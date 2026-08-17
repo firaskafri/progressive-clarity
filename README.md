@@ -63,12 +63,21 @@ remediation is represented or implied. Claude Code behavior remains on hold for
 insufficient API credit and **UNVERIFIED**.
 
 These results establish neither behavioral compatibility nor support for
-either host. See the exact [verification record](docs/verification.md).
-Release and OpenAI portal upload or submission remain blocked by failed strict
-acceptance. Publication is also blocked pending professional name and trademark
-clearance. Licensing authority is no longer listed as a blocker following the
-authorization recorded in [Provenance](PROVENANCE.md); neither that statement
-nor Git metadata is independent legal proof.
+either host. On 2026-08-17, the user reported publication of the ChatGPT plugin
+as
+[`plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
+An anonymous fetch independently confirms that the URL returns a ChatGPT
+Plugins route, but the response is a login page. It does not independently
+verify listing metadata, authenticated visibility, installability, activation,
+or rendered behavior. No ChatGPT behavioral verification is represented.
+
+User-reported publication does not clear Cursor strict acceptance or make this
+draft release-ready. Professional name and trademark clearance remains
+unresolved; publication is not evidence of clearance. See the exact
+[verification record](docs/verification.md). Licensing authority is no longer
+listed as a blocker following the authorization recorded in
+[Provenance](PROVENANCE.md); neither that statement nor Git metadata is
+independent legal proof.
 
 ## Scope and limitations
 
@@ -84,7 +93,7 @@ nor Git metadata is independent legal proof.
 - [Normative protocol](SPEC.md)
 - [Canonical Agent Skill](skills/progressive-clarity/SKILL.md)
 - Evidence-limited [installation guide](docs/installation.md), exact [verification record](docs/verification.md), and [version 0.1 limitations](docs/limitations.md)
-- Blocked [OpenAI plugin packaging record](docs/openai-plugin.md)
+- [OpenAI plugin packaging and publication record](docs/openai-plugin.md)
 - Host-neutral [evaluation guide](evals/README.md) and [case suite](evals/cases.json)
 - Templates: [chat](templates/chat.md) and [document](templates/document.md)
 - [Protocol examples](examples/README.md)

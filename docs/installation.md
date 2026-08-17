@@ -273,8 +273,9 @@ documentation does not establish local availability or host compatibility.
 OpenAI packaging, access, testing, and publication status is maintained only in
 the [OpenAI plugin packaging record](openai-plugin.md). This dual-mode
 documentation update does not add an OpenAI compatibility or support claim.
-Portal upload and submission are blocked because Cursor strict acceptance
-failed; no upload occurred.
+The user reports that the plugin was published on 17 August 2026. Anonymous
+access reaches a login page, so listing visibility, installation, activation,
+and ChatGPT behavior remain independently unverified.
 
 ## Official sources
 

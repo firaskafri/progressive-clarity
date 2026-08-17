@@ -137,11 +137,20 @@ Following the Agent Skills directory format is a portability design choice,
 not evidence that another host discovers, invokes, or follows this skill
 correctly.
 
-OpenAI packaging and access status remains separate. See
-[OpenAI plugin packaging](openai-plugin.md); this document makes no additional
-OpenAI compatibility, approval, publication, or support claim. Portal upload
-and submission are blocked because Cursor strict acceptance failed, and no
-upload occurred.
+OpenAI packaging and publication status remains separate. On 2026-08-17, the
+user reported publication of the ChatGPT plugin as
+[`plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
+An anonymous fetch independently confirms that the URL returns a ChatGPT
+Plugins route, but the response is a login page with no exposed listing
+metadata or install controls. The route check does not verify authenticated
+listing visibility, installability, activation, or rendered behavior.
+
+See the [OpenAI plugin packaging and publication record](openai-plugin.md) for
+the evidence boundary. User-reported publication does not clear Cursor strict
+acceptance, make version 0.1 release-ready, or establish ChatGPT compatibility
+or support. No ChatGPT behavioral verification is represented. Professional
+name and trademark clearance remains unresolved; publication is not evidence
+of clearance.
 
 The locally installed GitHub CLI is version `2.62.0` and does not expose the
 upstream preview skill commands. GitHub CLI installation and update workflows
@@ -183,8 +192,8 @@ Version 0.1 does not include:
 - executable helpers, hosted AI services, or runtime dependencies;
 - always-on rules or vendor-specific skill frontmatter;
 - an automated installer, updater, or uninstaller;
-- an uploaded, submitted, approved, or published plugin, marketplace listing,
-  or compatibility adapter;
+- independently verified ChatGPT listing metadata, authenticated
+  installability, activation evidence, or behavioral compatibility;
 - a live web demo, submitted user text, analytics, or a custom domain;
 - certification or universal conformance claims; or
 - formal participant research.

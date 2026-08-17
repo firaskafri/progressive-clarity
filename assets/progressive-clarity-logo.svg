@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Progressive Clarity nested views</title>
+  <rect width="256" height="256" rx="56" fill="#0B1220"/>
+  <rect x="38" y="38" width="180" height="180" rx="44" fill="none" stroke="#5EE0B7" stroke-width="12"/>
+  <rect x="70" y="70" width="116" height="116" rx="30" fill="none" stroke="#B7F7E4" stroke-width="12"/>
+  <rect x="100" y="100" width="56" height="56" rx="16" fill="#5EE0B7"/>
+</svg>

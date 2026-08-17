@@ -2,5 +2,16 @@
   "name": "progressive-clarity",
   "version": "0.1.0",
   "description": "Structure ordinary user-facing answers in sticky Verbose or Progressive modes with three additive, safe-to-stop views.",
-  "skills": "./skills/"
+  "author": {
+    "name": "FIRAS HASHEM AHMAD AL KAFRI"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Progressive Clarity",
+    "shortDescription": "Clear answers at useful depth",
+    "longDescription": "Structure user-facing answers in either Verbose or Progressive mode. Progressive mode uses three additive, safe-to-stop views so readers can stop at the depth they need without hidden reversals or repeated context.",
+    "developerName": "FIRAS HASHEM AHMAD AL KAFRI",
+    "composerIcon": "./assets/progressive-clarity-composer.svg",
+    "logo": "./assets/progressive-clarity-logo.svg"
+  }
 }

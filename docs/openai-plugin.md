@@ -1,4 +1,4 @@
-# OpenAI plugin packaging
+# OpenAI plugin packaging and publication
 
 Progressive Clarity uses the repository root as its copy-free OpenAI plugin
 source. The required manifest is `.codex-plugin/plugin.json`, and its
@@ -6,15 +6,16 @@ source. The required manifest is `.codex-plugin/plugin.json`, and its
 source does not duplicate or modify the canonical
 `skills/progressive-clarity/` package.
 
-This is packaging work only. It does not establish ChatGPT Skills access,
-Codex compatibility, OpenAI review, approval, publication, or support.
+Packaging alone does not establish ChatGPT Skills access, Codex compatibility,
+OpenAI review, approval, publication, or support. The publication evidence
+recorded below is separate from the local packaging result.
 
 ## Current gate
 
 The local package was rebuilt against final skill SHA-256
 `5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562`.
 Two consecutive builds produced the same archive SHA-256:
-`76312e768fa23590eb920b13b9a49278e8fc4e6b1218e84ad46436d9532374c5`.
+`439bf9ce41ca558c622d7d0b31e2a453fcc3a11fe3dbf73e284fd90d46113479`.
 
 That packaging result does not clear the behavior gate. Cursor round one ended
 with 6 cases passing and 5 failing; the one permitted targeted remediation
@@ -23,9 +24,33 @@ there were no safety-warning or procedural-safety failures, but strict
 acceptance still requires every prescribed run to pass. The mandatory hard
 stop has been reached.
 
-**OpenAI portal upload and submission are blocked because Cursor strict
-acceptance failed.** No portal upload, submission, publication, or release was
-performed. This record does not authorize or imply another remediation round.
+Upload, submission, or publication does not clear that failed behavior gate.
+This record does not authorize or imply another remediation round.
+
+## Publication record
+
+On 2026-08-17, the user reported that the ChatGPT plugin was published at
+[`https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
+The plugin ID is `plugins_6a82efdddbb48191b2785354515e1be2`. This report
+supersedes earlier repository statements that upload, submission, or
+publication had not occurred or remained blocked.
+
+An anonymous fetch on 2026-08-17 independently reached that ChatGPT Plugins
+route, but the response exposed only a login page with login and sign-up
+controls. It did not expose the plugin's listing metadata or install controls.
+The fetch therefore confirms that the route exists, not that the listing is
+visible to an authenticated account or that the plugin can be installed.
+
+No authenticated listing or install flow was independently exercised, and no
+ChatGPT activation or rendered response was scored. Publication is
+user-confirmed; listing visibility, installability, activation, and behavior
+remain independently **UNVERIFIED**. The report also does not independently
+document the upload, submission, review, approval, or publication sequence.
+
+The publication report does not change the non-release-ready status, the failed
+Cursor strict acceptance result, or the Claude Code hold. Professional name and
+trademark clearance remains unresolved; publication is not evidence of
+clearance.
 
 ## Package contents
 
@@ -46,18 +71,30 @@ The ZIP contains exactly:
 
 ```text
 .codex-plugin/plugin.json
+assets/progressive-clarity-composer.svg
+assets/progressive-clarity-logo.svg
 skills/progressive-clarity/LICENSE
 skills/progressive-clarity/SKILL.md
 ```
 
 The packager fixes ZIP timestamps, permissions, ordering, and compression
 settings. It rejects unexpected files in the canonical skill directory,
-validates the documented minimal manifest fields, rereads the completed ZIP,
-and fails if any packaged file differs byte-for-byte from its repository source.
-Its output reports the SHA-256 digest and byte count for the archive and every
-entry. For the final frozen source, the archive is 28,725 bytes and has
+validates the documented manifest, publisher-name, asset-path, SVG, and square
+image constraints, rereads the completed ZIP, and fails if any packaged file
+differs byte-for-byte from its repository source. Its output reports the
+SHA-256 digest and byte count for the archive and every entry. For the final
+frozen source, the archive is 30,659 bytes and has
 SHA-256
-`76312e768fa23590eb920b13b9a49278e8fc4e6b1218e84ad46436d9532374c5`.
+`439bf9ce41ca558c622d7d0b31e2a453fcc3a11fe3dbf73e284fd90d46113479`.
+
+The two original visual assets use a restrained three-level nested-view motif
+with flat midnight and mint colors. They contain no text, gradients, external
+references, scripts, or third-party marks:
+
+- `progressive-clarity-composer.svg`: 64×64, SHA-256
+  `bf37be72d058568f451efb22cace2703c684a2aaa6b8a1ae21309a4a9911add9`;
+- `progressive-clarity-logo.svg`: 256×256, SHA-256
+  `e0b487bcf7852dc2fb4074f90f86e1fb468b04a02bb54f7f6e963bd258275a92`.
 
 `dist/` was already ignored before this packaging work. Do not commit the ZIP.
 
@@ -83,9 +120,11 @@ The public submission checks are documented separately in the
 [submission error reference](https://developers.openai.com/plugins/deploy/submission-errors).
 No supported offline OpenAI plugin-schema validator was available locally
 during this implementation. The packager checks the documented source
-invariants, but the OpenAI submission portal remains authoritative for current
-upload and final-directory validation. Portal validation was not attempted
-because the strict-acceptance blocker applies before upload.
+invariants, including the 48–4,096-pixel square SVG range and 5 MiB asset limit,
+but the OpenAI submission portal remains authoritative for current upload and
+final-directory validation. This repository does not contain independently
+reviewable portal-validation or security-scan output for the reported
+publication.
 
 Do not treat a valid ZIP, a successful local install, or a portal upload as
 behavioral compatibility evidence. Activation and rendered behavior are
@@ -123,8 +162,8 @@ ChatGPT Skills access and public plugin submission access are separate.
 5. Open **Settings → Organization → General** and verify the individual or
    business identity that would appear as the publisher.
 6. Open the [plugin submission portal](https://platform.openai.com/plugins).
-   Confirm that **Create plugin** is available, but do not create a draft until
-   the publication blockers below are resolved.
+   Record whether **Create plugin** is available without treating that control
+   as evidence for the reported publication's submission history.
 
 Do not copy account identifiers, access tokens, API keys, or authentication
 files into this repository or into verification records.
@@ -148,47 +187,49 @@ publisher separately chooses whether to publish it. See
 [Submit plugins](https://developers.openai.com/plugins/deploy/submission) and
 [Connect and test your plugin](https://developers.openai.com/plugins/deploy/connect-chatgpt).
 
-The repository manifest intentionally contains only the official minimal fields:
-plugin name, semantic version, description, and the root skills path. It does
-not claim a verified publisher identity or finished public listing. If the
-portal requires public interface metadata or image assets in the uploaded
-archive, add them only after the publisher identity, branding, and artifact
-scope are explicitly approved.
+The repository manifest now contains the package identity and root skills path,
+plus the required public interface fields: display name, short and long
+descriptions, developer name, composer icon, and logo. Both `author.name` and
+`interface.developerName` are exactly
+`FIRAS HASHEM AHMAD AL KAFRI`, the user-provided verified identity. The
+submission portal must still confirm that the selected verified Platform
+identity matches those fields. OpenAI may normalize a mismatch to the selected
+verified identity only after portal confirmation.
 
 ## Security and identity boundaries
 
-The packaged skill is instruction-only. The ZIP contains no scripts, MCP
-server configuration, app mapping, hooks, network dependency, executable bit,
-analytics, telemetry, or `agents/openai.yaml`.
+The packaged skill is instruction-only. Apart from the manifest and two static
+SVG branding assets, the ZIP contains no scripts, MCP server configuration, app
+mapping, hooks, network dependency, executable bit, analytics, telemetry, or
+`agents/openai.yaml`.
 
 OpenAI scans uploaded skills, but that scan does not replace source review.
 Treat every submitted instruction and file as security-sensitive. Review the
-final ZIP inventory before upload and rerun the byte-equivalence checks after
-every source change.
+final ZIP inventory before any future upload and rerun the byte-equivalence
+checks after every source change.
 
-The repository records Firas Kafri as the source author and includes an author
-statement, but Git history is not proof of copyright ownership or licensing
-authority. The verified OpenAI publisher identity must match the person or
-business actually authorized to publish. Do not add publisher claims merely
-to satisfy a form.
+The manifest records the user-provided verified identity exactly as
+`FIRAS HASHEM AHMAD AL KAFRI`. Git history and a manifest string are not proof
+of copyright ownership or licensing authority. The selected OpenAI Platform
+identity must be the person or business actually authorized to publish.
 
-## Explicit blockers
+## Remaining verification and release limitations
 
-Do not submit or publish while any of these remain unresolved:
+The reported publication does not resolve:
 
 - failed Cursor strict acceptance and the completed bounded-cycle hard stop;
+- Claude Code behavior, which remains on hold for insufficient API credit and
+  **UNVERIFIED**;
+- ChatGPT listing metadata, authenticated visibility, installability,
+  activation, and rendered behavior, which remain independently
+  **UNVERIFIED**;
+- independently reviewable records of the upload, submission, review, approval,
+  portal validation, security scans, and publication sequence;
+- independent confirmation that the selected OpenAI Platform identity matched
+  the manifest and that the submitter had **Apps Management: Write**;
 - confirmation that no employer, client, collaborator, contract, or AI-tool
-  term limits the selected licenses;
-- professional trademark clearance for “Progressive Clarity”;
-- verified ChatGPT Skills availability and upload permission on the target
-  account or workspace;
-- verified OpenAI Platform publisher identity and **Apps Management: Write**;
-- completed ChatGPT and Codex activation and behavioral testing against the
-  frozen suite;
-- approved public listing copy, publisher name, logo, category, starter
-  prompts, availability, and policy attestations;
-- selected five positive and three negative submission cases with
-  reviewer-reproducible expected behavior;
-- successful OpenAI portal validation and security scans; and
-- explicit user approval to submit and, after any approval, separate explicit
-  user approval to publish.
+  term limits the selected licenses; or
+- professional name and trademark clearance for “Progressive Clarity.”
+
+Publication does not establish behavioral compatibility, installation support,
+release readiness, or professional name clearance.

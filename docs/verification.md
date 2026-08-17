@@ -206,11 +206,27 @@ tools, network access, and data handling remain host-controlled.
 
 ## OpenAI status
 
-OpenAI packaging, access, testing, and publication status is maintained in the
-[OpenAI plugin packaging record](openai-plugin.md). Local deterministic
-packaging does not establish behavior. Portal upload and submission are
-blocked because Cursor strict acceptance failed; no upload was performed. This
-record makes no OpenAI compatibility or support claim.
+**Current status: publication is user-confirmed; listing, installation,
+activation, and behavior remain independently UNVERIFIED.**
+
+On 2026-08-17, the user reported publication of the ChatGPT plugin at
+[`plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
+An anonymous fetch independently confirmed that the URL returns a ChatGPT
+Plugins route, but the response exposed only a login page. It did not expose
+listing metadata or install controls.
+
+The publication report supersedes the earlier statement that portal upload and
+submission were blocked and that no upload occurred. It is a user report, not a
+`PASS` under the result labels above. The anonymous route check independently
+establishes only that the route exists; it does not establish authenticated
+listing visibility, installability, successful installation, activation, or
+rendered behavior. No authenticated install flow or ChatGPT evaluation run was
+performed for this record.
+
+The [OpenAI plugin packaging and publication record](openai-plugin.md) keeps
+the full evidence boundary. Local deterministic packaging and user-reported
+publication do not clear the failed Cursor gate or establish OpenAI
+compatibility, support, or release readiness.
 
 ## Closed-cycle evidence boundary
 
@@ -222,8 +238,9 @@ record makes no OpenAI compatibility or support claim.
   round.
 - This record closes the bounded cycle; it does not authorize or imply another
   remediation round.
-- No support, compatibility, upload, submission, publication, or release claim
-  follows from the structural checks or partial behavioral positives.
+- No support, compatibility, or release claim follows from the structural
+  checks or partial behavioral positives. Publication is recorded separately
+  from the user report and anonymous route check described above.
 
 ## Licensing authorization
 
@@ -234,13 +251,15 @@ Apache-2.0 for the skill and tooling paths. The
 the statement nor Git metadata independently proves copyright ownership or
 licensing authority. Licensing authority is no longer tracked as a blocker.
 
-## Blockers
+## Remaining verification gaps and limitations
 
 - Cursor strict acceptance failed, and the bounded remediation policy reached
   its hard stop.
 - The final skill has no passing full-suite Cursor result.
 - Claude Code behavior is on hold for insufficient API credit and remains
   `UNVERIFIED`.
-- OpenAI portal upload and submission are blocked by failed strict acceptance;
-  no upload occurred.
+- ChatGPT listing metadata, authenticated visibility, installability,
+  activation, and rendered behavior remain independently `UNVERIFIED`.
+- The upload, submission, review, approval, portal-validation, security-scan,
+  and publication sequence is not independently documented.
 - Professional name and trademark clearance remains unresolved.

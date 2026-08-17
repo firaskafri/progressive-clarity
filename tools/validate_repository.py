@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+from package_openai_plugin import load_manifest, source_entries
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "progressive-clarity"
@@ -39,7 +41,7 @@ FACT_REFERENCE_FIELDS = {
     "required_step_order",
 }
 EXPECTED_SKILL_FILES = {Path("LICENSE"), Path("SKILL.md")}
-TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".yaml", ".yml"}
+TEXT_SUFFIXES = {".json", ".md", ".py", ".svg", ".txt", ".yaml", ".yml"}
 TEXT_NAMES = {".editorconfig", ".gitignore", "LICENSE"}
 LINK_PATTERN = re.compile(
     r"!?\[[^\]]*]\((?P<target><[^>]+>|[^)\s]+)"
@@ -184,6 +186,15 @@ def validate_relative_links(errors: list[str]) -> None:
         matches.extend(REFERENCE_LINK_PATTERN.finditer(text))
         for match in matches:
             validate_link(source, match.group("target"), anchor_cache, errors)
+
+
+def validate_openai_plugin(errors: list[str]) -> None:
+    """Validate the OpenAI manifest, referenced assets, and package inputs."""
+    try:
+        manifest = load_manifest()
+        source_entries(manifest)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        errors.append(f"OpenAI plugin: {exc}")
 
 
 def parse_frontmatter(text: str, errors: list[str]) -> dict[str, str]:
@@ -598,6 +609,7 @@ def main() -> int:
     validate_frozen_files(errors)
     validate_whitespace(errors)
     validate_relative_links(errors)
+    validate_openai_plugin(errors)
     validate_skill_package(errors)
     validate_evaluation_suite(errors)
     validate_terminology(errors)
