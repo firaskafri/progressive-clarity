@@ -1,0 +1,28 @@
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Generated output
+build/
+coverage/
+dist/

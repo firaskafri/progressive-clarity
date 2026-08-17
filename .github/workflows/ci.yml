@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.8"
+
+      - name: Validate repository files
+        run: |
+          python3 -m json.tool evals/cases.json >/dev/null
+          python3 tools/validate_repository.py
+
+      - name: Check out pinned skills-ref
+        env:
+          SKILLS_REF_REVISION: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+        run: |
+          git clone --filter=blob:none --no-checkout \
+            https://github.com/agentskills/agentskills.git \
+            "$RUNNER_TEMP/agentskills"
+          git -C "$RUNNER_TEMP/agentskills" checkout \
+            --detach "$SKILLS_REF_REVISION"
+          test "$(git -C "$RUNNER_TEMP/agentskills" rev-parse HEAD)" = \
+            "$SKILLS_REF_REVISION"
+
+      - name: Run official skills-ref validation
+        working-directory: ${{ runner.temp }}/agentskills/skills-ref
+        run: |
+          uv sync
+          source .venv/bin/activate
+          skills-ref validate \
+            "$GITHUB_WORKSPACE/skills/progressive-clarity"

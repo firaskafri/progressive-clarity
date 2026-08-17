@@ -1,0 +1,1557 @@
+{
+  "schema_version": "1.0.0",
+  "suite_id": "progressive-clarity-v0.1-host-neutral",
+  "protocol": {
+    "path": "SPEC.md",
+    "version": "0.1 draft",
+    "sha256": "90ccf39dc5cf91e895fb3cf2f1f788cba80daea94e1f07435748083c55bb4096"
+  },
+  "scope": {
+    "language": "English",
+    "hosts": [
+      "Cursor",
+      "Claude Code"
+    ],
+    "result_values": [
+      "PASS",
+      "FAIL",
+      "UNVERIFIED"
+    ],
+    "human_outcome_claims": false,
+    "safe_stopping_measure": "Observable proxy only: every required fact and indispensable caveat is present at each rendered stopping point."
+  },
+  "run_policy": {
+    "fresh_session_per_case_run": true,
+    "preserve_one_session_for_all_turns_in_a_continuity_case": true,
+    "default_runs_per_host": 1,
+    "repeat_runs_per_host": 3,
+    "repeat_semantics": "Three total runs per host; the baseline run is run 1.",
+    "repeat_case_ids": [
+      "PC-01",
+      "PC-03",
+      "PC-06",
+      "PC-10",
+      "PC-11"
+    ],
+    "hard_fail_conditions": [
+      "An indispensable warning is omitted or deferred.",
+      "A response contradicts an operative source fact.",
+      "A later qualification silently makes an earlier stopping point materially false.",
+      "A response gives an unsafe instruction."
+    ],
+    "case_result_rule": "Any behavioral FAIL in any required run fails that case for that host. Missing activation or internal-state traces may produce UNVERIFIED only for those dimensions; they do not erase an observable behavioral FAIL.",
+    "capture_fields": [
+      "suite_id",
+      "case_id",
+      "run_number",
+      "host",
+      "host_version",
+      "model",
+      "model_version_or_identifier",
+      "date_time_utc",
+      "settings",
+      "skill_revision",
+      "protocol_sha256",
+      "installation_path",
+      "invocation_method",
+      "activation_trace",
+      "internal_state_trace",
+      "prompts",
+      "raw_outputs",
+      "counted_words_by_response",
+      "cumulative_count_by_topic",
+      "required_fact_results",
+      "prohibited_behavior_results",
+      "budget_exception_metadata",
+      "behavior_result",
+      "activation_result",
+      "internal_state_result",
+      "case_result",
+      "evaluator_notes"
+    ]
+  },
+  "word_count": {
+    "method": "human-scored",
+    "included": [
+      "Reader-visible assistant prose",
+      "Clarity cue labels",
+      "List text",
+      "Inline code after removing backticks",
+      "Visible Markdown link text"
+    ],
+    "excluded": [
+      "Headings",
+      "Markdown syntax",
+      "Markdown link destination URLs",
+      "Bare URLs",
+      "Fenced code blocks",
+      "Data tables",
+      "Non-rendered state notes",
+      "Citation markers and footnote references",
+      "User prompts",
+      "Control dialogue"
+    ],
+    "tokenization": [
+      "Remove Markdown punctuation and split included prose at whitespace.",
+      "Count a token when it contains at least one English letter or digit.",
+      "Count contractions and hyphenated compounds with no whitespace as one word.",
+      "Count compact dates, times, numbers, and code-like tokens with no whitespace as one word.",
+      "Count spaced dates and times by whitespace token.",
+      "Do not count standalone symbols or punctuation without a letter or digit.",
+      "Remove inline-code backticks and count the code content by the same rule."
+    ],
+    "accumulation": [
+      "Add all counted At a glance and In context prose for the active topic.",
+      "A targeted branch inherits and adds to the active topic total.",
+      "Direct In context entry is counted once.",
+      "At depth prose is outside the hard cap.",
+      "Only indispensable warning text and necessary correction repair text receive their defined exemptions."
+    ]
+  },
+  "rubric": {
+    "behavioral_conformance": "Score required facts, caveats, order, budgets, corrections, and prohibited output from rendered responses.",
+    "activation": "PASS requires host evidence that the expected skill loaded or remained inactive. Without a trace, activation is UNVERIFIED; behavior is scored separately.",
+    "internal_state": "Without a host trace, selected view, branch focus, and topic reset may be UNVERIFIED. Their rendered consequences remain pass/fail.",
+    "clarification": "A focused question is excluded control dialogue only when it contains no answer, recommendation, rationale, or implementation detail beyond an indispensable warning.",
+    "additive_expansion": "Every sentence or bullet in an expansion must add a new fact, qualification, consequence, action, evidence item, or relationship.",
+    "hidden_reversal": "A later qualification fails if it makes an earlier operative claim materially false without the correction procedure.",
+    "targeted_branch": "The branch inherits the active topic count, uses its shallowest complete view, excludes sibling branches, and does not advance the parent view.",
+    "correction": "The repair starts the next relevant response, identifies and withdraws the error, states it was wrong or incomplete, replaces it, and updates changed consequences or actions. Only necessary repair text is exempt.",
+    "warning": "A material warning appears before the related action or conclusion and may exceed a budget only as far as indispensable safety content requires.",
+    "purposeful_at_depth": "Each section supports a requested fact, evidence need, alternative, exception, procedure, implementation concern, or necessary consequence.",
+    "non_fit": "Procedures preserve complete step order, controlling legal text remains unchanged with separate non-controlling explanation, and narrative preserves sequence, pacing, and voice."
+  },
+  "cases": [
+    {
+      "id": "PC-01",
+      "title": "Positive automatic activation",
+      "coverage": [
+        "positive_activation",
+        "automatic_activation",
+        "at_a_glance",
+        "safe_stopping_proxy"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "activate",
+      "session_mode": "single_turn",
+      "runs_per_host": 3,
+      "source_facts": [
+        {
+          "id": "PC-01-F1",
+          "text": "The Orion release moves from 12 September to 19 September."
+        },
+        {
+          "id": "PC-01-F2",
+          "text": "Checkout retry tests failed."
+        },
+        {
+          "id": "PC-01-F3",
+          "text": "Existing customers are unaffected."
+        },
+        {
+          "id": "PC-01-F4",
+          "text": "Only new checkout attempts are exposed."
+        },
+        {
+          "id": "PC-01-F5",
+          "text": "Priya owns the fix by 15 September."
+        },
+        {
+          "id": "PC-01-F6",
+          "text": "QA sign-off is due 17 September."
+        },
+        {
+          "id": "PC-01-F7",
+          "text": "Release on 19 September is conditional on QA sign-off."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Turn these notes into the shortest complete executive update: The Orion release moves from 12 September to 19 September because checkout retry tests failed. Existing customers are unaffected; only new checkout attempts are exposed. Priya owns the fix by 15 September. QA sign-off is due 17 September. Release on 19 September only if sign-off passes.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-01-F1",
+              "PC-01-F2",
+              "PC-01-F3",
+              "PC-01-F4",
+              "PC-01-F6",
+              "PC-01-F7"
+            ],
+            "optional_fact_ids": [
+              "PC-01-F5"
+            ],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40
+            },
+            "prohibited_behavior": [
+              "Treating 19 September as unconditional",
+              "Omitting the affected or unaffected scope",
+              "Adding an unsupported cause",
+              "Using background as a runway before the decision"
+            ],
+            "pass_criteria": [
+              "Every required fact is present.",
+              "No source fact is contradicted.",
+              "Counted prose is at most 40 words.",
+              "Behavior is scored independently from activation evidence."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-02",
+      "title": "Explicit invocation at At a glance",
+      "coverage": [
+        "explicit_activation",
+        "at_a_glance"
+      ],
+      "activation_mode": "explicit",
+      "activation_expectation": "activate",
+      "precondition": "Invoke progressive-clarity through the host's documented explicit mechanism before sending the prompt.",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-02-F1",
+          "text": "Friday's office closure starts at 15:00."
+        },
+        {
+          "id": "PC-02-F2",
+          "text": "Electrical testing starts at 15:30."
+        },
+        {
+          "id": "PC-02-F3",
+          "text": "Badge access is disabled until Monday at 07:00."
+        },
+        {
+          "id": "PC-02-F4",
+          "text": "Facilities owns the closure."
+        },
+        {
+          "id": "PC-02-F5",
+          "text": "Everyone must leave before 15:00."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "At a glance only: Friday's office closure starts at 15:00 because electrical testing begins at 15:30. Badge access remains disabled until Monday at 07:00. Facilities owns the closure. Everyone must leave before 15:00.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-02-F1",
+              "PC-02-F2",
+              "PC-02-F3",
+              "PC-02-F5"
+            ],
+            "optional_fact_ids": [
+              "PC-02-F4"
+            ],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40
+            },
+            "prohibited_behavior": [
+              "Changing a supplied time",
+              "Omitting the badge-access restriction",
+              "Omitting the required departure action",
+              "Adding unrelated deeper detail"
+            ],
+            "pass_criteria": [
+              "The explicit invocation action and any host trace are captured.",
+              "Every required fact is present.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-03",
+      "title": "Negative automatic activation",
+      "coverage": [
+        "negative_activation",
+        "automatic_activation",
+        "unrelated_task"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "inactive",
+      "session_mode": "single_turn",
+      "runs_per_host": 3,
+      "source_facts": [
+        {
+          "id": "PC-03-F1",
+          "text": "17 multiplied by 19 equals 323."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Calculate 17 × 19. Return only the integer, with no explanation or formatting.",
+          "expected": {
+            "view": "outside_protocol",
+            "required_fact_ids": [
+              "PC-03-F1"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "not_applicable"
+            },
+            "prohibited_behavior": [
+              "Any heading",
+              "Any clarity cue",
+              "Any explanation",
+              "Any Markdown formatting"
+            ],
+            "pass_criteria": [
+              "The trimmed raw output equals 323 exactly.",
+              "Inactivity is UNVERIFIED unless the host exposes an inactivity trace."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-04",
+      "title": "Direct entry at In context",
+      "coverage": [
+        "in_context",
+        "direct_entry",
+        "cumulative_budget"
+      ],
+      "activation_mode": "explicit_prompt",
+      "activation_expectation": "not_scored",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-04-F1",
+          "text": "Acme API v1 shuts down 1 December."
+        },
+        {
+          "id": "PC-04-F2",
+          "text": "Acme API v2 is live."
+        },
+        {
+          "id": "PC-04-F3",
+          "text": "Mobile owns app migration by 15 November."
+        },
+        {
+          "id": "PC-04-F4",
+          "text": "Integrations owns partner migration by 20 November."
+        },
+        {
+          "id": "PC-04-F5",
+          "text": "v2 uses OAuth2 and v1 API keys do not work."
+        },
+        {
+          "id": "PC-04-F6",
+          "text": "Partners request an exception by 1 November."
+        },
+        {
+          "id": "PC-04-F7",
+          "text": "An approved exception ends 15 December."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Start directly at In context; do not render a separate At a glance section. Acme API v1 shuts down 1 December and v2 is live. Mobile owns app migration by 15 November; Integrations owns partner migration by 20 November. v2 uses OAuth2; v1 API keys do not work. Partners needing more time must request an exception by 1 November; an approved exception ends 15 December.",
+          "expected": {
+            "view": "in_context",
+            "required_fact_ids": [
+              "PC-04-F1",
+              "PC-04-F2",
+              "PC-04-F3",
+              "PC-04-F4",
+              "PC-04-F5",
+              "PC-04-F6",
+              "PC-04-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "direct_in_context_hard_cap",
+              "max_counted_words": 200
+            },
+            "prohibited_behavior": [
+              "A separate At a glance section followed by repeated content",
+              "Claiming v1 API keys remain valid",
+              "Omitting the exception end date",
+              "Inventing a shutdown rationale"
+            ],
+            "pass_criteria": [
+              "All lower-view essentials and context facts appear in one integrated response.",
+              "Every required fact is present.",
+              "Counted prose is at most 200 words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-05",
+      "title": "Direct entry at At depth",
+      "coverage": [
+        "at_depth",
+        "direct_entry",
+        "purposeful_detail"
+      ],
+      "activation_mode": "explicit_prompt",
+      "activation_expectation": "not_scored",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-05-F1",
+          "text": "Event export moves from daily CSV to hourly JSONL on 5 November."
+        },
+        {
+          "id": "PC-05-F2",
+          "text": "Delayed delivery slows fraud review."
+        },
+        {
+          "id": "PC-05-F3",
+          "text": "Data Platform owns the change."
+        },
+        {
+          "id": "PC-05-F4",
+          "text": "Schema v3 adds event_id and UTC occurred_at and removes local_time."
+        },
+        {
+          "id": "PC-05-F5",
+          "text": "Consumers validate by 29 October."
+        },
+        {
+          "id": "PC-05-F6",
+          "text": "Hourly CSV was rejected because nested metadata is lossy."
+        },
+        {
+          "id": "PC-05-F7",
+          "text": "Finance remains on daily CSV until 31 December."
+        },
+        {
+          "id": "PC-05-F8",
+          "text": "Rollback restores the v2 exporter and replays retained events."
+        },
+        {
+          "id": "PC-05-F9",
+          "text": "Retention is 14 days."
+        },
+        {
+          "id": "PC-05-F10",
+          "text": "The source is https://example.test/runbook."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Start directly at At depth; do not render separate lower-view sections. Prepare an implementation note: Event export moves from daily CSV to hourly JSONL on 5 November because delayed delivery slows fraud review. Data Platform owns it. Schema v3 adds `event_id` and UTC `occurred_at`, and removes `local_time`. Consumers validate by 29 October. Hourly CSV was rejected because nested metadata is lossy. Finance remains on daily CSV until 31 December. Rollback restores the v2 exporter and replays retained events; retention is 14 days. Source: https://example.test/runbook.",
+          "expected": {
+            "view": "at_depth",
+            "required_fact_ids": [
+              "PC-05-F1",
+              "PC-05-F2",
+              "PC-05-F3",
+              "PC-05-F4",
+              "PC-05-F5",
+              "PC-05-F6",
+              "PC-05-F7",
+              "PC-05-F8",
+              "PC-05-F9",
+              "PC-05-F10"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_depth_unrestricted"
+            },
+            "prohibited_behavior": [
+              "Separate repetitive At a glance and In context sections",
+              "Omitting the Finance exception",
+              "Inventing evidence, schema fields, or rollback steps",
+              "Adding an unrelated specialist section"
+            ],
+            "pass_criteria": [
+              "Every required fact is present.",
+              "Every section maps to a source fact or necessary implementation consequence.",
+              "Lower-view essentials are integrated without stacked repetition."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-06",
+      "title": "Two consecutive more requests",
+      "coverage": [
+        "at_a_glance",
+        "in_context",
+        "at_depth",
+        "two_more",
+        "additive_expansion",
+        "cumulative_budget"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 3,
+      "source_facts": [
+        {
+          "id": "PC-06-F1",
+          "text": "Email delivery moves from Provider A to Provider B on 8 October."
+        },
+        {
+          "id": "PC-06-F2",
+          "text": "Provider A's EU delivery fell below 95%."
+        },
+        {
+          "id": "PC-06-F3",
+          "text": "Templates and sender addresses do not change."
+        },
+        {
+          "id": "PC-06-F4",
+          "text": "Provider B costs 8% more."
+        },
+        {
+          "id": "PC-06-F5",
+          "text": "Messaging owns cutover."
+        },
+        {
+          "id": "PC-06-F6",
+          "text": "Template edits freeze from 7 through 9 October."
+        },
+        {
+          "id": "PC-06-F7",
+          "text": "A 10% canary starts at 09:00 and expands at 13:00 only if bounce rate is at most 2%."
+        },
+        {
+          "id": "PC-06-F8",
+          "text": "Rollback occurs if bounce rate exceeds 2%."
+        },
+        {
+          "id": "PC-06-F9",
+          "text": "Provider A delivered 93.8% over seven days; Provider B's pilot delivered 98.7% across 50,000 messages."
+        },
+        {
+          "id": "PC-06-F10",
+          "text": "DNS TTL becomes 300 seconds at 08:00 and returns to 3,600 after 24 hours."
+        },
+        {
+          "id": "PC-06-F11",
+          "text": "Rollback switches the routing key, replays the queue, and checks duplicates."
+        },
+        {
+          "id": "PC-06-F12",
+          "text": "Logs remain 30 days and the runbook is https://example.test/mail."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Give the shortest complete answer about Northstar. Email delivery moves from Provider A to Provider B on 8 October because A's EU delivery fell below 95%. Templates and sender addresses do not change. B costs 8% more. Messaging owns cutover. Freeze template edits 7–9 October. A 10% canary starts at 09:00; expand at 13:00 only if bounce rate is ≤2%; roll back if it exceeds 2%. A delivered 93.8% over seven days; B's pilot delivered 98.7% across 50,000 messages. DNS TTL becomes 300 seconds at 08:00 and returns to 3,600 after 24 hours. Rollback switches the routing key, replays the queue, and checks duplicates. Logs remain 30 days. Runbook: https://example.test/mail.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-06-F1",
+              "PC-06-F2",
+              "PC-06-F3",
+              "PC-06-F4"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "northstar"
+            },
+            "prohibited_behavior": [
+              "Hiding the cost increase until a later view",
+              "Rendering implementation detail at the shallowest view"
+            ],
+            "pass_criteria": [
+              "The decision, reason, user-facing consequence, and cost caveat are present.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "More.",
+          "expected": {
+            "view": "in_context",
+            "required_fact_ids": [
+              "PC-06-F5",
+              "PC-06-F6",
+              "PC-06-F7",
+              "PC-06-F8"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "in_context_cumulative_hard_cap",
+              "max_cumulative_counted_words": 200,
+              "cumulative_topic": "northstar"
+            },
+            "prohibited_behavior": [
+              "Reproducing the first response as a preface",
+              "Changing the canary threshold",
+              "Skipping directly to unrelated specialist detail"
+            ],
+            "pass_criteria": [
+              "Every sentence or bullet adds a new fact, qualification, consequence, action, or relationship.",
+              "Turn 1 plus turn 2 counted prose is at most 200 words."
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "More.",
+          "expected": {
+            "view": "at_depth",
+            "required_fact_ids": [
+              "PC-06-F9",
+              "PC-06-F10",
+              "PC-06-F11",
+              "PC-06-F12"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_depth_unrestricted"
+            },
+            "prohibited_behavior": [
+              "Reproducing either earlier response",
+              "Inventing comparison evidence",
+              "Adding unrelated specialist volume"
+            ],
+            "pass_criteria": [
+              "Evidence, implementation controls, rollback procedure, retention, and source are present.",
+              "Every sentence or bullet adds new information."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-07",
+      "title": "Targeted branch expansion",
+      "coverage": [
+        "targeted_branch",
+        "branch_budget_inheritance",
+        "parent_view_preservation"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-07-F1",
+          "text": "Atlas is adopted on 1 November."
+        },
+        {
+          "id": "PC-07-F2",
+          "text": "Atlas saves $120,000 annually."
+        },
+        {
+          "id": "PC-07-F3",
+          "text": "Security approval requires customer keys to remain in the organization's KMS."
+        },
+        {
+          "id": "PC-07-F4",
+          "text": "Migration takes two weekends."
+        },
+        {
+          "id": "PC-07-F5",
+          "text": "Rollback is allowed for 30 days."
+        },
+        {
+          "id": "PC-07-F6",
+          "text": "Rollback restores the cutover-start snapshot."
+        },
+        {
+          "id": "PC-07-F7",
+          "text": "Records created afterward require reconciliation."
+        },
+        {
+          "id": "PC-07-F8",
+          "text": "The incident commander approves rollback."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "At a glance: We plan to adopt Atlas on 1 November, saving $120,000 annually. Security approved it only if customer keys remain in our KMS. Migration takes two weekends. Rollback is allowed for 30 days, restores the cutover-start snapshot, requires reconciliation of records created afterward, and must be approved by the incident commander.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-07-F1",
+              "PC-07-F2",
+              "PC-07-F3",
+              "PC-07-F4"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "atlas"
+            },
+            "prohibited_behavior": [
+              "Omitting the KMS condition",
+              "Using rollback implementation detail at this view"
+            ],
+            "pass_criteria": [
+              "The adoption, consequence, indispensable security condition, and migration scope are present.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Expand only the rollback risk.",
+          "expected": {
+            "view": "in_context_targeted_branch",
+            "required_fact_ids": [
+              "PC-07-F5",
+              "PC-07-F6",
+              "PC-07-F7",
+              "PC-07-F8"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "in_context_cumulative_hard_cap",
+              "max_cumulative_counted_words": 200,
+              "cumulative_topic": "atlas"
+            },
+            "prohibited_behavior": [
+              "Replaying the adoption, savings, security, or migration-duration branches",
+              "Advancing the parent topic's general view",
+              "Resetting the cumulative budget"
+            ],
+            "pass_criteria": [
+              "Only rollback-branch facts and necessary connective prose appear.",
+              "The branch inherits the turn 1 count.",
+              "Turn 1 plus turn 2 counted prose is at most 200 words.",
+              "Parent-view state is UNVERIFIED without a host trace, while sibling-branch replay is pass/fail."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-08",
+      "title": "Topic reset",
+      "coverage": [
+        "topic_reset",
+        "depth_state",
+        "budget_reset"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-08-F1",
+          "text": "Project Cedar's pilot starts 3 March."
+        },
+        {
+          "id": "PC-08-F2",
+          "text": "The pilot includes 20 support agents."
+        },
+        {
+          "id": "PC-08-F3",
+          "text": "The target is 15% lower handle time."
+        },
+        {
+          "id": "PC-08-F4",
+          "text": "No customer data leaves the EU."
+        },
+        {
+          "id": "PC-08-F5",
+          "text": "Maya owns the pilot."
+        },
+        {
+          "id": "PC-08-F6",
+          "text": "The review is 31 March."
+        },
+        {
+          "id": "PC-08-F7",
+          "text": "Annual plans rise 4% on 1 April."
+        },
+        {
+          "id": "PC-08-F8",
+          "text": "Existing contracts retain their price until renewal."
+        },
+        {
+          "id": "PC-08-F9",
+          "text": "Finance sends notices by 1 March."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Summarize Project Cedar: pilot starts 3 March with 20 support agents; target is 15% lower handle time; no customer data leaves the EU; Maya owns it; review is 31 March.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-08-F1",
+              "PC-08-F3",
+              "PC-08-F4"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "cedar"
+            },
+            "prohibited_behavior": [
+              "Omitting the EU constraint"
+            ],
+            "pass_criteria": [
+              "The pilot, target, and data constraint are present.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "More.",
+          "expected": {
+            "view": "in_context",
+            "required_fact_ids": [
+              "PC-08-F2",
+              "PC-08-F5",
+              "PC-08-F6"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "in_context_cumulative_hard_cap",
+              "max_cumulative_counted_words": 200,
+              "cumulative_topic": "cedar"
+            },
+            "prohibited_behavior": [
+              "Replaying the first response"
+            ],
+            "pass_criteria": [
+              "Participant scope, owner, and review date are added.",
+              "The Cedar cumulative count is at most 200 words."
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "New topic: What is the billing decision? Annual plans rise 4% on 1 April; existing contracts retain their price until renewal; Finance sends notices by 1 March.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-08-F7",
+              "PC-08-F8",
+              "PC-08-F9"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "billing",
+              "reset_from_previous_topic": true
+            },
+            "prohibited_behavior": [
+              "Carrying Cedar facts into the response",
+              "Continuing at At depth because the prior topic was expanded",
+              "Applying the Cedar count to billing",
+              "Omitting the renewal caveat"
+            ],
+            "pass_criteria": [
+              "All billing facts and no Cedar facts appear.",
+              "A fresh At a glance budget applies.",
+              "Internal reset state is UNVERIFIED without a host trace."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-09",
+      "title": "Cumulative counting and token exclusions",
+      "coverage": [
+        "tokenization",
+        "cumulative_budget",
+        "inline_code",
+        "url",
+        "citation",
+        "fenced_code",
+        "data_table"
+      ],
+      "activation_mode": "explicit_prompt",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-09-F1",
+          "text": "Nimbus v1 becomes read-only for standard clients on 6 June."
+        },
+        {
+          "id": "PC-09-F2",
+          "text": "Standard v1 writes return HTTP 409."
+        },
+        {
+          "id": "PC-09-F3",
+          "text": "Standard clients migrate by 5 June."
+        },
+        {
+          "id": "PC-09-F4",
+          "text": "The batch importer may keep writing until 20 June."
+        },
+        {
+          "id": "PC-09-F5",
+          "text": "Client Platform owns migration."
+        },
+        {
+          "id": "PC-09-F6",
+          "text": "Nimbus v2 accepts only asynchronous writes."
+        },
+        {
+          "id": "PC-09-F7",
+          "text": "The guide is https://example.test/nimbus and the citation is [Ops Memo 7]."
+        },
+        {
+          "id": "PC-09-F8",
+          "text": "The requested example is client.write(mode=\"async\")."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Use Progressive Clarity. Answer At a glance and include the raw guide URL and citation. Nimbus v1 becomes read-only for standard clients on 6 June; writes return HTTP 409; migrate by 5 June. The batch importer may keep writing until 20 June. Client Platform owns migration. Nimbus v2 accepts only asynchronous writes. Guide: https://example.test/nimbus. Citation: [Ops Memo 7].",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-09-F1",
+              "PC-09-F2",
+              "PC-09-F3",
+              "PC-09-F4",
+              "PC-09-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "nimbus"
+            },
+            "prohibited_behavior": [
+              "Treating v1 as read-only for the batch importer before 20 June",
+              "Counting the bare URL or citation marker"
+            ],
+            "pass_criteria": [
+              "The exception prevents a hidden reversal.",
+              "The bare URL and citation are present but excluded from the count.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "More. Include a two-row Markdown table comparing v1 and v2 write behavior, plus a fenced example containing `client.write(mode=\"async\")`.",
+          "expected": {
+            "view": "in_context",
+            "required_fact_ids": [
+              "PC-09-F5",
+              "PC-09-F6",
+              "PC-09-F8"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "in_context_cumulative_hard_cap",
+              "max_cumulative_counted_words": 200,
+              "cumulative_topic": "nimbus",
+              "counting_assertions": [
+                "Exclude table cells.",
+                "Exclude fenced code.",
+                "Count any reader-visible inline code outside the fence after removing backticks.",
+                "Count cue labels and list text.",
+                "Exclude headings and Markdown syntax."
+              ]
+            },
+            "prohibited_behavior": [
+              "Counting fenced code or table cells",
+              "Omitting the requested table",
+              "Omitting the fenced example",
+              "Replaying the first response"
+            ],
+            "pass_criteria": [
+              "The owner and v2 write constraint are added.",
+              "The requested table and fenced example are present.",
+              "The evaluator records included text, excluded text, response counts, and cumulative count.",
+              "Cumulative counted prose is at most 200 words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-10",
+      "title": "Material warning precedence",
+      "coverage": [
+        "material_warning",
+        "safety_precedence",
+        "warning_budget_exception"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "single_turn",
+      "runs_per_host": 3,
+      "source_facts": [
+        {
+          "id": "PC-10-F1",
+          "text": "Failover left both the payment primary and replica writable."
+        },
+        {
+          "id": "PC-10-F2",
+          "text": "Restarting either before reconciliation can diverge order histories."
+        },
+        {
+          "id": "PC-10-F3",
+          "text": "The divergence can lose acknowledged payments."
+        },
+        {
+          "id": "PC-10-F4",
+          "text": "Writes must be frozen now."
+        },
+        {
+          "id": "PC-10-F5",
+          "text": "The incident commander must be paged."
+        },
+        {
+          "id": "PC-10-F6",
+          "text": "Restart is allowed only after the commander confirms reconciliation is complete."
+        },
+        {
+          "id": "PC-10-F7",
+          "text": "The next reconciliation report is at 14:30."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Answer At a glance. An operator asks whether to restart the payment primary. Failover left both primary and replica writable. Restarting either before reconciliation can diverge order histories and lose acknowledged payments. Freeze writes now, page the incident commander, and restart only after the commander confirms reconciliation is complete. The next report is at 14:30.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-10-F1",
+              "PC-10-F2",
+              "PC-10-F3",
+              "PC-10-F4",
+              "PC-10-F5",
+              "PC-10-F6",
+              "PC-10-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_warning",
+              "target_counted_words": 40,
+              "exception": "Only indispensable warning words beyond the target are allowed and must be recorded in evaluation metadata."
+            },
+            "prohibited_behavior": [
+              "Giving restart steps",
+              "Placing the warning after background detail",
+              "Omitting the potential payment loss",
+              "Treating 14:30 alone as restart authorization"
+            ],
+            "pass_criteria": [
+              "The response starts with a prohibition against restarting now or a semantic equivalent.",
+              "Every warning and immediate action fact is present.",
+              "No unsafe restart instruction appears.",
+              "Any overage records its reason and affected words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-11",
+      "title": "Correction preserves depth and accumulation",
+      "coverage": [
+        "correction",
+        "correction_budget_exception",
+        "depth_preservation",
+        "post_correction_more"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 3,
+      "source_facts": [
+        {
+          "id": "PC-11-F1",
+          "text": "The initially supplied production date is Tuesday at 09:00 UTC."
+        },
+        {
+          "id": "PC-11-F2",
+          "text": "The corrected production date is Thursday at 09:00 UTC."
+        },
+        {
+          "id": "PC-11-F3",
+          "text": "Tuesday is only the dry run."
+        },
+        {
+          "id": "PC-11-F4",
+          "text": "Production coverage must move to Thursday."
+        },
+        {
+          "id": "PC-11-F5",
+          "text": "The database owner validates backups before production."
+        },
+        {
+          "id": "PC-11-F6",
+          "text": "The incident commander approves cutover."
+        },
+        {
+          "id": "PC-11-F7",
+          "text": "Operations publishes status every 30 minutes."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "At a glance: Production maintenance begins Tuesday at 09:00 UTC. Schedule production coverage for that window. The database owner validates backups before production, the incident commander approves cutover, and operations publishes status every 30 minutes.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-11-F1"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "cumulative_topic": "maintenance"
+            },
+            "prohibited_behavior": [
+              "Inventing a different date",
+              "Rendering all In context ownership detail at the shallowest view"
+            ],
+            "pass_criteria": [
+              "The initially supplied date and immediate coverage action are present.",
+              "Counted prose is at most 40 words."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Correction: the runbook says Thursday at 09:00 UTC. Tuesday is only the dry run. Move production coverage to Thursday.",
+          "expected": {
+            "view": "correction_at_a_glance",
+            "required_fact_ids": [
+              "PC-11-F1",
+              "PC-11-F2",
+              "PC-11-F3",
+              "PC-11-F4"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "correction_exemption",
+              "cumulative_topic": "maintenance",
+              "pre_correction_total_unchanged": true,
+              "exempt_content": "Only text necessary to identify, retract, replace, and state changed action."
+            },
+            "prohibited_behavior": [
+              "Silently substituting Thursday",
+              "Leaving both dates operative",
+              "Hiding the repair below other content",
+              "Repeating unaffected ownership details as exempt text",
+              "Inventing a reason for the source error"
+            ],
+            "pass_criteria": [
+              "The repair starts the response.",
+              "Tuesday as the production date is identified and explicitly withdrawn as wrong or incomplete.",
+              "Thursday at 09:00 UTC replaces it.",
+              "Tuesday is identified as the dry run.",
+              "Production coverage moves to Thursday.",
+              "Exempt words and rationale are recorded in metadata."
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "More.",
+          "expected": {
+            "view": "in_context",
+            "required_fact_ids": [
+              "PC-11-F5",
+              "PC-11-F6",
+              "PC-11-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "in_context_cumulative_hard_cap",
+              "max_cumulative_counted_words": 200,
+              "cumulative_topic": "maintenance",
+              "accumulation_rule": "Resume from the pre-correction total; do not add exempt repair words."
+            },
+            "prohibited_behavior": [
+              "Advancing to At depth",
+              "Replaying the correction",
+              "Using Tuesday as the production date"
+            ],
+            "pass_criteria": [
+              "The response adds ownership and cadence facts.",
+              "It continues from the corrected At a glance view into In context.",
+              "Pre-correction counted prose plus this addition is at most 200 words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-12",
+      "title": "Sequential procedure non-fit",
+      "coverage": [
+        "procedure",
+        "non_fit",
+        "natural_sequence",
+        "complete_procedure"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "defer_three_view_format",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-12-F1",
+          "text": "The incident commander declares restore mode."
+        },
+        {
+          "id": "PC-12-F2",
+          "text": "The operator blocks application writes."
+        },
+        {
+          "id": "PC-12-F3",
+          "text": "The backup checksum must equal the manifest; otherwise stop and escalate without restoring."
+        },
+        {
+          "id": "PC-12-F4",
+          "text": "Restore the backup to staging."
+        },
+        {
+          "id": "PC-12-F5",
+          "text": "Run the integrity suite; on failure keep writes blocked and escalate."
+        },
+        {
+          "id": "PC-12-F6",
+          "text": "The incident commander approves production cutover."
+        },
+        {
+          "id": "PC-12-F7",
+          "text": "Cut over and then reopen writes."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Write the production restore procedure from these controlling steps. Preserve order and prerequisites: (1) Incident commander declares restore mode. (2) Operator blocks application writes. (3) Verify backup checksum equals the manifest; if not, stop and escalate—do not restore. (4) Restore to staging. (5) Run the integrity suite; if any check fails, keep writes blocked and escalate. (6) Incident commander approves production cutover. (7) Cut over, then reopen writes. Add a brief overview only if it helps.",
+          "expected": {
+            "view": "non_fit_procedure",
+            "required_fact_ids": [
+              "PC-12-F1",
+              "PC-12-F2",
+              "PC-12-F3",
+              "PC-12-F4",
+              "PC-12-F5",
+              "PC-12-F6",
+              "PC-12-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "procedure_body_unrestricted",
+              "optional_overview_max_counted_words": 40
+            },
+            "prohibited_behavior": [
+              "Reordering steps",
+              "Withholding later steps for conversational expansion",
+              "Breaking the procedure into three repetitive views",
+              "Omitting either stop condition",
+              "Reopening writes before cutover",
+              "Inventing commands"
+            ],
+            "pass_criteria": [
+              "All seven steps appear in order.",
+              "Both failure branches stop and escalate.",
+              "Writes reopen only after cutover.",
+              "Any overview is concise and separate from the complete natural sequence."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-13",
+      "title": "Narrative non-fit",
+      "coverage": [
+        "narrative",
+        "voice_dependent",
+        "non_fit"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "defer_three_view_format",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-13-F1",
+          "text": "The scene is first person and past tense."
+        },
+        {
+          "id": "PC-13-F2",
+          "text": "Lina enters the empty station."
+        },
+        {
+          "id": "PC-13-F3",
+          "text": "The display changes from DELAYED to CANCELLED."
+        },
+        {
+          "id": "PC-13-F4",
+          "text": "She hears a child laugh behind the locked kiosk."
+        },
+        {
+          "id": "PC-13-F5",
+          "text": "She says exactly: Who's there?"
+        },
+        {
+          "id": "PC-13-F6",
+          "text": "The lights go out."
+        },
+        {
+          "id": "PC-13-F7",
+          "text": "The scene is 120 through 140 words with no headings or bullets."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Write a 120–140-word first-person scene, not a summary. Events must occur in this order: Lina enters the empty station; the display changes from DELAYED to CANCELLED; she hears a child laugh behind the locked kiosk; she says exactly, \"Who's there?\"; the lights go out. Use past tense. No headings or bullets.",
+          "expected": {
+            "view": "non_fit_narrative",
+            "required_fact_ids": [
+              "PC-13-F1",
+              "PC-13-F2",
+              "PC-13-F3",
+              "PC-13-F4",
+              "PC-13-F5",
+              "PC-13-F6",
+              "PC-13-F7"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "user_length_constraint",
+              "min_words": 120,
+              "max_words": 140
+            },
+            "prohibited_behavior": [
+              "Conclusion-first summary",
+              "Clarity cues",
+              "Headings",
+              "Bullets",
+              "Reordered events",
+              "Altered required dialogue"
+            ],
+            "pass_criteria": [
+              "The response is first-person past-tense narrative.",
+              "Events appear in the supplied order.",
+              "The exact dialogue appears.",
+              "The user length constraint is met.",
+              "No three-view formatting is forced."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-14",
+      "title": "Controlling legal text hybrid",
+      "coverage": [
+        "legal",
+        "non_fit",
+        "controlling_text",
+        "non_controlling_summary"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "defer_three_view_format",
+      "session_mode": "single_turn",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-14-F1",
+          "text": "Supplier shall retain Customer Data solely for thirty (30) days following termination, except to the extent retention is required by applicable law, in which case Supplier shall isolate such data and cease all other processing."
+        },
+        {
+          "id": "PC-14-F2",
+          "text": "The default retention period is 30 days after termination."
+        },
+        {
+          "id": "PC-14-F3",
+          "text": "Applicable law may require longer retention."
+        },
+        {
+          "id": "PC-14-F4",
+          "text": "Legally retained data must be isolated."
+        },
+        {
+          "id": "PC-14-F5",
+          "text": "All other processing of legally retained data must cease."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Reproduce this controlling clause exactly, then provide a separately labeled plain-language summary of at most 40 words: Supplier shall retain Customer Data solely for thirty (30) days following termination, except to the extent retention is required by applicable law, in which case Supplier shall isolate such data and cease all other processing.",
+          "expected": {
+            "view": "non_fit_legal_hybrid",
+            "required_fact_ids": [
+              "PC-14-F1",
+              "PC-14-F2",
+              "PC-14-F3",
+              "PC-14-F4",
+              "PC-14-F5"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "legal_hybrid",
+              "controlling_text": "preserve_exactly",
+              "summary_max_counted_words": 40
+            },
+            "prohibited_behavior": [
+              "Editing, shortening, or paraphrasing the controlling clause",
+              "Interleaving the summary with the clause",
+              "Failing to mark the summary as non-controlling",
+              "Presenting the summary as a substitute",
+              "Adding legal advice or unsupported conclusions"
+            ],
+            "pass_criteria": [
+              "The exact controlling clause appears as one unchanged contiguous string.",
+              "The explanation is separate and clearly marked non-controlling.",
+              "The explanation contains the default, exception, isolation, and processing facts.",
+              "The explanation is at most 40 counted words."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC-15",
+      "title": "Clarification control dialogue",
+      "coverage": [
+        "clarification",
+        "control_dialogue",
+        "budget_exclusion",
+        "state_preservation"
+      ],
+      "activation_mode": "automatic",
+      "activation_expectation": "not_scored",
+      "session_mode": "multi_turn_continuity",
+      "runs_per_host": 1,
+      "source_facts": [
+        {
+          "id": "PC-15-F1",
+          "text": "The assistant must know whether the environment is staging or production."
+        },
+        {
+          "id": "PC-15-F2",
+          "text": "The assistant must know whether backfill is complete."
+        },
+        {
+          "id": "PC-15-F3",
+          "text": "The assistant must know whether query comparison passed."
+        },
+        {
+          "id": "PC-15-F4",
+          "text": "The assistant must know whether rollback is available."
+        },
+        {
+          "id": "PC-15-F5",
+          "text": "The environment is staging."
+        },
+        {
+          "id": "PC-15-F6",
+          "text": "Backfill is complete."
+        },
+        {
+          "id": "PC-15-F7",
+          "text": "Query comparison passed."
+        },
+        {
+          "id": "PC-15-F8",
+          "text": "The rollback switch is available."
+        },
+        {
+          "id": "PC-15-F9",
+          "text": "Error rate and latency must be monitored before any production decision."
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Tell me whether to enable the new index now.",
+          "expected": {
+            "view": "control_dialogue",
+            "required_fact_ids": [
+              "PC-15-F1",
+              "PC-15-F2",
+              "PC-15-F3",
+              "PC-15-F4"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "control_dialogue_excluded",
+              "counted_words": 0,
+              "state_change": "none"
+            },
+            "prohibited_behavior": [
+              "Recommending activation before obtaining the missing facts",
+              "Embedding rationale or implementation guidance in the question",
+              "Treating the question as a rendered view",
+              "Advancing depth state"
+            ],
+            "pass_criteria": [
+              "The response asks one focused clarification covering environment, backfill, query comparison, and rollback.",
+              "It contains no substantive recommendation.",
+              "It consumes no view budget.",
+              "Internal no-view state is UNVERIFIED without a host trace."
+            ]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Staging. The backfill is complete, query comparison passed, and the rollback switch is available.",
+          "expected": {
+            "view": "at_a_glance",
+            "required_fact_ids": [
+              "PC-15-F5",
+              "PC-15-F6",
+              "PC-15-F7",
+              "PC-15-F8",
+              "PC-15-F9"
+            ],
+            "optional_fact_ids": [],
+            "budget": {
+              "kind": "at_a_glance_target",
+              "max_counted_words": 40,
+              "prior_control_dialogue_counted_words": 0
+            },
+            "prohibited_behavior": [
+              "Treating staging readiness as production approval",
+              "Counting the clarification question",
+              "Omitting monitoring before a production decision"
+            ],
+            "pass_criteria": [
+              "The assistant recommends enabling in staging.",
+              "It cites readiness evidence and preserves rollback.",
+              "It requires error-rate and latency monitoring before production.",
+              "Only the rendered answer is counted and is at most 40 words."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
