@@ -20,12 +20,20 @@ The blob identifier was verified against the named path at the named commit.
 These identifiers preserve the exact source revision independently of later
 changes to either repository.
 
-## Author statement and adaptation
+## Author statement, authorization, and adaptation
 
 Firas Kafri states that he created the source method and guide. Git metadata
-for the recorded commit also names Firas Kafri as its author. Git metadata
-documents repository history; it is not, by itself, proof of copyright
-ownership or licensing authority.
+for the recorded commit also names Firas Kafri as its author.
+
+On 2026-08-17, Firas Kafri explicitly confirmed in the project conversation
+that he controls the source draft and authorizes:
+
+- CC BY 4.0 for the protocol and documentation text; and
+- Apache-2.0 for the skill and tooling paths.
+
+This records his express representation and authorization. Neither this
+statement nor the Git metadata independently proves copyright ownership or
+licensing authority.
 
 Progressive Clarity adapts that source into an AI-first conversational
 response protocol. The adaptation uses distinct terminology and requirements
@@ -45,11 +53,10 @@ sources:
 - Apache-2.0:
   <https://www.apache.org/licenses/LICENSE-2.0.txt>
 
-## Rights still requiring confirmation
+## Remaining clearance
 
-Before publication, the licensor should confirm that no employer, client,
-collaborator, contract, or AI-tool term limits the right to license the source
-or the adaptation. A professional trademark clearance for “Progressive
-Clarity” has not been completed. The preliminary trademark-record review
-documented in `ACKNOWLEDGEMENTS.md` is attribution research, not legal
+For project tracking, the recorded authorization removes licensing authority
+from the publication blockers. Professional name and trademark clearance for
+“Progressive Clarity” has not been completed. The preliminary trademark-record
+review documented in `ACKNOWLEDGEMENTS.md` is attribution research, not legal
 clearance.

@@ -1,6 +1,6 @@
 # Sequential procedure
 
-- **Expected view:** Hybrid: an At a glance orientation followed by the complete natural step sequence.
+- **Expected mode and views:** Hybrid in either mode: an optional At a glance orientation followed by the complete natural step sequence.
 - **Required facts:** Verifiers receive the new public key before signers switch; both keys overlap; old signatures expire before revocation; rollback remains possible.
 - **Budget:** The orientation is at most 40 counted words. The ordered procedure is not forced into conversational view increments.
 
@@ -9,6 +9,8 @@
 Show me how to rotate an application signing key without interrupting verification.
 
 ## Response
+
+### At a glance
 
 <!-- words:procedure-glance:start -->
 Use an overlap period: publish the new verifier before signing with the new key, then retire the old key only after old signatures expire. Keep rollback access throughout.

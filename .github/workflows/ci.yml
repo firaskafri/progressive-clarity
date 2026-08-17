@@ -24,7 +24,22 @@ jobs:
         with:
           version: "0.11.8"
 
-      - name: Validate repository files
+      - name: Verify frozen dual-mode inputs
+        run: |
+          sha256sum --check --strict <<'EOF'
+          ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d  SPEC.md
+          5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562  skills/progressive-clarity/SKILL.md
+          4c27a740e2e02e54f97889618397a6417c82e089b9bb44919b92642e59289680  evals/cases.json
+          EOF
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          suite = json.loads(Path("evals/cases.json").read_text(encoding="utf-8"))
+          assert suite["schema_version"] == "2.0.0"
+          PY
+
+      - name: Validate dual-mode repository
         run: |
           python3 -m json.tool evals/cases.json >/dev/null
           python3 tools/validate_repository.py

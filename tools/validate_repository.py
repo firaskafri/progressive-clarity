@@ -13,13 +13,30 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "progressive-clarity"
 FROZEN_FILES = {
-    Path("SPEC.md"): "90ccf39dc5cf91e895fb3cf2f1f788cba80daea94e1f07435748083c55bb4096",
+    Path("SPEC.md"): "ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d",
     Path("skills/progressive-clarity/SKILL.md"): (
-        "4167d7fa89d008453b223d2ff33a2182096abefaffeab4698a65a6ce23bdbaae"
+        "5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562"
     ),
     Path("evals/cases.json"): (
-        "b5c2becc53e6e7e167878de3f4f84451fd0d446c38ac4d5e6df74eaeef42cbd4"
+        "4c27a740e2e02e54f97889618397a6417c82e089b9bb44919b92642e59289680"
     ),
+}
+EXPECTED_SCHEMA_VERSION = "2.0.0"
+EXPECTED_SUITE_ID = "progressive-clarity-v0.1-two-mode-acceptance"
+EXPECTED_CASE_IDS = tuple(f"M{number:02d}" for number in range(1, 12))
+EXPECTED_REPEAT_CASE_IDS = ("M02", "M05", "M06", "M08", "M11")
+EXPECTED_TOTALS_PER_HOST = {
+    "sessions": 21,
+    "scored_assistant_responses": 39,
+}
+EXPECTED_TOTALS_BOTH_HOSTS = {
+    "sessions": 42,
+    "scored_assistant_responses": 78,
+}
+FACT_REFERENCE_FIELDS = {
+    "required_fact_ids",
+    "optional_fact_ids",
+    "required_step_order",
 }
 EXPECTED_SKILL_FILES = {Path("LICENSE"), Path("SKILL.md")}
 TEXT_SUFFIXES = {".json", ".md", ".py", ".txt", ".yaml", ".yml"}
@@ -269,8 +286,82 @@ def validate_skill_package(errors: list[str]) -> None:
         )
 
 
+def validate_fact_references(
+    node: object,
+    location: str,
+    fact_ids: set[str],
+    referenced: set[str],
+    errors: list[str],
+) -> None:
+    """Validate every fact-reference list, including nested stopping points."""
+    if isinstance(node, list):
+        for index, item in enumerate(node):
+            validate_fact_references(
+                item,
+                f"{location}[{index}]",
+                fact_ids,
+                referenced,
+                errors,
+            )
+        return
+    if not isinstance(node, dict):
+        return
+
+    required = node.get("required_fact_ids")
+    optional = node.get("optional_fact_ids")
+    if isinstance(required, list) and isinstance(optional, list):
+        overlap = {
+            value
+            for value in required
+            if isinstance(value, str) and value in optional
+        }
+        if overlap:
+            errors.append(
+                f"evals/cases.json: {location} repeats facts as required and "
+                f"optional {sorted(overlap)}"
+            )
+
+    for key, value in node.items():
+        child_location = f"{location}.{key}"
+        if key not in FACT_REFERENCE_FIELDS:
+            validate_fact_references(
+                value,
+                child_location,
+                fact_ids,
+                referenced,
+                errors,
+            )
+            continue
+        if not isinstance(value, list):
+            errors.append(
+                f"evals/cases.json: {child_location} must be a fact-id list"
+            )
+            continue
+        references = [
+            reference
+            for reference in value
+            if isinstance(reference, str) and reference
+        ]
+        if len(references) != len(value):
+            errors.append(
+                f"evals/cases.json: {child_location} contains a non-string "
+                "or empty fact reference"
+            )
+        if len(references) != len(set(references)):
+            errors.append(
+                f"evals/cases.json: {child_location} has duplicate fact references"
+            )
+        unknown = set(references) - fact_ids
+        if unknown:
+            errors.append(
+                f"evals/cases.json: {child_location} references unknown facts "
+                f"{sorted(unknown)}"
+            )
+        referenced.update(references)
+
+
 def validate_evaluation_suite(errors: list[str]) -> None:
-    """Validate JSON syntax and the suite's declared referential constraints."""
+    """Validate the frozen schema, totals, and referential constraints."""
     path = ROOT / "evals" / "cases.json"
     try:
         suite = json.loads(path.read_text(encoding="utf-8"))
@@ -278,26 +369,65 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         errors.append(f"evals/cases.json: invalid JSON ({exc})")
         return
 
+    if suite.get("schema_version") != EXPECTED_SCHEMA_VERSION:
+        errors.append(
+            "evals/cases.json: schema_version must be "
+            f"{EXPECTED_SCHEMA_VERSION}"
+        )
+    if suite.get("suite_id") != EXPECTED_SUITE_ID:
+        errors.append(f"evals/cases.json: suite_id must be {EXPECTED_SUITE_ID}")
+
     expected_protocol_hash = FROZEN_FILES[Path("SPEC.md")]
-    if suite.get("protocol", {}).get("sha256") != expected_protocol_hash:
+    protocol = suite.get("protocol")
+    if not isinstance(protocol, dict):
+        errors.append("evals/cases.json: protocol must be an object")
+        protocol = {}
+    if protocol.get("path") != "SPEC.md":
+        errors.append("evals/cases.json: protocol path must be SPEC.md")
+    if protocol.get("version") != "0.1 draft":
+        errors.append("evals/cases.json: protocol version must be 0.1 draft")
+    if protocol.get("sha256") != expected_protocol_hash:
         errors.append("evals/cases.json: protocol hash does not match frozen SPEC.md")
 
-    policy = suite.get("run_policy", {})
-    cases = suite.get("cases", [])
+    policy = suite.get("run_policy")
+    if not isinstance(policy, dict):
+        errors.append("evals/cases.json: run_policy must be an object")
+        policy = {}
+    cases = suite.get("cases")
+    if not isinstance(cases, list):
+        errors.append("evals/cases.json: cases must be a list")
+        return
     repeat_ids = policy.get("repeat_case_ids", [])
+    if not isinstance(repeat_ids, list) or not all(
+        isinstance(case_id, str) for case_id in repeat_ids
+    ):
+        errors.append("evals/cases.json: repeat_case_ids must be a string list")
+        repeat_ids = []
     if len(repeat_ids) != len(set(repeat_ids)):
         errors.append("evals/cases.json: duplicate repeat_case_ids")
+    if tuple(repeat_ids) != EXPECTED_REPEAT_CASE_IDS:
+        errors.append(
+            "evals/cases.json: repeat_case_ids must be "
+            f"{list(EXPECTED_REPEAT_CASE_IDS)}"
+        )
 
-    case_ids: set[str] = set()
+    case_id_sequence: list[str] = []
     all_fact_ids: set[str] = set()
-    for case in cases:
+    computed_sessions = 0
+    computed_responses = 0
+    for case_index, case in enumerate(cases):
+        if not isinstance(case, dict):
+            errors.append(
+                f"evals/cases.json: cases[{case_index}] must be an object"
+            )
+            continue
         case_id = case.get("id")
         if not isinstance(case_id, str) or not case_id:
             errors.append("evals/cases.json: case missing string id")
             continue
-        if case_id in case_ids:
+        if case_id in case_id_sequence:
             errors.append(f"evals/cases.json: duplicate case id {case_id}")
-        case_ids.add(case_id)
+        case_id_sequence.append(case_id)
 
         expected_runs = (
             policy.get("repeat_runs_per_host")
@@ -308,9 +438,46 @@ def validate_evaluation_suite(errors: list[str]) -> None:
             errors.append(
                 f"evals/cases.json: {case_id} runs_per_host does not match run policy"
             )
+        runs_per_host = case.get("runs_per_host")
+        if (
+            not isinstance(runs_per_host, int)
+            or isinstance(runs_per_host, bool)
+            or runs_per_host < 1
+        ):
+            errors.append(
+                f"evals/cases.json: {case_id} runs_per_host must be a positive integer"
+            )
+            runs_per_host = 0
+        computed_sessions += runs_per_host
 
         facts = case.get("source_facts", [])
-        fact_ids = [fact.get("id") for fact in facts if isinstance(fact, dict)]
+        if not isinstance(facts, list):
+            errors.append(
+                f"evals/cases.json: {case_id} source_facts must be a list"
+            )
+            facts = []
+        fact_ids: list[str] = []
+        for fact_index, fact in enumerate(facts):
+            if not isinstance(fact, dict):
+                errors.append(
+                    f"evals/cases.json: {case_id} source_facts[{fact_index}] "
+                    "must be an object"
+                )
+                continue
+            fact_id = fact.get("id")
+            fact_text = fact.get("text")
+            if not isinstance(fact_id, str) or not fact_id:
+                errors.append(
+                    f"evals/cases.json: {case_id} source_facts[{fact_index}] "
+                    "missing string id"
+                )
+            else:
+                fact_ids.append(fact_id)
+            if not isinstance(fact_text, str) or not fact_text:
+                errors.append(
+                    f"evals/cases.json: {case_id} source_facts[{fact_index}] "
+                    "missing string text"
+                )
         if len(fact_ids) != len(set(fact_ids)):
             errors.append(f"evals/cases.json: {case_id} has duplicate fact ids")
         duplicates = set(fact_ids) & all_fact_ids
@@ -321,39 +488,75 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         all_fact_ids.update(fact_ids)
 
         turns = case.get("turns", [])
-        turn_numbers = [turn.get("turn") for turn in turns if isinstance(turn, dict)]
+        if not isinstance(turns, list):
+            errors.append(f"evals/cases.json: {case_id} turns must be a list")
+            turns = []
+        computed_responses += runs_per_host * len(turns)
+        turn_numbers = [
+            turn.get("turn") if isinstance(turn, dict) else None for turn in turns
+        ]
         if turn_numbers != list(range(1, len(turns) + 1)):
             errors.append(
                 f"evals/cases.json: {case_id} turn numbers are not sequential"
             )
         referenced: set[str] = set()
-        for turn in turns:
+        for turn_index, turn in enumerate(turns):
+            if not isinstance(turn, dict):
+                errors.append(
+                    f"evals/cases.json: {case_id} turns[{turn_index}] "
+                    "must be an object"
+                )
+                continue
             expected = turn.get("expected", {})
-            required = expected.get("required_fact_ids", [])
-            optional = expected.get("optional_fact_ids", [])
-            references = required + optional
-            if len(references) != len(set(references)):
+            if not isinstance(expected, dict):
                 errors.append(
                     f"evals/cases.json: {case_id} turn {turn.get('turn')} "
-                    "has duplicate fact references"
+                    "expected must be an object"
                 )
-            unknown = set(references) - set(fact_ids)
-            if unknown:
-                errors.append(
-                    f"evals/cases.json: {case_id} turn {turn.get('turn')} "
-                    f"references unknown facts {sorted(unknown)}"
-                )
-            referenced.update(references)
+                continue
+            validate_fact_references(
+                expected,
+                f"{case_id} turn {turn.get('turn')} expected",
+                set(fact_ids),
+                referenced,
+                errors,
+            )
         unused = set(fact_ids) - referenced
         if unused:
             errors.append(
                 f"evals/cases.json: {case_id} has unreferenced facts {sorted(unused)}"
             )
 
+    if tuple(case_id_sequence) != EXPECTED_CASE_IDS:
+        errors.append(
+            "evals/cases.json: case ids must be "
+            f"{list(EXPECTED_CASE_IDS)} in order"
+        )
+    case_ids = set(case_id_sequence)
     unknown_repeat_ids = set(repeat_ids) - case_ids
     if unknown_repeat_ids:
         errors.append(
             f"evals/cases.json: unknown repeat case ids {sorted(unknown_repeat_ids)}"
+        )
+
+    computed_per_host = {
+        "sessions": computed_sessions,
+        "scored_assistant_responses": computed_responses,
+    }
+    if computed_per_host != EXPECTED_TOTALS_PER_HOST:
+        errors.append(
+            "evals/cases.json: cases compute unexpected per-host totals "
+            f"{computed_per_host}"
+        )
+    if policy.get("initial_round_totals_per_host") != EXPECTED_TOTALS_PER_HOST:
+        errors.append(
+            "evals/cases.json: initial_round_totals_per_host must be "
+            f"{EXPECTED_TOTALS_PER_HOST}"
+        )
+    if policy.get("initial_round_totals_both_hosts") != EXPECTED_TOTALS_BOTH_HOSTS:
+        errors.append(
+            "evals/cases.json: initial_round_totals_both_hosts must be "
+            f"{EXPECTED_TOTALS_BOTH_HOSTS}"
         )
 
 

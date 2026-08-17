@@ -1,8 +1,8 @@
 # Explicit view requests
 
-These are independent entries into the same fictional topic. Each response includes the essentials required at its requested view; they are not consecutive turns.
+These are independent one-off requests made while Verbose mode is sticky. Each response renders only the requested view; the stored mode remains Verbose for the next ordinary request.
 
-- **Expected views:** At a glance, In context, and At depth as explicitly requested.
+- **Expected mode and views:** Verbose remains sticky while each explicit view request overrides one response.
 - **Required facts:** Pooling is recommended; it reduces setup overhead and caps connections; an oversized pool can increase contention; implementation must use measured limits.
 - **Budgets:** At a glance is at most 40 counted words. Direct In context is at most 200 counted words. At depth has no hard cap but remains purposeful.
 
@@ -13,6 +13,8 @@ These are independent entries into the same fictional topic. Each response inclu
 At a glance, should we add database connection pooling before traffic increases?
 
 ### Response
+
+#### At a glance
 
 <!-- words:explicit-glance:start -->
 Yes—add connection pooling before traffic increases. It reduces setup overhead and protects the database from unbounded client connections; set a measured pool limit instead of accepting the library default.
@@ -25,6 +27,8 @@ Yes—add connection pooling before traffic increases. It reduces setup overhead
 Answer In context: should we add database connection pooling before traffic increases?
 
 ### Response
+
+#### In context
 
 <!-- words:explicit-context:start -->
 Adopt connection pooling before traffic increases. It reduces setup overhead and caps concurrent database connections.
@@ -43,6 +47,8 @@ Adopt connection pooling before traffic increases. It reduces setup overhead and
 Answer At depth: should we add database connection pooling before traffic increases, and how should we implement it?
 
 ### Response
+
+#### At depth
 
 <!-- words:explicit-depth:start -->
 Adopt connection pooling before traffic increases. The pool should bound aggregate concurrency across every application instance, not merely reduce connection setup time.

@@ -1,0 +1,6 @@
+{
+  "name": "progressive-clarity",
+  "version": "0.1.0",
+  "description": "Structure ordinary user-facing answers in sticky Verbose or Progressive modes with three additive, safe-to-stop views.",
+  "skills": "./skills/"
+}

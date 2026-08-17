@@ -1,8 +1,8 @@
 # Clarification control dialogue
 
-- **Expected views:** No rendered view during clarification, then At a glance after the missing facts arrive.
-- **Required facts:** The assistant must identify the environment and readiness evidence before recommending activation; clarification must not advance depth or consume budget.
-- **Budget:** The clarification question is control dialogue and does not count. The later At a glance response is at most 40 counted words.
+- **Expected mode and views:** Default Verbose mode survives clarification; no view renders until missing facts arrive, then all three views render.
+- **Required facts:** The assistant identifies environment and readiness before recommending activation; clarification changes neither mode nor depth and consumes no budget.
+- **Budget:** Control dialogue does not count. At a glance is at most 40 words; At a glance plus In context is at most 200.
 
 ## User
 
@@ -16,8 +16,24 @@ Is this staging or production, and have the backfill, query comparison, and roll
 
 Staging. The backfill is complete, query comparison passed, and the rollback switch is available.
 
-## Assistant — At a glance
+## Assistant
+
+### At a glance
 
 <!-- words:clarification-glance:start -->
-Enable the index in staging. The backfill and query comparison are complete, and rollback is available; monitor error rate and latency before any production decision.
+Enable the index in staging. Readiness checks passed and rollback is available; do not treat this as production approval.
 <!-- words:clarification-glance:end -->
+
+### In context
+
+<!-- words:clarification-context:start -->
+**Where it fits:** Staging limits exposure to internal validation.
+
+**What follows:** Assign an activation owner and observation window before switching traffic.
+<!-- words:clarification-context:end -->
+
+### At depth
+
+<!-- words:clarification-depth:start -->
+Capture baseline query latency and plans before activation. Define rollback thresholds for errors and latency, then compare representative traffic after the switch. Preserve the previous index until the observation window closes.
+<!-- words:clarification-depth:end -->

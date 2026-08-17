@@ -1,6 +1,6 @@
 # Legal non-fit
 
-- **Expected view:** At a glance refusal to replace controlling text, with a safe informative alternative.
+- **Expected mode and views:** Legal non-fit in either mode; preserve controlling text and offer a separate informative explanation.
 - **Required facts:** Keep the signed clause unchanged; label any explanation non-controlling; the explanation cannot replace or govern the clause.
 - **Budget:** At a glance is at most 40 counted words.
 

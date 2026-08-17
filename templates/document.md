@@ -1,6 +1,6 @@
 # Document template
 
-Document mode is an informative adaptation of Progressive Clarity for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
+Document mode is an informative Verbose-style adaptation of Progressive Clarity for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
 
 Use the visible sections only when they help readers choose a stopping point. For tutorials, procedures, controlling legal text, and voice-dependent writing, use the hybrid guidance at the end.
 
@@ -8,6 +8,8 @@ Version 0.1 word-budget guidance applies to English prose only. Use the human co
 
 ```markdown
 # <Conclusion written as a specific claim>
+
+## At a glance
 
 <!-- At a glance: no more than 40 counted prose words. -->
 
@@ -18,6 +20,7 @@ Version 0.1 word-budget guidance applies to English prose only. Use the human co
 
 <!-- At a glance plus this section: no more than 200 counted prose words. -->
 <!-- Keep only useful cues. -->
+<!-- Add information; do not repeat At a glance facts. -->
 
 - **Why it counts:** <Significance not already stated.>
 - **Where it fits:** <Relevant scope or relationship.>
@@ -62,7 +65,7 @@ Place an optional concise orientation before the ordered steps, then preserve th
 Never edit the controlling text to fit this template. Put a clearly separate, non-controlling explanation before or after it.
 
 ```markdown
-## Informative summary
+## Non-controlling informative summary
 
 <Plain-language explanation. This does not replace the controlling text.>
 

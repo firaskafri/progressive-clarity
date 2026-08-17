@@ -2,11 +2,11 @@
 
 Version 0.1 draft
 
-Progressive Clarity is an AI-first response protocol. It gives a complete answer at the shallowest useful view, then adds context and detail without repetition or hidden reversal.
+Progressive Clarity is an AI-first response protocol with two conversation modes. Verbose mode renders all three additive views at once. Progressive mode reveals those views across turns.
 
 ## 1. Scope
 
-This specification is normative for conversational AI responses. It governs depth selection, stopping quality, expansion, correction, and response-budget accounting.
+This specification is normative for conversational AI responses. It governs conversation mode, view composition, stopping quality, expansion, correction, and response-budget accounting.
 
 The keywords **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** state requirements. A response conforms when every available stopping point follows the four invariants, the selection rules, and the applicable budget.
 
@@ -25,19 +25,23 @@ Every rendered view MUST be:
 
 These invariants apply after every assistant turn, not only after the final turn in a sequence.
 
+View completeness is cumulative. In Verbose mode, the In context stopping point includes At a glance above it, and the At depth stopping point includes both earlier sections. In Progressive mode, the stopping point includes earlier turns on the active topic. Each deeper section remains additive and does not restate those earlier facts.
+
 ## 3. The three views
+
+Every rendered view MUST show its heading: **At a glance**, **In context**, or **At depth**. Markdown heading level MAY vary with the surrounding artifact. Headings do not count toward a word budget.
 
 ### 3.1 At a glance
 
 **At a glance** gives the direct answer and its decision-relevant consequence. It includes any caveat or warning that is indispensable to a correct stopping point.
 
-It SHOULD contain no more than 40 counted words. If 40 words cannot hold a complete and safe answer, the assistant MUST preserve correctness and safety, then either exceed the target or select a deeper view.
+It MUST contain no more than 40 counted words. Only an indispensable warning MAY exceed this cap, and only as far as section 9 requires.
 
 ### 3.2 In context
 
 **In context** adds only what the user needs to understand or act: rationale, scope, relevant constraints, ownership, and the next action. Not every response needs every category.
 
-The counted prose supplied for the active topic through In context MUST total no more than 200 words, including any earlier At a glance turn, targeted branch, or other In context expansion. Only the warning and correction exceptions defined below may exceed this normal hard cap. When the assistant enters In context directly, the integrated response includes the lower-view essentials without rendering a separate At a glance section.
+The counted prose supplied through In context MUST total no more than 200 words. In Verbose mode, this is the combined At a glance and In context prose in one response. In Progressive mode, it includes earlier At a glance turns, targeted branches, and other In context expansions on the active topic. Only the warning and correction exceptions defined below may exceed this normal hard cap.
 
 ### 3.3 At depth
 
@@ -45,19 +49,61 @@ The counted prose supplied for the active topic through In context MUST total no
 
 At depth has no hard word limit. Entering At depth removes the 200-word cap from that response and later At depth expansions. It does not excuse an over-budget path that should have stopped at In context. At depth still MUST be additive, relevant, and organized so the user can locate the requested detail. Length alone does not satisfy this view.
 
-## 4. Depth selection
+## 4. Conversation modes and view selection
+
+The assistant tracks one sticky conversation mode: **Verbose** or **Progressive**.
+
+### 4.1 Mode state and commands
+
+A new conversation starts in Verbose mode. Starting a new topic inside that conversation does not reset the mode.
+
+The commands `Progressive mode` and `Verbose mode` change the sticky mode. Match them case-insensitively when the user presents the phrase as a command or clear mode directive. A mode command is control dialogue: it does not render a view, advance topic depth, or consume a view budget.
+
+When a message contains both a mode command and a substantive request, change the mode first and use the new mode for that request. The selected mode remains active until another mode command changes it or the conversation ends.
+
+### 4.2 Verbose mode
+
+Verbose mode is the default. For each ordinary in-scope request, the assistant MUST render one response with these visible headings in this order:
+
+1. **At a glance**
+2. **In context**
+3. **At depth**
+
+At a glance contains the direct answer, consequence, and indispensable caveat. In context adds rationale, scope, constraints, ownership, or action without repeating At a glance facts. At depth adds evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources without repeating facts from either earlier view.
+
+After a complete Verbose response, topic depth is At depth. An unqualified `More` adds purposeful At depth information only. A named `More` request expands only that branch. The assistant MUST NOT replay At a glance, In context, or previously supplied At depth material.
+
+### 4.3 Progressive mode
+
+Progressive mode is explicit and sticky. On a new topic, the first substantive response renders **At a glance** only.
+
+An unqualified `More` advances one view on the active topic:
+
+- At a glance → In context;
+- In context → At depth.
+
+Each expansion renders only the new visible view and adds information not already supplied. At depth has no hard cap but remains purposeful. After At depth, another unqualified `More` adds the most relevant unresolved At depth information or asks one focused clarification when no direction is evident.
+
+### 4.4 One-off view overrides
+
+An explicit request for At a glance, In context, or At depth overrides presentation for that response only. It MUST NOT change the sticky conversation mode unless the request also includes a mode command.
+
+A one-off response renders only the requested view heading. Direct entry at In context or At depth integrates the lower-view essentials into that view without rendering separate lower-view sections.
+
+If a message includes both a mode command and one-off view request, apply the mode change first, use the requested view for that response, and retain the new mode afterward.
+
+### 4.5 Selection precedence
 
 Apply these considerations in order:
 
 1. correctness and indispensable warnings;
-2. the user's explicit depth request;
-3. the minimum detail needed to complete the task;
-4. automatic depth selection;
-5. word budgets and presentation preferences.
+2. an explicit mode command;
+3. an explicit one-off view request;
+4. the sticky conversation mode;
+5. the minimum detail needed to complete the task;
+6. word budgets and presentation preferences.
 
-`auto` selects the shallowest view that is complete and safe to stop. A simple factual request will often fit At a glance. A decision with material trade-offs will often require In context. A request for evidence, implementation, alternatives, or exceptions will often require At depth.
-
-An explicit request for At a glance, In context, or At depth overrides automatic selection, but it does not override correctness, indispensable warnings, or the minimum content needed for a complete answer. If the requested view is too shallow, the assistant SHOULD say so briefly and provide the minimum safe detail.
+No mode or one-off override permits an incomplete or unsafe answer. If a requested view is too shallow, the assistant SHOULD say so briefly and provide the minimum safe detail.
 
 ## 5. English word-budget rules
 
@@ -82,57 +128,49 @@ Then count words as follows:
 
 For budget accumulation:
 
-- Add all counted At a glance and In context prose for the active topic.
-- A targeted branch inherits the active topic's existing cumulative total. Its At a glance or In context prose adds to the same 200-word budget; selecting a branch does not reset the count.
-- For direct entry at In context, count the integrated response once.
+- In Verbose mode, count At a glance separately against 40 words, then combine its prose with In context prose for the 200-word limit.
+- In Progressive mode, add all counted At a glance and In context prose across turns on the active topic.
+- A targeted branch in Progressive mode inherits the active topic's existing cumulative total. Its At a glance or In context prose adds to the same 200-word budget; selecting a branch does not reset the count.
+- For a one-off In context response, count the integrated response once against the 200-word limit.
 - At depth prose is outside the hard cap but remains subject to the complete, accurate, additive, and purposeful requirements.
 - Mandatory warnings MAY exceed a budget only as far as the indispensable warning requires.
 - A correction uses the limited exemption defined in section 7.
 
-The 40-word At a glance limit is a target. The cumulative 200-word In context limit is a normal hard cap with only the defined warning and correction exceptions. Neither limit permits omission of a required fact.
+The 40-word At a glance limit and cumulative 200-word In context limit are normal hard caps with only the defined warning and correction exceptions. Neither limit permits omission of a required fact.
 
 ## 6. Conversational state
 
-The assistant tracks an active topic, its current view, and any branch the user has selected. This state controls what an expansion adds; it need not be shown to the user.
+The assistant tracks the sticky mode, active topic, current topic depth, cumulative In context count, facts already supplied, and any selected branch. This state controls composition and expansion; it need not be shown to the user.
 
-### 6.1 Initial response and `auto`
+### 6.1 Conversation and topic boundaries
 
-For a new topic, reset the view state and apply `auto` unless the user requests a view explicitly.
+A new conversation initializes Verbose mode. A new topic resets topic depth, branch focus, supplied-fact memory, and cumulative count, but preserves the sticky mode.
 
 ### 6.2 Clarification and control dialogue
 
 A focused clarification question is control dialogue when its sole purpose is to obtain information needed to select or complete a view. Control dialogue is not a rendered view or stopping point. It does not advance, reset, or otherwise change depth state, and it consumes none of the At a glance or In context budget.
 
-For a new topic, state remains at no rendered view until the assistant answers after clarification. For an existing topic, state remains at its current view.
+For a new topic, depth remains at no rendered view until the assistant answers after clarification. For an existing topic, mode and depth remain unchanged.
 
 The assistant MUST NOT use control dialogue to hide substantive response content from the count. Any answer, recommendation, rationale, or implementation detail beyond an indispensable warning is rendered prose and follows the normal view and budget rules. A warning that cannot safely wait still appears with the clarification under section 9.
 
-### 6.3 General expansion
+### 6.3 Targeted expansion
 
-An unqualified request such as “more” advances one view on the active topic:
+A targeted follow-up selects only the named branch and MUST NOT replay sibling branches or the general topic.
 
-- At a glance → In context;
-- In context → At depth.
+In Progressive mode, the branch inherits the active topic's current depth and cumulative count unless the user requests a view explicitly. A request to expand that branch advances it one view; a targeted factual question uses the minimum complete depth. Branch prose through In context contributes to the same 200-word total. An unqualified `More` continues the selected branch.
 
-The new turn contains only the addition. It MUST NOT reproduce the earlier view as a preface or summary. Two consecutive “more” requests therefore move from At a glance to In context and then to At depth.
+In Verbose mode, a targeted follow-up adds only the depth needed for that branch; it does not re-render all three views. `More` on a named branch adds purposeful At depth detail to that branch without replaying prior views.
 
-If the active topic is already At depth, another unqualified expansion SHOULD add the most relevant unresolved detail. If no direction is evident, the assistant SHOULD ask one focused question instead of producing an arbitrary volume of text.
+A clearly broader request returns focus to the parent topic. Returning focus does not reset the sticky mode or active topic's cumulative count.
 
-### 6.4 Targeted expansion
+### 6.4 Mode and override continuity
 
-A targeted follow-up selects only the named branch. The assistant chooses the shallowest complete view for that branch unless the user specifies depth. It MUST NOT replay sibling branches or advance the parent topic's general view.
+A mode command changes only the sticky mode. It does not erase facts already supplied for the active topic.
 
-The branch inherits all counted prose already supplied for the active topic. Branch prose at At a glance or In context contributes to the same cumulative 200-word total. If the branch enters At depth, its At depth prose has no hard cap but MUST remain purposeful.
+A one-off view override changes only the current response's composition, not sticky mode. It records the highest view rendered as the active topic depth so later expansion never moves backward, and it updates supplied-fact memory so later output does not repeat it. The next ordinary request still follows the stored mode.
 
-After answering the branch, an unqualified “more” continues that branch. A clearly broader request returns focus to the parent topic without resetting the active topic's cumulative count.
-
-### 6.5 Direct entry
-
-When the user requests In context or At depth directly, the assistant gives one integrated answer at that view. It includes lower-view essentials in place, without stacking repetitive view sections.
-
-### 6.6 Topic change
-
-A new topic resets depth state. Similar vocabulary alone does not make two requests the same topic; the user's intended subject and goal determine continuity.
+Similar vocabulary alone does not make two requests the same topic; the user's intended subject and goal determine continuity.
 
 ## 7. Corrections
 
@@ -145,7 +183,7 @@ A correction is a repair, not an expansion. When an earlier statement is materia
 
 The correction MUST appear at the start of the next relevant response. It MUST NOT be hidden in At depth or phrased as if both versions remain valid.
 
-A correction repairs the active view and preserves its depth state. It does not advance or reset the view. An unqualified “more” after the repair continues from the corrected view.
+A correction repairs the affected view and preserves the sticky mode and active topic depth. It does not advance or reset either state. After repair, an unqualified `More` follows the current mode: it advances from the corrected view in Progressive mode or elaborates At depth in Verbose mode.
 
 A correction MAY repeat enough context to identify, retract, and replace the error and to state the changed consequence or action. Only that necessary repair text is exempt from the normal budget. Unrelated explanation, unaffected facts, and new detail are not exempt.
 
@@ -171,7 +209,7 @@ The assistant MUST place a material warning in the earliest view where the relat
 
 ## 10. Non-fit and hybrid cases
 
-Do not force the three-view presentation onto content whose function depends on another structure.
+Do not force the three-view presentation onto content whose function depends on another structure. These exceptions apply in both conversation modes.
 
 - **Tutorials and procedures:** Preserve the natural step order. A concise orientation MAY precede the steps, but later steps cannot be withheld as conversational expansion when the user needs the complete procedure.
 - **Controlling legal text:** Keep the controlling text unchanged. Any explanation or summary MUST be separate, clearly marked as non-controlling, and never presented as a substitute.
@@ -183,12 +221,12 @@ A hybrid response conforms when its optional overview follows the applicable inv
 
 Version 0.1 scores observable behavior separately from host activation and internal state. A verification result uses `PASS`, `FAIL`, or `UNVERIFIED`.
 
-- **Behavioral conformance:** Required facts, caveats, order, budgets, corrections, and prohibited output are scored from the rendered response. Observable violations are `FAIL`.
+- **Behavioral conformance:** Required facts, caveats, visible view headings, order, budgets, mode transitions, corrections, and prohibited output are scored from rendered responses. Observable violations are `FAIL`.
 - **Activation evidence:** Record a host trace when the host exposes evidence that the protocol or skill loaded. If no trace exists, activation or inactivity MAY be `UNVERIFIED`; behavior alone MUST NOT be treated as proof of activation.
 - **Activation contract:** This protocol does not define host triggers. An activation test MUST name the frozen protocol and skill revisions and score against that skill's trigger description.
-- **Internal view state:** If a host exposes no state trace, the selected view, branch focus, and topic reset MAY be `UNVERIFIED`. Their rendered consequences—facts, structure, accumulation, and expansion order—remain pass/fail observations.
+- **Internal mode and view state:** If a host exposes no state trace, sticky mode, selected view, branch focus, and topic reset MAY be `UNVERIFIED`. Their rendered consequences—headings, facts, structure, accumulation, and expansion order—remain pass/fail observations.
 - **Safe-stopping proxy:** Host verification checks whether every required fact and indispensable caveat is present at the stopping point. It does not establish a human reader outcome.
-- **Additive expansion:** Each sentence or bullet in an expansion MUST add a new fact, qualification, consequence, action, evidence item, or relationship. A unit that only restates prior content fails as an echo.
+- **Additive composition:** Each sentence or bullet in a deeper Verbose view or later expansion MUST add a new fact, qualification, consequence, action, evidence item, or relationship. A unit that only restates prior content fails as an echo.
 - **Hidden reversal:** A later qualification fails when it makes an earlier operative claim materially false, unless the response uses the correction procedure in section 7.
 - **Purposeful At depth:** Each section MUST support a requested fact, evidence need, alternative, exception, procedure, implementation concern, or necessary consequence. Unrelated volume and unsupported specialist detail fail.
 
@@ -200,6 +238,10 @@ A response does not conform when it:
 
 - announces importance but withholds the answer;
 - repeats the same claim at each view;
+- omits a rendered view heading;
+- treats a one-off view request as a sticky mode change;
+- resets the sticky mode when only the topic changes;
+- replays all three views after `More` in Verbose mode;
 - reveals a later fact that silently invalidates an earlier stopping point;
 - omits a warning to meet a budget;
 - treats optional cues as a form to complete;
@@ -215,5 +257,6 @@ Before completing a turn, verify:
 3. Is every indispensable caveat already visible?
 4. Does this turn add information instead of replaying prior content?
 5. Does later detail preserve or explicitly correct earlier claims?
-6. Is the selected view the shallowest one that satisfies the request?
-7. Does counted prose meet the applicable target or hard cap, or is a defined exception necessary?
+6. Does presentation follow the sticky mode or explicit one-off override?
+7. Is every rendered view heading visible?
+8. Does counted prose meet the applicable target or hard cap, or is a defined exception necessary?

@@ -1,6 +1,6 @@
 # Two consecutive expansions
 
-- **Expected views:** At a glance → In context → At depth.
+- **Expected mode and views:** `Progressive mode` becomes sticky, then `More` advances At a glance → In context → At depth.
 - **Required facts at first stop:** Delay the release; the reliability gate is missed; review is pending.
 - **Required additions at second stop:** Affected users, failure rate, owner action, and reassessment condition.
 - **Required additions at third stop:** Validation dimensions, rollout controls, and the hold condition.
@@ -8,9 +8,11 @@
 
 ## Initial prompt
 
-Should we delay the mobile release? Crash-free sessions are 98.7%, our gate is 99.5%, the fix is ready, and review is tomorrow.
+Progressive mode. Should we delay the mobile release? Crash-free sessions are 98.7%, our gate is 99.5%, the fix is ready, and review is tomorrow.
 
-## Assistant — At a glance
+## Assistant
+
+### At a glance
 
 <!-- words:two-more-glance:start -->
 Delay the release. Crash-free sessions are below the 99.5% gate, and the fix has not completed review. Reassess after tomorrow's review instead of waiving the reliability threshold.
@@ -20,7 +22,9 @@ Delay the release. Crash-free sessions are below the 99.5% gate, and the fix has
 
 More.
 
-## Assistant — In context addition
+## Assistant
+
+### In context
 
 <!-- words:two-more-context:start -->
 **Where it fits:** The gate protects all users, while the known defect affects session startup on older devices.
@@ -34,7 +38,9 @@ More.
 
 More.
 
-## Assistant — At depth addition
+## Assistant
+
+### At depth
 
 <!-- words:two-more-depth:start -->
 Validate the candidate against the same telemetry window and device mix used to define the gate. Segment startup crashes by OS version, model, and cold versus warm launch. Check confidence intervals, sample size, and whether retries mask user-visible failures.

@@ -6,99 +6,122 @@ Use this template to apply Progressive Clarity in conversation. `SPEC.md` contro
 
 Track this state without displaying it:
 
+- sticky mode: Verbose by default, or Progressive;
 - active topic;
-- current view: none, At a glance, In context, or At depth;
+- current topic depth: none, At a glance, In context, or At depth;
 - selected branch, if any;
 - cumulative counted words supplied through In context;
 - facts and caveats already supplied;
 - statements that require correction.
 
-Reset the state when the user starts a new topic.
+A new topic resets topic depth, branch focus, cumulative count, and supplied-fact memory. It does not reset sticky mode.
 
-This state need not be displayed. During verification, record it only when the host exposes a trace; otherwise, internal state and activation may be `UNVERIFIED` while rendered behavior is scored separately.
+During verification, record mode and view state only when the host exposes a trace. Otherwise, internal state and activation may be `UNVERIFIED` while rendered behavior is scored separately.
 
-## Initial or direct response
+## Mode commands
 
-Choose the view explicitly requested by the user. Otherwise, choose the shallowest complete view.
-
-### At a glance
+Treat `Progressive mode` and `Verbose mode` as sticky state commands.
 
 ```text
-<Direct answer.> <Decision-relevant consequence.> <Indispensable caveat or warning, when present.>
+Progressive mode. <Optional substantive request.>
+Verbose mode. <Optional substantive request.>
 ```
 
-Keep counted prose at or below 40 words unless completeness or safety requires more. Do not tease later content.
+Apply the mode change before answering a request in the same message. A standalone command is control dialogue and does not render a view or consume a view budget.
 
-### In context
+## Verbose mode
 
-Write one integrated response of at most 200 counted words. Include the direct answer and only the context needed to understand or act.
+For an ordinary in-scope request, render all three visible headings in one response:
 
-Use any helpful cues; omit the rest:
+```markdown
+## At a glance
 
-```text
-<Direct answer and consequence.>
+<Direct answer, consequence, and indispensable caveat in no more than 40 counted words.>
 
-**Where it fits:** <Relevant scope or relationship.>
-**What shifts:** <Meaningful change, if any.>
-**Keep in view:** <Material limit, dependency, or caveat.>
-**What follows:** <Action, owner, or timing.>
+## In context
+
+<Only new rationale, scope, constraints, ownership, or action.>
+
+## At depth
+
+<Only new evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources.>
 ```
 
-### At depth
+At a glance plus In context must remain at or below 200 counted words. At depth has no hard cap but must remain purposeful. Do not restate an earlier fact in a deeper view.
 
-Start with the answer and indispensable caveat, then organize the requested specialist detail:
+After this response, topic depth is At depth. `More` adds only new At depth material:
 
-```text
-<Direct answer and consequence.>
+```markdown
+## At depth
 
-<Evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources needed for this request.>
+<Purposeful elaboration not already supplied.>
 ```
 
-Use descriptive headings when the response covers several specialist concerns. Do not render separate lower-view sections before the detailed answer.
+If `More` names a branch, expand only that branch.
 
-At depth has no hard word cap, but every section must support the user's request.
+## Progressive mode
+
+For a new topic, render only:
+
+```markdown
+## At a glance
+
+<Direct answer, consequence, and indispensable caveat in no more than 40 counted words.>
+```
+
+The first unqualified `More` renders only:
+
+```markdown
+## In context
+
+<New rationale, scope, constraints, ownership, or action.>
+```
+
+At a glance plus In context must remain at or below 200 counted words.
+
+The next unqualified `More` renders only:
+
+```markdown
+## At depth
+
+<New evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources.>
+```
+
+Later `More` requests add purposeful At depth material or ask one focused clarification when direction is unclear.
+
+## One-off view override
+
+An explicit view request changes only one response:
+
+```markdown
+## <At a glance | In context | At depth>
+
+<Complete response at the requested view.>
+```
+
+For direct In context or At depth entry, integrate lower-view essentials without separate lower-view headings. Resume the sticky mode on the next ordinary request.
+
+When the same message includes a mode command and a view request, store the new mode and use the requested view once.
+
+Record the highest view rendered as current topic depth and retain supplied facts, so later expansion does not move backward or echo the override.
+
+## Targeted follow-up
+
+Answer only the selected branch. Do not replay sibling branches or the general topic.
+
+In Progressive mode, the branch inherits current topic depth and the cumulative In context count. An unqualified `More` continues that branch.
+
+In Verbose mode, a targeted follow-up does not re-render all three views. Use the needed visible view heading and add only branch-specific information. Named `More` requests add At depth detail for that branch.
 
 ## Clarification
 
-Ask one focused question when missing information prevents view selection or a complete answer:
+Ask one focused question when missing information prevents a complete answer:
 
 ```text
 <One question that obtains the missing choice or fact.>
 ```
 
-Treat this as control dialogue, not a rendered view. Do not advance depth or add it to the word budget. If the question includes substantive answer content, count that content normally. Include an indispensable warning immediately when it cannot safely wait.
-
-## Expansion turn
-
-When the user says “more,” advance one view and supply only new information.
-
-### At a glance → In context
-
-```text
-<New rationale, scope, constraint, ownership, or action that completes In context.>
-```
-
-The cumulative counted prose for the active topic must remain at or below 200 words unless an allowed exception applies.
-
-### In context → At depth
-
-```text
-<New evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources.>
-```
-
-Do not repeat the direct answer as an opening summary.
-
-## Targeted follow-up
-
-Answer only the selected branch:
-
-```text
-**<Optional cue>:** <The shallowest complete answer for the named branch.>
-```
-
-Keep the parent topic's view unchanged. Continue the branch if the next request is an unqualified “more.”
-
-The branch inherits the active topic's cumulative count. Add branch prose at At a glance or In context to the same 200-word total. Once the branch enters At depth, remove the hard cap for its purposeful detail.
+Treat it as control dialogue. Preserve mode and depth, and do not add it to a view budget. Count any substantive answer content normally. Include an indispensable warning immediately when it cannot safely wait.
 
 ## Correction
 
@@ -110,6 +133,6 @@ Earlier I said <withdrawn statement>. That was wrong.
 <Replacement statement.> <Changed consequence or action.>
 ```
 
-Use “incomplete” instead of “wrong” only when the earlier statement remains true but omitted information that materially changes its meaning. Repeat only enough to identify and repair the error.
+Preserve sticky mode and active topic depth. Exempt only the words needed to retract, replace, and state the changed consequence or action. Leave the prior cumulative total unchanged and count unrelated explanation or new detail normally.
 
-Preserve the active view. Exempt only the words needed to retract, replace, and state the changed consequence or action; leave the prior cumulative total unchanged. Count any unrelated explanation or new detail normally. A later unqualified “more” advances from the corrected view.
+After repair, `More` follows the stored mode: it advances from the corrected view in Progressive mode or adds At depth detail in Verbose mode.
