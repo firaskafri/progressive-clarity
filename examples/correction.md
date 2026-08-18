@@ -1,23 +1,34 @@
 # Correction
 
-This fictional transcript intentionally begins with a wrong statement so the required repair is observable.
+This fictional transcript intentionally begins with a wrong date so the repair
+is observable.
 
-- **Expected mode and views:** Progressive mode renders At a glance, correction preserves mode and depth, then `More` advances to In context.
-- **Required facts in the repair:** Withdraw Tuesday as the production date; replace it with Thursday at 09:00 UTC; identify Tuesday as the dry run; move production coverage to Thursday.
-- **Required additions after repair:** Backup validation owner, cutover approval owner, and status cadence.
-- **Budget:** The initial At a glance response is at most 40 words. Only necessary repair text is exempt and leaves the prior cumulative count unchanged. The later In context addition resumes that count and keeps the total at most 200 words.
+- **Expected views:** Both substantive responses contain all three views. The
+  repair is the first prose under At a glance.
+- **Required repair facts:** Withdraw Tuesday as the production date; replace
+  it with Thursday at 09:00 UTC; identify Tuesday as the dry run; move
+  production coverage to Thursday.
+- **Budget:** Necessary repair prose is exempt. Unaffected and new content
+  follows ordinary 40/200 allocation.
 
 ## User
 
-Progressive mode. When does production maintenance begin? The database owner validates backups before the production window, the incident commander approves cutover, and operations publishes status every 30 minutes.
+When does production maintenance begin?
 
 ## Assistant
 
 ### At a glance
 
-<!-- words:correction-glance:start -->
-Production maintenance begins Tuesday at 09:00 UTC. Schedule coverage for that window.
-<!-- words:correction-glance:end -->
+Production maintenance begins Tuesday at 09:00 UTC. Schedule coverage for that
+window.
+
+### In context
+
+The database owner validates backups before cutover.
+
+### At depth
+
+Operations publishes status every 30 minutes during the window.
 
 ## User
 
@@ -25,20 +36,25 @@ The runbook says Thursday. Tuesday is only the dry run.
 
 ## Assistant — correction
 
+### At a glance
+
 <!-- words:correction-repair:start -->
 Earlier I said production maintenance begins Tuesday. That was wrong.
-
-Production maintenance begins Thursday at 09:00 UTC; Tuesday is only the dry run. Schedule production coverage for Thursday and use Tuesday for rehearsal support.
+Production begins Thursday at 09:00 UTC; Tuesday is only the dry run. Move
+production coverage to Thursday.
 <!-- words:correction-repair:end -->
-
-## User
-
-More.
-
-## Assistant
 
 ### In context
 
 <!-- words:correction-context:start -->
-**What follows:** The database owner validates backups before Thursday's window. The incident commander approves cutover, and operations publishes status updates every 30 minutes.
+Use Tuesday for rehearsal support. The incident commander approves Thursday's
+cutover after backup validation.
 <!-- words:correction-context:end -->
+
+### At depth
+
+<!-- words:correction-depth:start -->
+The status cadence remains every 30 minutes during production maintenance.
+Record dry-run findings separately so they cannot be mistaken for production
+authorization.
+<!-- words:correction-depth:end -->

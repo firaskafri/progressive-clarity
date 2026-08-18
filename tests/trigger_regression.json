@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Activation-only prompts for the advisory skill description; these cases do not claim host invocation or output conformance.",
+  "cases": [
+    {
+      "id": "TR01",
+      "prompt": "gold prices and forecasts",
+      "expected_activation": "activate",
+      "rationale": "The user-provided missed-trigger prompt requests a factual forecast."
+    },
+    {
+      "id": "TR02",
+      "prompt": "Why do central banks raise interest rates when inflation stays high?",
+      "expected_activation": "activate",
+      "rationale": "An ordinary factual explanation uses the three-view format."
+    },
+    {
+      "id": "TR03",
+      "prompt": "Compare the M5 Pro and M5 Max for software development.",
+      "expected_activation": "activate",
+      "rationale": "An ordinary comparison uses the three-view format."
+    },
+    {
+      "id": "TR04",
+      "prompt": "Should we delay the mobile release if crash-free sessions remain below target?",
+      "expected_activation": "activate",
+      "rationale": "An ordinary recommendation and decision uses the three-view format."
+    },
+    {
+      "id": "TR05",
+      "prompt": "Summarize the current migration status and the main remaining risk.",
+      "expected_activation": "activate",
+      "rationale": "An ordinary status summary uses the three-view format."
+    },
+    {
+      "id": "TR06",
+      "prompt": "Return only 42.",
+      "expected_activation": "remain_inactive",
+      "rationale": "A requested bare value preserves its exact minimal shape."
+    },
+    {
+      "id": "TR07",
+      "prompt": "Return exactly this JSON and nothing else: {\"status\":\"ok\"}",
+      "expected_activation": "remain_inactive",
+      "rationale": "An exact JSON output preserves the requested format."
+    },
+    {
+      "id": "TR08",
+      "prompt": "Write a short fictional scene in the voice of a weary lighthouse keeper.",
+      "expected_activation": "remain_inactive",
+      "rationale": "Narrative and voice-dependent writing preserves narrative form."
+    },
+    {
+      "id": "TR09",
+      "prompt": "Give the complete step-by-step procedure for replacing a bicycle chain.",
+      "expected_activation": "remain_inactive",
+      "rationale": "A complete sequential procedure preserves natural step order."
+    }
+  ]
+}

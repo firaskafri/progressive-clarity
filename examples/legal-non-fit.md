@@ -1,6 +1,6 @@
 # Legal non-fit
 
-- **Expected mode and views:** Legal non-fit in either mode; preserve controlling text and offer a separate informative explanation.
+- **Expected structure:** Legal non-fit; preserve controlling text and offer a separate informative explanation.
 - **Required facts:** Keep the signed clause unchanged; label any explanation non-controlling; the explanation cannot replace or govern the clause.
 - **Budget:** At a glance is at most 40 counted words.
 

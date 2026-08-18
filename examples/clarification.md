@@ -1,7 +1,7 @@
 # Clarification control dialogue
 
-- **Expected mode and views:** Default Verbose mode survives clarification; no view renders until missing facts arrive, then all three views render.
-- **Required facts:** The assistant identifies environment and readiness before recommending activation; clarification changes neither mode nor depth and consumes no budget.
+- **Expected views:** No view renders until missing facts arrive; then all three views render.
+- **Required facts:** The assistant identifies environment and readiness before recommending activation; pure clarification preserves topic state and consumes no budget.
 - **Budget:** Control dialogue does not count. At a glance is at most 40 words; At a glance plus In context is at most 200.
 
 ## User

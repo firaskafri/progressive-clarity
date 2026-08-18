@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "progressive-clarity-core"
+version = "0.2.1"
+description = "Deterministic local mechanics for Progressive Clarity"
+requires-python = ">=3.11"
+dependencies = []
+license = "Apache-2.0"
+license-files = ["LICENSES/Apache-2.0.txt"]
+authors = [
+  { name = "Firas Kafri" },
+]
+
+[project.scripts]
+pc-core = "pc_core.cli:main"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/LICENSES/Apache-2.0.txt",
+  "/pc_core",
+  "/pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pc_core"]

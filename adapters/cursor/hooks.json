@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterAgentResponse": [
+      {
+        "command": ".pc-core/venv/bin/pc-core hook cursor-after-response",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": ".pc-core/venv/bin/pc-core hook cursor-stop",
+        "loop_limit": 1,
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # Decision
 
-- **Expected mode and views:** Default Verbose mode renders all three views once.
+- **Expected views:** All three views render once in order.
 - **Required facts:** Retain daily retries; weekly retries delay recovery; costs must be compared with recovered revenue; the billing owner runs a four-week analysis; any change requires a defined threshold.
 - **Budget:** At a glance is at most 40 counted words; At a glance plus In context is at most 200.
 

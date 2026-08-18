@@ -35,8 +35,14 @@ including:
 
 - `skills/`;
 - `evals/`;
+- `pc_core/`;
+- `adapters/`;
+- `tests/`;
 - `tools/`;
 - `scripts/`;
+- `pyproject.toml`;
+- `.codex-plugin/`;
+- `assets/`;
 - `.github/`;
 - `.gitignore`; and
 - `.editorconfig`.

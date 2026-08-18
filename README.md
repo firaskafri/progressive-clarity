@@ -1,102 +1,116 @@
 # Progressive Clarity
 
-**Progressive Clarity is an AI-first response protocol with two conversation modes. Verbose mode presents three additive views at once; Progressive mode reveals the same views across turns.**
+**Progressive Clarity is an AI-first response protocol that renders three
+additive views in every ordinary in-scope response.**
 
-## Two conversation modes
+## One response contract
 
-- **Verbose mode is the default.** An ordinary in-scope request renders **At a glance**, **In context**, and **At depth** in one response, in that order.
-- **Progressive mode is explicit and sticky.** The command `Progressive mode` switches the conversation until `Verbose mode` changes it or the conversation ends. A new topic resets topic depth, not the selected mode.
-- A one-off request for `At a glance`, `In context`, or `At depth` changes only that response. It does not change the sticky mode.
+1. **At a glance** gives the direct answer, consequence, material scope, and
+   indispensable caveat in at most 40 counted English prose words.
+2. **In context** adds rationale, constraints, ownership, timing, controls, or
+   action. Non-warning prose through this section totals at most 200 words.
+3. **At depth** adds purposeful evidence, assumptions, measurements,
+   alternatives, exceptions, implementation, or sources without a hard cap.
 
-In Progressive mode, a new topic starts with At a glance. Each unqualified `More` advances to In context and then At depth, rendering only new information. In Verbose mode, `More` adds purposeful At depth detail without replaying all three views.
+Each fact belongs in one view. Deeper sections add information instead of
+recapping earlier facts. Safety, legal, and accuracy requirements outrank
+brevity. Corrections explicitly retract and replace errors. Clarifications,
+complete procedures, controlling text, exact outputs, transformations, and
+narratives retain the structure required by their purpose.
 
-## Three additive views
+See the [normative v0.2 specification](SPEC.md).
 
-- **At a glance** gives the direct answer, its decision-relevant consequence, and any indispensable caveat or warning. The target is no more than 40 counted English prose words.
-- **In context** adds only the rationale, scope, constraints, ownership, and action needed to understand or act. Counted prose through this view is normally capped at 200 words: combined with At a glance in Verbose mode and accumulated across turns on the active topic in Progressive mode.
-- **At depth** adds purposeful evidence, assumptions, alternatives, exceptions, procedures, implementation guidance, or sources. It has no hard word cap.
+## Advisory and Enforced surfaces
 
-## Core invariants
+- **ChatGPT is Advisory.** Its deterministic ZIP contains only the prompt-only
+  skill, license, manifest, and static assets. It has no backend or MCP server.
+- **Ordinary Cursor and Claude Code skill use is Advisory.** Prompt adherence
+  is not a deterministic gate.
+- **Project hook templates are Advisory/block-and-retry.** They inspect output
+  after generation and cannot reliably retract every displayed candidate.
+- **The non-streaming `pc-core` wrapper Enforces mechanical checks.** It
+  validates a versioned envelope, mandatory three-view order, 40/200 budgets,
+  non-empty view prose, fact IDs and declared reuse, optional authoritative
+  fact-catalog coverage, correction/quotation structure, exact lexical echoes
+  in Progressive Clarity explanation, verbatim-artifact exemptions, explicit
+  topic/branch/turn state, and cross-turn host-session resume. It emits only
+  canonical Markdown after a pass and permits at most two total candidates.
 
-Every rendered view must be:
+Mechanical certification applies only to output buffered and released by that
+wrapper. It does not establish accuracy, completeness, warning necessity,
+human safe stopping, semantic repetition, purposeful depth, hidden-reversal
+absence, caller-catalog correctness or completeness, or host-wide
+compatibility. Those remain advisory `UNVERIFIED`.
 
-- **Complete:** it answers the immediate request at the selected depth rather than teasing later content.
-- **Accurate:** later detail may qualify the answer but must not silently make an earlier statement false.
-- **Additive:** an expansion contributes new information instead of replaying earlier sentences or bullets.
-- **Safe to stop:** the user can stop without forming a materially wrong belief or taking a materially wrong action.
+See [Local deterministic enforcement](docs/local-enforcement.md).
 
-## Compact interaction
+## Example
 
-> **User:** Progressive mode. Should we delay the mobile release? Crash-free sessions are 98.7%, the gate is 99.5%, the fix is ready, and review is tomorrow.
+> **User:** Should we delay the mobile release? Crash-free sessions are 98.7%,
+> the gate is 99.5%, the fix is ready, and review is tomorrow.
 >
-> **Assistant — At a glance:** Delay the release. Crash-free sessions are below the 99.5% gate, and the fix has not completed review. Reassess after tomorrow's review instead of waiving the reliability threshold.
+> **At a glance:** Delay the release. Crash-free sessions remain below the
+> 99.5% gate; reassess after tomorrow's fix review instead of waiving the
+> reliability threshold.
 >
-> **User:** More.
+> **In context:** The release owner should compare the reviewed candidate with
+> the existing gate before scheduling rollout.
 >
-> **Assistant — In context:** The known defect affects startup on older devices; the current rate represents about 13 failed sessions per 1,000. Mobile engineering completes review and targeted tests tomorrow, then the release owner compares the candidate with the existing gate.
-
-The mode command applies before the request and remains active. The second answer advances the active topic by one view and supplies only new context. See the [full expansion example](examples/two-more.md) and [mode-persistence example](examples/mode-switching.md).
+> **At depth:** Test the affected startup path on older devices and preserve a
+> rollback trigger tied to the same crash-free-session metric.
 
 ## Verification status
 
-This repository is a **non-release-ready draft** of version 0.1. Official
-Agent Skills structural validation and local CI-equivalent checks pass for the
-final frozen inputs:
+Protocol v0.2 and package v0.2.1 remain a **non-release-ready draft**. The
+v0.2.1 ChatGPT ZIP is Advisory and has not been uploaded. Local verification
+covers deterministic mechanics, package integrity, links, lint, and structural
+skill validation.
 
-- `SPEC.md`: `ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d`;
-- `skills/progressive-clarity/SKILL.md`:
-  `5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562`;
-  and
-- `evals/cases.json`:
-  `4c27a740e2e02e54f97889618397a6417c82e089b9bb44919b92642e59289680`.
+One bounded live Cursor wrapper remediation rerun produced 17 responses: 10
+were mechanically certified and 7 were withheld. `E02`, `E06`, and `E07`
+passed; `E03`, `E04`, and `E05` failed. The rerun verified the targeted
+session-resume, non-empty-view, explicit-trust, catalog-coverage, and
+fail-closed mechanics, but strict semantic and behavioral acceptance remains
+unmet. It used the pre-trigger-revision skill, so it is not a prompt-only
+acceptance result for the current v0.2.1 bytes.
 
-The bounded Cursor cycle is closed. Round one completed 21 fresh sessions and
-39 scored responses against the pre-remediation skill: 6 cases passed and 5
-failed. The one permitted remediation produced the final skill above; its
-targeted round completed 9 fresh sessions and 20 responses: 0 cases passed and
-all 5 failed again. All 59 response-budget checks passed. Neither round had a
-safety-warning or procedural-safety failure.
+No current prompt-only Cursor, Claude Code, or ChatGPT acceptance run exists.
+The Claude Code adapter and hook are structurally tested, but live Claude Code
+wrapper behavior remains `UNVERIFIED` because it requires paid Anthropic API
+access and no paid live run was completed.
 
-The policy hard stop has therefore been reached. Cursor strict acceptance,
-which requires every prescribed run to pass, is **unmet**. No additional
-remediation is represented or implied. Claude Code behavior remains on hold for
-insufficient API credit and **UNVERIFIED**.
+The preceding bounded Cursor cycle belongs to older dual-behavior inputs. It
+ended at its required hard stop: round one passed 6 of 11 cases; its one
+targeted remediation round failed all 5 rerun cases. Across both rounds, all 59
+budget checks passed and no safety-warning or procedural-safety branch failed.
+These results do not verify v0.2.
 
-These results establish neither behavioral compatibility nor support for
-either host. On 2026-08-17, the user reported publication of the ChatGPT plugin
-as
+On 2026-08-17, the user reported publication of an older ChatGPT plugin as
 [`plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
-An anonymous fetch independently confirms that the URL returns a ChatGPT
-Plugins route, but the response is a login page. It does not independently
-verify listing metadata, authenticated visibility, installability, activation,
-or rendered behavior. No ChatGPT behavioral verification is represented.
+An anonymous fetch confirmed only a login-gated ChatGPT Plugins route. This URL
+is retained as historical publication evidence; it is not evidence that the
+v0.2.1 ZIP was uploaded.
 
-User-reported publication does not clear Cursor strict acceptance or make this
-draft release-ready. Professional name and trademark clearance remains
-unresolved; publication is not evidence of clearance. See the exact
-[verification record](docs/verification.md). Licensing authority is no longer
-listed as a blocker following the authorization recorded in
-[Provenance](PROVENANCE.md); neither that statement nor Git metadata is
-independent legal proof.
+The user also supplied a live transcript from the older published build. It is
+historical, user-provided evidence: heading order, staged transitions, and
+caveats passed; 40/200 budgets and no-fact-repetition failed; post-switch-back
+behavior remained `UNVERIFIED`. A later user-provided pre-v0.2.1 transcript
+missed the initial three-view response and then described removed modes. Both
+records are non-conformant historical evidence, not current v0.2.1 conformance
+or activation evidence.
 
-## Scope and limitations
-
-- [`SPEC.md`](SPEC.md) is normative for conversational AI responses. The [document template](templates/document.md) is an informative adaptation, not a second protocol.
-- Version 0.1 defines word-budget conformance for English responses only.
-- Correctness, indispensable warnings, and higher-priority safety, policy, and legal requirements take precedence over brevity.
-- Procedures, controlling legal text, and voice-dependent narratives retain the structure their purpose requires; Progressive Clarity may provide a separate overview where appropriate.
-- The protocol defines intended, observable response behavior. Its empirical effectiveness and human reader outcomes have not been established.
-- No host has been behaviorally verified as compatible, and no installation support is offered.
+See the exact [verification record](docs/verification.md) and
+[OpenAI publication record](docs/openai-plugin.md).
 
 ## Repository guide
 
 - [Normative protocol](SPEC.md)
-- [Canonical Agent Skill](skills/progressive-clarity/SKILL.md)
-- Evidence-limited [installation guide](docs/installation.md), exact [verification record](docs/verification.md), and [version 0.1 limitations](docs/limitations.md)
-- [OpenAI plugin packaging and publication record](docs/openai-plugin.md)
-- Host-neutral [evaluation guide](evals/README.md) and [case suite](evals/cases.json)
-- Templates: [chat](templates/chat.md) and [document](templates/document.md)
-- [Protocol examples](examples/README.md)
-- [License mapping](LICENSE.md): [CC BY 4.0](LICENSES/CC-BY-4.0.txt) for protocol and documentation text, and [Apache-2.0](LICENSES/Apache-2.0.txt) for skill and tooling paths
-- [Provenance](PROVENANCE.md)
-- [Acknowledgements](ACKNOWLEDGEMENTS.md)
+- [Canonical prompt-only skill](skills/progressive-clarity/SKILL.md)
+- [Local enforcement architecture](docs/local-enforcement.md)
+- [Installation](docs/installation.md) and [limitations](docs/limitations.md)
+- [Verification record](docs/verification.md)
+- [OpenAI package record](docs/openai-plugin.md)
+- [Advisory host evaluation suite](evals/README.md)
+- [Chat](templates/chat.md) and [document](templates/document.md) templates
+- [Examples](examples/README.md)
+- [License mapping](LICENSE.md) and [provenance](PROVENANCE.md)

@@ -1,262 +1,325 @@
 # Progressive Clarity Protocol
 
-Version 0.1 draft
+Version 0.2 draft
 
-Progressive Clarity is an AI-first response protocol with two conversation modes. Verbose mode renders all three additive views at once. Progressive mode reveals those views across turns.
+Progressive Clarity is an AI-first response protocol with one presentation
+contract: every ordinary in-scope response renders all three additive views in
+one response.
 
 ## 1. Scope
 
-This specification is normative for conversational AI responses. It governs conversation mode, view composition, stopping quality, expansion, correction, and response-budget accounting.
+This specification is normative for conversational factual answers,
+explanations, recommendations, comparisons, decisions, status updates, and
+summaries. It governs view composition, stopping quality, correction,
+exceptions, and response-budget accounting.
 
-The keywords **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** state requirements. A response conforms when every available stopping point follows the four invariants, the selection rules, and the applicable budget.
+The keywords **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**
+state requirements. Version 0.2 defines word-budget conformance for English
+responses only.
 
-Document mode is an informative adaptation for static artifacts. It does not create a second normative protocol.
-
-Version 0.1 defines word-budget conformance for English responses only. It makes no word-budget claim for non-English output.
+Document adaptation is informative. It does not create another conversational
+behavior.
 
 ## 2. Invariants
 
-Every rendered view MUST be:
+Each response and each cumulative stopping point MUST be:
 
-- **Complete:** It answers the immediate request at the selected depth. It is not a teaser for later content.
-- **Accurate:** Later detail MAY narrow or qualify the answer, but MUST NOT silently make an earlier statement false.
-- **Additive:** An expansion contributes information the user has not already received. It MUST NOT replay earlier sentences or bullets merely to make the answer longer.
-- **Safe to stop:** A user can stop after the current view without forming a materially wrong belief or taking a materially wrong action.
+- **Complete:** It answers the immediate request, not a teaser.
+- **Accurate:** Later detail MAY narrow a claim but MUST NOT silently make an
+  earlier operative claim false.
+- **Additive:** Each deeper view contributes information not already supplied.
+- **Safe to stop:** The reader can stop after At a glance or In context without
+  forming a materially wrong belief or taking a materially wrong action.
 
-These invariants apply after every assistant turn, not only after the final turn in a sequence.
+The invariants are semantic requirements. A deterministic validator can check
+declared structure and exact lexical echoes, but it cannot prove truth,
+completeness, safe reader outcomes, semantic repetition, or hidden reversal.
 
-View completeness is cumulative. In Verbose mode, the In context stopping point includes At a glance above it, and the At depth stopping point includes both earlier sections. In Progressive mode, the stopping point includes earlier turns on the active topic. Each deeper section remains additive and does not restate those earlier facts.
+## 3. The only in-scope presentation
 
-## 3. The three views
-
-Every rendered view MUST show its heading: **At a glance**, **In context**, or **At depth**. Markdown heading level MAY vary with the surrounding artifact. Headings do not count toward a word budget.
-
-### 3.1 At a glance
-
-**At a glance** gives the direct answer and its decision-relevant consequence. It includes any caveat or warning that is indispensable to a correct stopping point.
-
-It MUST contain no more than 40 counted words. Only an indispensable warning MAY exceed this cap, and only as far as section 9 requires.
-
-### 3.2 In context
-
-**In context** adds only what the user needs to understand or act: rationale, scope, relevant constraints, ownership, and the next action. Not every response needs every category.
-
-The counted prose supplied through In context MUST total no more than 200 words. In Verbose mode, this is the combined At a glance and In context prose in one response. In Progressive mode, it includes earlier At a glance turns, targeted branches, and other In context expansions on the active topic. Only the warning and correction exceptions defined below may exceed this normal hard cap.
-
-### 3.3 At depth
-
-**At depth** supplies purposeful specialist detail. It MAY include evidence, assumptions, alternatives, exceptions, procedures, implementation guidance, and sources.
-
-At depth has no hard word limit. Entering At depth removes the 200-word cap from that response and later At depth expansions. It does not excuse an over-budget path that should have stopped at In context. At depth still MUST be additive, relevant, and organized so the user can locate the requested detail. Length alone does not satisfy this view.
-
-## 4. Conversation modes and view selection
-
-The assistant tracks one sticky conversation mode: **Verbose** or **Progressive**.
-
-### 4.1 Mode state and commands
-
-A new conversation starts in Verbose mode. Starting a new topic inside that conversation does not reset the mode.
-
-The commands `Progressive mode` and `Verbose mode` change the sticky mode. Match them case-insensitively when the user presents the phrase as a command or clear mode directive. A mode command is control dialogue: it does not render a view, advance topic depth, or consume a view budget.
-
-When a message contains both a mode command and a substantive request, change the mode first and use the new mode for that request. The selected mode remains active until another mode command changes it or the conversation ends.
-
-### 4.2 Verbose mode
-
-Verbose mode is the default. For each ordinary in-scope request, the assistant MUST render one response with these visible headings in this order:
+Every ordinary in-scope response MUST render these headings exactly once and
+in this order:
 
 1. **At a glance**
 2. **In context**
 3. **At depth**
 
-At a glance contains the direct answer, consequence, and indispensable caveat. In context adds rationale, scope, constraints, ownership, or action without repeating At a glance facts. At depth adds evidence, assumptions, alternatives, exceptions, procedure, implementation, or sources without repeating facts from either earlier view.
+The canonical Markdown renderer uses level-two headings. Other renderers MAY
+adapt heading level to their artifact while preserving text and order.
+Headings do not count toward a prose budget.
 
-After a complete Verbose response, topic depth is At depth. An unqualified `More` adds purposeful At depth information only. A named `More` request expands only that branch. The assistant MUST NOT replay At a glance, In context, or previously supplied At depth material.
+### 3.1 At a glance
 
-### 4.3 Progressive mode
+At a glance gives the direct answer, its decision-relevant consequence,
+material scope, and every caveat indispensable to a correct stopping point.
 
-Progressive mode is explicit and sticky. On a new topic, the first substantive response renders **At a glance** only.
+Its non-warning English prose MUST contain no more than 40 counted words.
+An indispensable warning MAY exceed the cap only as far as section 8 requires.
 
-An unqualified `More` advances one view on the active topic:
+### 3.2 In context
 
-- At a glance → In context;
-- In context → At depth.
+In context adds only what the reader needs to understand or act: new rationale,
+scope, constraints, ownership, timing, controls, or next action.
 
-Each expansion renders only the new visible view and adds information not already supplied. At depth has no hard cap but remains purposeful. After At depth, another unqualified `More` adds the most relevant unresolved At depth information or asks one focused clarification when no direction is evident.
+Combined non-warning prose in At a glance and In context MUST contain no more
+than 200 counted words in that response. This is a per-response limit, not
+conversation state.
 
-### 4.4 One-off view overrides
+### 3.3 At depth
 
-An explicit request for At a glance, In context, or At depth overrides presentation for that response only. It MUST NOT change the sticky conversation mode unless the request also includes a mode command.
+At depth adds purposeful specialist detail: evidence, assumptions,
+measurements, alternatives, exceptions, implementation guidance, procedures,
+or sources.
 
-A one-off response renders only the requested view heading. Direct entry at In context or At depth integrates the lower-view essentials into that view without rendering separate lower-view sections.
+At depth has no hard word limit. It MUST remain relevant, organized, and
+additive. Length alone does not satisfy this view.
 
-If a message includes both a mode command and one-off view request, apply the mode change first, use the requested view for that response, and retain the new mode afterward.
+### 3.4 Requests for more, less, or one named view
 
-### 4.5 Selection precedence
+There is no depth progression or alternate presentation state. A substantive
+follow-up receives the same three ordered views, focused on the follow-up.
 
-Apply these considerations in order:
+A preference for brevity SHOULD make all three sections shorter without
+removing them. A request whose required output is an exact value, exact format,
+pure transformation, complete procedure, controlling text, or narrative uses
+the applicable non-fit structure in section 9.
 
-1. correctness and indispensable warnings;
-2. an explicit mode command;
-3. an explicit one-off view request;
-4. the sticky conversation mode;
-5. the minimum detail needed to complete the task;
-6. word budgets and presentation preferences.
+## 4. Fact allocation and repetition
 
-No mode or one-off override permits an incomplete or unsafe answer. If a requested view is too shallow, the assistant SHOULD say so briefly and provide the minimum safe detail.
+Before composing, assign each atomic proposition to its earliest necessary
+view:
 
-## 5. English word-budget rules
+- At a glance: answer, consequence, material boundary, or indispensable caveat.
+- In context: new rationale, constraint, owner, timing, action, or control.
+- At depth: new evidence, measurement, source, alternative, exception, or
+  implementation detail.
 
-Version 0.1 uses a human-scored English word count. First identify included prose:
+An atomic fact MUST appear in only one view. A deeper view MUST NOT recap,
+paraphrase, or repeat an earlier fact merely to make the section self-contained.
+Necessary correction reuse follows section 7. This cross-view rule applies to
+Progressive Clarity explanation, not to an artifact whose function requires
+exact reproduction. Exact controlling text, quotations, code, data, or another
+user-required verbatim artifact MAY preserve and repeat source bytes as
+required and is outside cross-view no-repetition checks. Any separate summary,
+overview, or explanation remains subject to ordinary additive and
+no-duplicate rules.
 
-- Count reader-visible assistant prose, including cue labels, list text, and inline code.
-- Count visible Markdown link text, but exclude its destination URL. Exclude bare URLs.
-- Exclude headings, Markdown syntax, fenced code blocks, data tables, and non-rendered state notes.
-- Exclude citation markers and footnote references, including forms such as `[1]`, `[Ops Memo 7]`, `[^3]`, and `(Smith, 2025)`.
-- Count reader-visible explanatory footnote prose by the normal rules; exclude only its marker or backlink.
-- Exclude the user's prompt and control dialogue defined in section 6.2.
+A supplied measurement SHOULD retain its value, unit, scope, time window,
+denominator or sample size, and source character such as pilot, estimate, or
+benchmark. Material supplied evidence MUST NOT be silently omitted to satisfy a
+budget; clarify or use the warning/non-fit rules when necessary.
 
-Then count words as follows:
+## 5. English word-count algorithm
 
-- Remove Markdown punctuation and split the included prose at whitespace.
-- Count each resulting token that contains at least one English letter or digit as one word.
-- Count a contraction or hyphenated compound with no whitespace as one word: `don't`, `reader-first`.
-- Count a compact date, time, number, or code-like token as one word when it has no whitespace: `2026-07-30`, `09:00`, `$120,000`, `≤40`, `HTTP-409`.
-- Count spaced dates and times by token: `30 July 2026` is three words; `09:00 UTC` is two.
-- Do not count a standalone symbol or punctuation token with no letter or digit. A symbol attached to a counted token does not split it.
-- Remove inline-code backticks, then count the code content by the same whitespace rule. For example, `client.write(mode="async")` is one word.
+Human scoring and `pc-core` use the following ordered deterministic algorithm.
 
-For budget accumulation:
+### 5.1 Included and excluded Markdown
 
-- In Verbose mode, count At a glance separately against 40 words, then combine its prose with In context prose for the 200-word limit.
-- In Progressive mode, add all counted At a glance and In context prose across turns on the active topic.
-- A targeted branch in Progressive mode inherits the active topic's existing cumulative total. Its At a glance or In context prose adds to the same 200-word budget; selecting a branch does not reset the count.
-- For a one-off In context response, count the integrated response once against the 200-word limit.
-- At depth prose is outside the hard cap but remains subject to the complete, accurate, additive, and purposeful requirements.
-- Mandatory warnings MAY exceed a budget only as far as the indispensable warning requires.
-- A correction uses the limited exemption defined in section 7.
+Normalize CRLF and bare CR to LF, then:
 
-The 40-word At a glance limit and cumulative 200-word In context limit are normal hard caps with only the defined warning and correction exceptions. Neither limit permits omission of a required fact.
+1. Exclude fenced code blocks opened by at least three backticks or tildes
+   after no more than three leading spaces and closed by at least the opening
+   marker length of the same character.
+2. Exclude an ATX heading line. Exclude a Setext heading line together with its
+   immediately following `===` or `---` underline.
+3. Exclude a GitHub-style data table when a pipe-containing header is followed
+   by a pipe-containing delimiter row whose two or more cells each match
+   `:?-{3,}:?`. Exclude the header, delimiter, and contiguous following
+   non-empty pipe-containing rows.
+4. Remove an inline or reference Markdown image, including alt text and
+   destination or reference label. Replace an inline or reference link with its
+   visible text. Remove a reference destination definition, autolink, or bare
+   URL.
+5. Remove a footnote-reference marker but retain explanatory footnote prose
+   after its definition marker. Remove a footnote backlink.
+6. Remove these citation-marker forms: `[^label]`; a bracket containing only
+   numeric references and comma/dash ranges; a textual bracket label ending in
+   a separate one-to-four-digit reference number, such as `[Ops Memo 7]`; and a
+   parenthetical author-date marker containing a comma followed by a year from
+   1900 through 2099, such as `(Smith, 2025)`.
+7. Remove HTML comments and tags. Remove leading blockquote, unordered-list,
+   ordered-list, and task-checkbox markers. Delete these Markdown punctuation
+   characters without inserting whitespace: backslash, backtick, `*`, `_`,
+   `{`, `}`, `[`, `]`, `(`, `)`, `#`, `+`, `.`, `!`, `>`, `|`, `~`, and `-`.
 
-## 6. Conversational state
+The remaining reader-visible assistant prose is included, including cue labels,
+list text, visible link text, inline-code content after backtick removal, and
+explanatory footnote prose. The user prompt, non-rendered state, and genuine
+clarification control dialogue are excluded.
 
-The assistant tracks the sticky mode, active topic, current topic depth, cumulative In context count, facts already supplied, and any selected branch. This state controls composition and expansion; it need not be shown to the user.
+### 5.2 Token count and budgets
 
-### 6.1 Conversation and topic boundaries
+Split included prose at Unicode whitespace. Count each resulting token that
+contains at least one ASCII letter `A-Z` or `a-z`, or digit `0-9`, as one word.
+Do not split a token at attached punctuation.
 
-A new conversation initializes Verbose mode. A new topic resets topic depth, branch focus, supplied-fact memory, and cumulative count, but preserves the sticky mode.
+An unspaced contraction or hyphenated compound therefore counts once. Compact
+dates, times, numbers, currency amounts, inequalities, and code-like tokens
+also count once. A standalone symbol without an ASCII letter or digit does not
+count.
 
-### 6.2 Clarification and control dialogue
+Budget accounting is:
 
-A focused clarification question is control dialogue when its sole purpose is to obtain information needed to select or complete a view. Control dialogue is not a rendered view or stopping point. It does not advance, reset, or otherwise change depth state, and it consumes none of the At a glance or In context budget.
+- At a glance non-warning prose: at most 40 words.
+- At a glance plus In context non-warning prose in the current response: at
+  most 200 words.
+- At depth prose: outside the hard cap.
+- An indispensable warning: separately counted and exempt only as necessary.
+- Necessary correction repair text: separately counted and exempt only as
+  necessary.
 
-For a new topic, depth remains at no rendered view until the assistant answers after clarification. For an existing topic, mode and depth remain unchanged.
+## 6. Topic, branch, and clarification state
 
-The assistant MUST NOT use control dialogue to hide substantive response content from the count. Any answer, recommendation, rationale, or implementation detail beyond an indispensable warning is rendered prose and follows the normal view and budget rules. A warning that cannot safely wait still appears with the clarification under section 9.
+The assistant tracks the active topic, selected branch, turn number, and
+emitted fact ledger. It does not track presentation depth or a cumulative
+cross-turn shallow-word count.
 
-### 6.3 Targeted expansion
+A new topic resets branch focus and the topic fact ledger. A targeted follow-up
+selects only the named branch and excludes sibling branches and general recap,
+but still renders all three views for that branch.
 
-A targeted follow-up selects only the named branch and MUST NOT replay sibling branches or the general topic.
-
-In Progressive mode, the branch inherits the active topic's current depth and cumulative count unless the user requests a view explicitly. A request to expand that branch advances it one view; a targeted factual question uses the minimum complete depth. Branch prose through In context contributes to the same 200-word total. An unqualified `More` continues the selected branch.
-
-In Verbose mode, a targeted follow-up adds only the depth needed for that branch; it does not re-render all three views. `More` on a named branch adds purposeful At depth detail to that branch without replaying prior views.
-
-A clearly broader request returns focus to the parent topic. Returning focus does not reset the sticky mode or active topic's cumulative count.
-
-### 6.4 Mode and override continuity
-
-A mode command changes only the sticky mode. It does not erase facts already supplied for the active topic.
-
-A one-off view override changes only the current response's composition, not sticky mode. It records the highest view rendered as the active topic depth so later expansion never moves backward, and it updates supplied-fact memory so later output does not repeat it. The next ordinary request still follows the stored mode.
-
-Similar vocabulary alone does not make two requests the same topic; the user's intended subject and goal determine continuity.
+When missing information prevents a complete or safe substantive response, ask
+one focused clarification. A pure clarification is control dialogue: it has no
+view headings and consumes no view budget. It MUST NOT contain a hidden
+recommendation, rationale, or implementation detail. An indispensable warning
+that cannot safely wait appears with the question.
 
 ## 7. Corrections
 
-A correction is a repair, not an expansion. When an earlier statement is materially wrong, the assistant MUST:
+A correction is a repair. When an emitted statement is materially wrong, the
+next relevant response MUST:
 
-1. identify the statement being withdrawn;
+1. identify the withdrawn statement;
 2. say plainly that it was wrong or incomplete;
-3. provide the replacement;
-4. state any changed consequence or action.
+3. provide the replacement; and
+4. state the changed consequence or action.
 
-The correction MUST appear at the start of the next relevant response. It MUST NOT be hidden in At depth or phrased as if both versions remain valid.
+The repair text MUST be the first prose under At a glance. The response still
+renders At a glance, In context, and At depth in order. Only context necessary
+to identify, retract, replace, and state the changed action is exempt from the
+normal budget. Unaffected facts and new explanation follow ordinary allocation
+and budgets.
 
-A correction repairs the affected view and preserves the sticky mode and active topic depth. It does not advance or reset either state. After repair, an unqualified `More` follows the current mode: it advances from the corrected view in Progressive mode or elaborates At depth in Verbose mode.
+The assistant MUST NOT invent a retraction for a claim it did not emit.
 
-A correction MAY repeat enough context to identify, retract, and replace the error and to state the changed consequence or action. Only that necessary repair text is exempt from the normal budget. Unrelated explanation, unaffected facts, and new detail are not exempt.
+## 8. Safety and legal precedence
 
-The cumulative total consumed before the correction remains unchanged. Exempt repair words neither add to nor subtract from it. Subsequent At a glance or In context prose resumes accumulation from the pre-correction total.
+Safety, policy, legal, and accuracy requirements outrank brevity. A material
+warning MUST appear in the earliest view containing the related action or
+conclusion. It MUST NOT be deferred to In context or At depth.
 
-## 8. Clarity cues
+When a warning cannot fit normally, put it in explicit warning content and
+include only what is indispensable: prohibition or immediate action, hazardous
+state, causal mechanism, concrete harm, containment or escalation, and
+condition for resuming. A checkpoint time is not authorization unless the
+source says it is.
 
-Clarity cues are optional navigation labels, not required fields. Use only the cues that help the current response:
+Warning placement and arithmetic are mechanically checkable. Whether a warning
+is indispensable, sufficient, accurate, or safe remains semantic and
+`UNVERIFIED`.
 
-- **Why it counts:** the consequence or significance;
-- **Where it fits:** scope, relationship, or surrounding context;
-- **What shifts:** a meaningful change from the prior state;
-- **Keep in view:** a risk, limit, dependency, or caveat;
-- **What follows:** the next action, owner, or timing.
+## 9. Non-fit structures
 
-Do not emit empty cues, force all five into a response, or use labels when plain sentences are clearer. Cue labels count toward the applicable prose budget.
+Do not force the three views onto output whose function depends on another
+shape:
 
-## 9. Safety precedence
+- **Tutorials and procedures:** preserve complete natural step order. Do not
+  withhold required later steps.
+- **Narrative or voice-dependent writing:** preserve sequence, pacing, tense,
+  and voice.
+- **Exact output and transformations:** preserve the requested value, format,
+  code, data, or verbatim reproduction without added headings.
+- **Controlling legal or authoritative text:** preserve source bytes exactly.
+  Put any explanation in a separate, clearly marked non-controlling summary.
 
-Progressive Clarity does not replace higher-priority safety, policy, legal, or accuracy requirements. When brevity conflicts with an indispensable warning, the warning wins.
+Exact controlling text, quotations, code, data, and other user-required
+verbatim artifacts MAY retain repeated source bytes when exactness requires
+them. The artifact itself is outside Progressive Clarity cross-view
+no-repetition checks. Any separate Progressive Clarity summary, overview, or
+explanation MUST remain additive and MUST NOT duplicate the artifact or repeat
+its own facts merely to recap them.
 
-The assistant MUST place a material warning in the earliest view where the related action or conclusion appears. It MUST NOT defer the warning to a later expansion. Refusals and safe alternatives MAY use the three views, but their protective content cannot depend on the user asking for more.
+An optional overview MAY use all three views only when the user requests it and
+it does not damage the required artifact.
 
-## 10. Non-fit and hybrid cases
+## 10. Deterministic local conformance
 
-Do not force the three-view presentation onto content whose function depends on another structure. These exceptions apply in both conversation modes.
+The canonical `SKILL.md` and ChatGPT package are **Advisory** prompt-only
+surfaces. They have no backend, MCP server, hook, or deterministic output gate.
 
-- **Tutorials and procedures:** Preserve the natural step order. A concise orientation MAY precede the steps, but later steps cannot be withheld as conversational expansion when the user needs the complete procedure.
-- **Controlling legal text:** Keep the controlling text unchanged. Any explanation or summary MUST be separate, clearly marked as non-controlling, and never presented as a substitute.
-- **Narrative or voice-dependent writing:** Preserve sequence, pacing, and voice unless the user explicitly asks for a Progressive Clarity summary or analysis.
+The local `pc-core` non-streaming wrapper is an **Enforced mechanical** surface
+only when it:
 
-A hybrid response conforms when its optional overview follows the applicable invariants and the body retains the structure required by its purpose.
+1. receives a trusted wrapper request and committed state separately from model
+   output;
+2. buffers a complete schema `2.0.0` envelope using protocol `0.2`;
+3. validates versions, intent/kind, topic/branch/turn state, three-section
+   order, word budgets, fact-ID integrity and reuse declarations, correction
+   structure, quotation bytes and hash when trusted source is supplied, and
+   exact lexical duplicates in Progressive Clarity explanation while exempting
+   required verbatim artifact bytes;
+4. renders only from the validated envelope; and
+5. atomically commits state only after validation succeeds.
 
-## 11. Verification and observability
+The wrapper withholds an invalid candidate. It permits at most two total
+generation attempts: one initial candidate and one complete repair. If the
+second candidate fails, it emits no candidate response and leaves committed
+state unchanged.
 
-Version 0.1 scores observable behavior separately from host activation and internal state. A verification result uses `PASS`, `FAIL`, or `UNVERIFIED`.
+Post-response host hooks are **Advisory/block-and-retry**. They can inspect
+visible headings, budgets, and exact lexical echoes, but cannot certify trusted
+request/state/fact-envelope conformance or retract output already displayed.
 
-- **Behavioral conformance:** Required facts, caveats, visible view headings, order, budgets, mode transitions, corrections, and prohibited output are scored from rendered responses. Observable violations are `FAIL`.
-- **Activation evidence:** Record a host trace when the host exposes evidence that the protocol or skill loaded. If no trace exists, activation or inactivity MAY be `UNVERIFIED`; behavior alone MUST NOT be treated as proof of activation.
-- **Activation contract:** This protocol does not define host triggers. An activation test MUST name the frozen protocol and skill revisions and score against that skill's trigger description.
-- **Internal mode and view state:** If a host exposes no state trace, sticky mode, selected view, branch focus, and topic reset MAY be `UNVERIFIED`. Their rendered consequences—headings, facts, structure, accumulation, and expansion order—remain pass/fail observations.
-- **Safe-stopping proxy:** Host verification checks whether every required fact and indispensable caveat is present at the stopping point. It does not establish a human reader outcome.
-- **Additive composition:** Each sentence or bullet in a deeper Verbose view or later expansion MUST add a new fact, qualification, consequence, action, evidence item, or relationship. A unit that only restates prior content fails as an echo.
-- **Hidden reversal:** A later qualification fails when it makes an earlier operative claim materially false, unless the response uses the correction procedure in section 7.
-- **Purposeful At depth:** Each section MUST support a requested fact, evidence need, alternative, exception, procedure, implementation concern, or necessary consequence. Unrelated volume and unsupported specialist detail fail.
+### 10.1 Envelope and fact ledger
 
-When a warning exceeds a budget or correction text uses its exemption, the evaluator records the reason and affected words in evaluation metadata. The assistant does not add a user-facing budget justification unless it helps the user understand the warning or correction.
+Envelope schema `2.0.0` contains `protocol_version`, `response_kind`,
+`topic_id`, `new_topic`, explicit turn/branch/fact-count state, atomic facts,
+and a kind-specific payload. There is no presentation-state field.
 
-## 12. Common failures
+Each fact has one stable ID, single-line text declaration, allocation, and
+optional cross-turn reuse reason. A prior ID retains exact text and allocation.
+`prior_context` marks necessary cross-turn reference. `correction` and
+`quotation` mark only their structured exceptions. A new topic resets the
+active fact ledger.
 
-A response does not conform when it:
+Exact normalized lexical repetition in Progressive Clarity view or explanatory
+prose is mechanical. Required exact controlling text, quotations, code, data,
+and other verbatim artifacts are exempt from that check and MAY preserve
+repeated source bytes. A separate summary, overview, or explanation is not
+exempt: it remains mechanically subject to exact-duplicate checks and
+semantically subject to additivity. Near-duplicate overlap is advisory because
+lexical similarity does not prove semantic repetition. Fact declarations
+cannot prove that every material fact was extracted, split atomically, or
+allocated to the semantically right view.
 
-- announces importance but withholds the answer;
-- repeats the same claim at each view;
-- omits a rendered view heading;
-- treats a one-off view request as a sticky mode change;
-- resets the sticky mode when only the topic changes;
-- replays all three views after `More` in Verbose mode;
-- reveals a later fact that silently invalidates an earlier stopping point;
-- omits a warning to meet a budget;
-- treats optional cues as a form to complete;
-- leaks specialist terminology into a shallower view without need;
-- breaks a procedure or narrative into disconnected view fragments.
+### 10.2 Guarantee boundary
 
-## 13. Conformance check
+Mechanical `PASS` guarantees only implemented checks over the trusted request,
+committed state, structured envelope, and canonical renderer buffered by that
+wrapper. It does not guarantee:
 
-Before completing a turn, verify:
+- semantic accuracy or completeness;
+- human safe-stopping outcomes;
+- warning indispensability or sufficiency;
+- topic or branch intent;
+- paraphrased fact repetition;
+- purposeful At depth content;
+- hidden-reversal absence;
+- host-wide behavior outside the wrapper; or
+- compatibility with an untested host.
 
-1. Does the current view answer the immediate request?
-2. Can the user stop here without a materially wrong conclusion or action?
-3. Is every indispensable caveat already visible?
-4. Does this turn add information instead of replaying prior content?
-5. Does later detail preserve or explicitly correct earlier claims?
-6. Does presentation follow the sticky mode or explicit one-off override?
-7. Is every rendered view heading visible?
-8. Does counted prose meet the applicable target or hard cap, or is a defined exception necessary?
+Those properties remain advisory and `UNVERIFIED` without an independent
+oracle.
+
+## 11. Conformance check
+
+Before sending an ordinary in-scope response, verify:
+
+1. all three headings appear exactly once and in order;
+2. At a glance directly answers and stays within 40 non-warning words;
+3. shallow non-warning prose totals at most 200 words;
+4. At depth is purposeful rather than filler;
+5. every material scope boundary and indispensable caveat appears early enough;
+6. each fact is allocated once and deeper prose adds new information;
+7. later detail preserves earlier claims or uses explicit correction; and
+8. a required non-fit structure has not been damaged by the three-view form.

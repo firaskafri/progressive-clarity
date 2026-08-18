@@ -2,38 +2,37 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from package_openai_plugin import load_manifest, source_entries
+from tools.package_openai_plugin import load_manifest, source_entries
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "progressive-clarity"
+PYPROJECT_PATH = ROOT / "pyproject.toml"
 FROZEN_FILES = {
-    Path("SPEC.md"): "ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d",
+    Path("SPEC.md"): "74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8",
     Path("skills/progressive-clarity/SKILL.md"): (
-        "5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562"
+        "ab8d3ba8e9aa02530f97d21af15ff371ec0df02055b6e2f0cff665c36c59a749"
     ),
     Path("evals/cases.json"): (
-        "4c27a740e2e02e54f97889618397a6417c82e089b9bb44919b92642e59289680"
+        "8788528b11667b99a8ba398efe1dd17da3b302c687e584e5c07ca94f84f17eb4"
     ),
 }
-EXPECTED_SCHEMA_VERSION = "2.0.0"
-EXPECTED_SUITE_ID = "progressive-clarity-v0.1-two-mode-acceptance"
-EXPECTED_CASE_IDS = tuple(f"M{number:02d}" for number in range(1, 12))
-EXPECTED_REPEAT_CASE_IDS = ("M02", "M05", "M06", "M08", "M11")
+EXPECTED_SCHEMA_VERSION = "4.0.0"
+EXPECTED_SUITE_ID = "progressive-clarity-v0.2-advisory-host-acceptance"
+EXPECTED_CASE_IDS = tuple(f"E{number:02d}" for number in range(1, 9))
+EXPECTED_REPEAT_CASE_IDS = ("E03", "E04", "E06")
 EXPECTED_TOTALS_PER_HOST = {
-    "sessions": 21,
-    "scored_assistant_responses": 39,
-}
-EXPECTED_TOTALS_BOTH_HOSTS = {
-    "sessions": 42,
-    "scored_assistant_responses": 78,
+    "sessions": 14,
+    "scored_assistant_responses": 19,
 }
 FACT_REFERENCE_FIELDS = {
     "required_fact_ids",
@@ -41,8 +40,28 @@ FACT_REFERENCE_FIELDS = {
     "required_step_order",
 }
 EXPECTED_SKILL_FILES = {Path("LICENSE"), Path("SKILL.md")}
-TEXT_SUFFIXES = {".json", ".md", ".py", ".svg", ".txt", ".yaml", ".yml"}
+TEXT_SUFFIXES = {
+    ".json",
+    ".md",
+    ".py",
+    ".svg",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
 TEXT_NAMES = {".editorconfig", ".gitignore", "LICENSE"}
+IGNORED_REPOSITORY_PARTS = {
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+}
 LINK_PATTERN = re.compile(
     r"!?\[[^\]]*]\((?P<target><[^>]+>|[^)\s]+)"
     r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\)"
@@ -54,6 +73,7 @@ LEGACY_CUE_PATTERN = re.compile(
     r"(?im)(?:\*\*)?(?:Why it matters|The big picture|What changes|"
     r"The constraint|What's next|What’s next):(?:\*\*)?"
 )
+TEST_DOCSTRING_FIELDS = ("Name:", "Description:", "Assumptions:", "Expectations:")
 
 
 def repository_files() -> list[Path]:
@@ -62,7 +82,9 @@ def repository_files() -> list[Path]:
         (
             path
             for path in ROOT.rglob("*")
-            if ".git" not in path.relative_to(ROOT).parts
+            if not (
+                set(path.relative_to(ROOT).parts) & IGNORED_REPOSITORY_PARTS
+            )
             and not path.is_symlink()
             and path.is_file()
         ),
@@ -179,7 +201,7 @@ def validate_relative_links(errors: list[str]) -> None:
     """Check relative destinations and anchors in Markdown links."""
     anchor_cache: dict[Path, set[str]] = {}
     for source in sorted(ROOT.rglob("*.md")):
-        if ".git" in source.relative_to(ROOT).parts:
+        if set(source.relative_to(ROOT).parts) & IGNORED_REPOSITORY_PARTS:
             continue
         text = markdown_without_fences(source.read_text(encoding="utf-8"))
         matches = list(LINK_PATTERN.finditer(text))
@@ -263,7 +285,8 @@ def validate_skill_package(errors: list[str]) -> None:
             actual_files.add(relative_path)
             if path.stat().st_mode & 0o111:
                 errors.append(
-                    f"skills/progressive-clarity/{relative_path}: executable bit forbidden"
+                    f"skills/progressive-clarity/{relative_path}: "
+                    "executable bit forbidden"
                 )
 
     if actual_files != EXPECTED_SKILL_FILES:
@@ -395,10 +418,34 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         protocol = {}
     if protocol.get("path") != "SPEC.md":
         errors.append("evals/cases.json: protocol path must be SPEC.md")
-    if protocol.get("version") != "0.1 draft":
-        errors.append("evals/cases.json: protocol version must be 0.1 draft")
+    if protocol.get("version") != "0.2 draft":
+        errors.append("evals/cases.json: protocol version must be 0.2 draft")
     if protocol.get("sha256") != expected_protocol_hash:
         errors.append("evals/cases.json: protocol hash does not match frozen SPEC.md")
+
+    scope = suite.get("scope")
+    if not isinstance(scope, dict):
+        errors.append("evals/cases.json: scope must be an object")
+        scope = {}
+    if scope.get("conformance_surface") != "Advisory prompt-only host behavior":
+        errors.append(
+            "evals/cases.json: scope must identify Advisory host behavior"
+        )
+    for field in (
+        "human_outcome_claims",
+        "semantic_completeness_claims",
+        "hidden_reversal_guarantees",
+    ):
+        if scope.get(field) is not False:
+            errors.append(f"evals/cases.json: scope.{field} must be false")
+
+    word_count = suite.get("word_count")
+    if not isinstance(word_count, dict) or not str(
+        word_count.get("method", "")
+    ).startswith("deterministic-pc-core-v2"):
+        errors.append(
+            "evals/cases.json: word_count method must name deterministic pc-core v2"
+        )
 
     policy = suite.get("run_policy")
     if not isinstance(policy, dict):
@@ -564,13 +611,6 @@ def validate_evaluation_suite(errors: list[str]) -> None:
             "evals/cases.json: initial_round_totals_per_host must be "
             f"{EXPECTED_TOTALS_PER_HOST}"
         )
-    if policy.get("initial_round_totals_both_hosts") != EXPECTED_TOTALS_BOTH_HOSTS:
-        errors.append(
-            "evals/cases.json: initial_round_totals_both_hosts must be "
-            f"{EXPECTED_TOTALS_BOTH_HOSTS}"
-        )
-
-
 def validate_terminology(errors: list[str]) -> None:
     """Keep source and third-party terminology in their documented contexts."""
     checks = (
@@ -587,6 +627,14 @@ def validate_terminology(errors: list[str]) -> None:
             "third-party terminology",
         ),
     )
+    stale_contract = re.compile(
+        r"\b(?:Progressive mode|Verbose mode|sticky mode|one-off view)\b",
+        re.IGNORECASE,
+    )
+    stale_allowlist = {
+        Path("docs/openai-plugin.md"),
+        Path("docs/verification.md"),
+    }
     for path in repository_files():
         if path.suffix not in {".json", ".md"}:
             continue
@@ -601,6 +649,220 @@ def validate_terminology(errors: list[str]) -> None:
             errors.append(f"{relative_path}: legacy layer terminology is forbidden")
         if re.search(r"(?im)^#{1,6}\s+Go deeper\s*$", text):
             errors.append(f"{relative_path}: legacy depth heading is forbidden")
+        if stale_contract.search(text) and relative_path not in stale_allowlist:
+            errors.append(
+                f"{relative_path}: removed presentation-state terminology "
+                "appears outside historical evidence"
+            )
+
+
+def test_docstring_problem(docstring: str) -> str | None:
+    """Return why a test docstring violates the four-field ordered contract."""
+    lines = [line.strip() for line in docstring.splitlines() if line.strip()]
+    positions: list[int] = []
+    for field in TEST_DOCSTRING_FIELDS:
+        matches = [
+            index for index, line in enumerate(lines) if line.startswith(field)
+        ]
+        if len(matches) != 1:
+            return f"must contain exactly one {field}"
+        positions.append(matches[0])
+    if positions != sorted(positions):
+        return (
+            "fields must appear in Name, Description, Assumptions, "
+            "Expectations order"
+        )
+    if positions[0] != 0:
+        return "Name must be the first non-empty docstring field"
+    return None
+
+
+def validate_test_docstrings(errors: list[str]) -> None:
+    """Require the documented test intent contract at every requested level."""
+    tests_dir = ROOT / "tests"
+    for path in sorted(tests_dir.glob("*.py")):
+        relative_path = path.relative_to(ROOT)
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        except (OSError, SyntaxError) as exc:
+            errors.append(f"{relative_path}: cannot parse tests ({exc})")
+            continue
+        module_docstring = ast.get_docstring(tree, clean=False) or ""
+        problem = test_docstring_problem(module_docstring)
+        if problem:
+            errors.append(
+                f"{relative_path}: module docstring {problem}"
+            )
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                class_docstring = ast.get_docstring(node, clean=False) or ""
+                problem = test_docstring_problem(class_docstring)
+                if problem:
+                    errors.append(
+                        f"{relative_path}:{node.lineno}: class {node.name} "
+                        f"docstring {problem}"
+                    )
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if not node.name.startswith("test_"):
+                    continue
+                case_docstring = ast.get_docstring(node, clean=False) or ""
+                problem = test_docstring_problem(case_docstring)
+                if problem:
+                    errors.append(
+                        f"{relative_path}:{node.lineno}: test {node.name} "
+                        f"docstring {problem}"
+                    )
+
+
+def validate_python_package(errors: list[str]) -> None:
+    """Validate the installable standard-library pc-core package contract."""
+    try:
+        data = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        errors.append(f"pyproject.toml: invalid project metadata ({exc})")
+        return
+    build = data.get("build-system")
+    project = data.get("project")
+    wheel = data.get("tool", {}).get("hatch", {}).get("build", {}).get(
+        "targets", {}
+    ).get("wheel")
+    if build != {
+        "requires": ["hatchling"],
+        "build-backend": "hatchling.build",
+    }:
+        errors.append("pyproject.toml: expected the reviewed hatchling build backend")
+    if not isinstance(project, dict):
+        errors.append("pyproject.toml: project metadata must be an object")
+        return
+    expected = {
+        "name": "progressive-clarity-core",
+        "version": "0.2.1",
+        "requires-python": ">=3.11",
+        "dependencies": [],
+        "license": "Apache-2.0",
+        "license-files": ["LICENSES/Apache-2.0.txt"],
+        "scripts": {"pc-core": "pc_core.cli:main"},
+    }
+    for field, expected_value in expected.items():
+        if project.get(field) != expected_value:
+            errors.append(
+                f"pyproject.toml: project.{field} must be {expected_value!r}"
+            )
+    if wheel != {"packages": ["pc_core"]}:
+        errors.append("pyproject.toml: wheel must contain only pc_core")
+
+
+def _hook_entry(
+    hooks: object,
+    event: str,
+    location: str,
+    errors: list[str],
+) -> dict[str, object] | None:
+    if not isinstance(hooks, dict):
+        return None
+    entries = hooks.get(event)
+    if (
+        not isinstance(entries, list)
+        or len(entries) != 1
+        or not isinstance(entries[0], dict)
+    ):
+        errors.append(f"{location}.{event}: expected exactly one hook object")
+        return None
+    return entries[0]
+
+
+def validate_host_templates(errors: list[str]) -> None:
+    """Validate project-local Cursor and Claude hook schemas and retry bounds."""
+    cursor_path = ROOT / "adapters" / "cursor" / "hooks.json"
+    claude_path = ROOT / "adapters" / "claude-code" / "settings.json"
+    try:
+        cursor = json.loads(cursor_path.read_text(encoding="utf-8"))
+        claude = json.loads(claude_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"host adapters: invalid JSON ({exc})")
+        return
+    if (
+        not isinstance(cursor, dict)
+        or set(cursor) != {"version", "hooks"}
+        or cursor.get("version") != 1
+    ):
+        errors.append(
+            "adapters/cursor/hooks.json: expected version and hooks only"
+        )
+    cursor_hooks = cursor.get("hooks") if isinstance(cursor, dict) else None
+    if not isinstance(cursor_hooks, dict) or set(cursor_hooks) != {
+        "afterAgentResponse",
+        "stop",
+    }:
+        errors.append(
+            "adapters/cursor/hooks.json: expected afterAgentResponse and stop only"
+        )
+    cursor_after = _hook_entry(
+        cursor_hooks,
+        "afterAgentResponse",
+        "adapters/cursor/hooks.json",
+        errors,
+    )
+    expected_after = {
+        "command": ".pc-core/venv/bin/pc-core hook cursor-after-response",
+        "timeout": 10,
+    }
+    if cursor_after is not None and cursor_after != expected_after:
+        errors.append(
+            "adapters/cursor/hooks.json: invalid afterAgentResponse hook"
+        )
+    cursor_stop = _hook_entry(
+        cursor_hooks,
+        "stop",
+        "adapters/cursor/hooks.json",
+        errors,
+    )
+    expected_stop = {
+        "command": ".pc-core/venv/bin/pc-core hook cursor-stop",
+        "loop_limit": 1,
+        "timeout": 10,
+    }
+    if cursor_stop is not None and cursor_stop != expected_stop:
+        errors.append("adapters/cursor/hooks.json: invalid bounded stop hook")
+    if not isinstance(claude, dict) or set(claude) != {"$schema", "hooks"}:
+        errors.append(
+            "adapters/claude-code/settings.json: expected $schema and hooks only"
+        )
+        return
+    claude_hooks = claude.get("hooks")
+    if not isinstance(claude_hooks, dict) or set(claude_hooks) != {"Stop"}:
+        errors.append(
+            "adapters/claude-code/settings.json: expected one Stop hook"
+        )
+        return
+    if claude.get("$schema") != (
+        "https://json.schemastore.org/claude-code-settings.json"
+    ):
+        errors.append("adapters/claude-code/settings.json: unexpected $schema")
+    stop_groups = claude_hooks["Stop"]
+    if (
+        not isinstance(stop_groups, list)
+        or len(stop_groups) != 1
+        or not isinstance(stop_groups[0], dict)
+        or set(stop_groups[0]) != {"hooks"}
+    ):
+        errors.append(
+            "adapters/claude-code/settings.json: expected one Stop hook group"
+        )
+        return
+    claude_stop = _hook_entry(
+        {"Stop": stop_groups[0]["hooks"]},
+        "Stop",
+        "adapters/claude-code/settings.json",
+        errors,
+    )
+    expected_claude_stop = {
+        "type": "command",
+        "command": ".pc-core/venv/bin/pc-core hook claude-stop",
+        "timeout": 10,
+    }
+    if claude_stop is not None and claude_stop != expected_claude_stop:
+        errors.append("adapters/claude-code/settings.json: invalid Stop hook")
 
 
 def main() -> int:
@@ -613,6 +875,9 @@ def main() -> int:
     validate_skill_package(errors)
     validate_evaluation_suite(errors)
     validate_terminology(errors)
+    validate_test_docstrings(errors)
+    validate_python_package(errors)
+    validate_host_templates(errors)
     if errors:
         print("Repository validation failed:", file=sys.stderr)
         for error in errors:

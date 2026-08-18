@@ -1,30 +1,39 @@
-# Targeted expansion
+# Targeted follow-up
 
-- **Expected mode and views:** Progressive mode renders At a glance, then advances only the requested invalidation branch to In context. The parent remains At a glance.
-- **Required facts at first stop:** Use a staged rollout; retain rollback; stale results are the primary risk.
-- **Required additions for the branch:** Describe the fill race, a prevention mechanism, required tests, and a freshness alert.
-- **Budget:** The branch inherits the parent topic's count. At a glance is at most 40 counted words, and parent plus branch prose through In context is at most 200 words.
+- **Expected views:** All three views focus only on the invalidation branch.
+- **Required facts:** The fill race, prevention mechanism, required tests,
+  freshness alert, and rollback trigger appear without general caching recap.
+- **Budget:** At a glance is at most 40 words; prose through In context is at
+  most 200 words.
 
-## Initial prompt
+## Prompt
 
-Progressive mode. How should we roll out caching for search results?
+For our staged search-cache rollout, expand only the invalidation risk. Do not
+recap request coalescing or general rollout policy.
 
-## Assistant
+## Response
 
 ### At a glance
 
 <!-- words:targeted-glance:start -->
-Use a staged rollout with request coalescing and a rollback switch. The main operational risk is stale results, so production activation depends on verified invalidation and freshness monitoring.
+Prevent stale overwrites by versioning cache entries or rejecting fills older
+than the latest invalidation. Keep rollback available until freshness checks
+pass.
 <!-- words:targeted-glance:end -->
-
-## User
-
-Expand only the invalidation risk.
-
-## Assistant
 
 ### In context
 
 <!-- words:targeted-context:start -->
-**Keep in view:** Writes can race with cache fills, allowing an older value to overwrite a fresh invalidation. Version cache entries or compare write timestamps before storing fills. Test delete, update, and partial-failure paths; alert on age, not only hit rate.
+Writes can race with in-flight fills, allowing an obsolete value to arrive
+after deletion or update. Test delete, update, partial failure, and delayed-fill
+paths. Alert on result age rather than hit rate alone.
 <!-- words:targeted-context:end -->
+
+### At depth
+
+<!-- words:targeted-depth:start -->
+Record a monotonic content version with each invalidation and fill request.
+Before storing, compare the fill's captured version with the current version.
+Reject mismatches, count them, and trigger rollback when freshness errors exceed
+the rollout threshold.
+<!-- words:targeted-depth:end -->

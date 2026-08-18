@@ -1,6 +1,6 @@
 # Sequential procedure
 
-- **Expected mode and views:** Hybrid in either mode: an optional At a glance orientation followed by the complete natural step sequence.
+- **Expected structure:** Non-fit procedure with an optional orientation followed by the complete natural step sequence.
 - **Required facts:** Verifiers receive the new public key before signers switch; both keys overlap; old signatures expire before revocation; rollback remains possible.
 - **Budget:** The orientation is at most 40 counted words. The ordered procedure is not forced into conversational view increments.
 

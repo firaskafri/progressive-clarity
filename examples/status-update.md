@@ -1,6 +1,6 @@
 # Status update
 
-- **Expected mode and views:** Default Verbose mode renders all three views with no fact replay.
+- **Expected views:** All three views render with no fact replay.
 - **Required facts:** The migration is 80% complete; two clients are blocked; 4 September is conditional; Priya owns the token-refresh fix; staging validation and client testing precede the launch decision.
 - **Budget:** At a glance is at most 40 counted words; At a glance plus In context is at most 200.
 

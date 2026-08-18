@@ -54,6 +54,8 @@ def sha256(data: bytes) -> str:
 
 def load_manifest() -> dict[str, object]:
     """Load and validate the tracked plugin manifest."""
+    if MANIFEST_PATH.is_symlink() or not MANIFEST_PATH.is_file():
+        raise ValueError("plugin manifest must be a regular file")
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     if not isinstance(manifest, dict):
         raise ValueError("plugin manifest must be a JSON object")
@@ -139,7 +141,9 @@ def validate_svg_asset(path: Path) -> None:
         raise ValueError(f"plugin asset viewBox must contain four numbers: {path}")
     view_width, view_height = view_box[2:]
     if width != height or view_width != view_height or width != view_width:
-        raise ValueError(f"plugin asset dimensions must be square and consistent: {path}")
+        raise ValueError(
+            f"plugin asset dimensions must be square and consistent: {path}"
+        )
     if not MIN_IMAGE_DIMENSION <= width <= MAX_IMAGE_DIMENSION:
         raise ValueError(
             f"plugin asset dimensions must be 48-4096 pixels: {path}"
@@ -191,12 +195,24 @@ def zip_info(name: str) -> zipfile.ZipInfo:
 
 
 def verify_archive(archive_path: Path, entries: dict[str, bytes]) -> None:
-    """Confirm archive paths and bytes exactly match the tracked sources."""
+    """Confirm archive inventory, metadata, and bytes match canonical output."""
     with zipfile.ZipFile(archive_path) as archive:
         names = archive.namelist()
         if names != sorted(entries):
             raise ValueError(f"unexpected archive inventory: {names}")
+        if archive.comment:
+            raise ValueError("archive comment must be empty")
         for name, expected_bytes in entries.items():
+            info = archive.getinfo(name)
+            if (
+                info.date_time != ARCHIVE_TIMESTAMP
+                or info.compress_type != zipfile.ZIP_STORED
+                or info.create_system != 3
+                or info.external_attr >> 16 != 0o100644
+                or info.extra
+                or info.comment
+            ):
+                raise ValueError(f"packaged metadata is not normalized: {name}")
             if archive.read(name) != expected_bytes:
                 raise ValueError(f"packaged bytes differ from source: {name}")
 

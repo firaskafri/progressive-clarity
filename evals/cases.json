@@ -1,66 +1,51 @@
 {
-  "schema_version": "2.0.0",
-  "suite_id": "progressive-clarity-v0.1-two-mode-acceptance",
+  "schema_version": "4.0.0",
+  "suite_id": "progressive-clarity-v0.2-advisory-host-acceptance",
   "protocol": {
     "path": "SPEC.md",
-    "version": "0.1 draft",
-    "sha256": "ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d"
+    "version": "0.2 draft",
+    "sha256": "74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8"
   },
   "scope": {
     "language": "English",
-    "hosts": [
-      "Cursor",
-      "Claude Code"
-    ],
-    "result_values": [
-      "PASS",
-      "FAIL",
-      "UNVERIFIED"
-    ],
+    "conformance_surface": "Advisory prompt-only host behavior",
+    "current_revision_execution": "UNVERIFIED: no current v0.2 Cursor, Claude Code, or ChatGPT acceptance run exists.",
+    "local_enforced_mechanics": "Covered separately by pc-core tests and a synthetic non-streaming wrapper. Mechanical PASS does not satisfy this semantic host suite.",
+    "hosts": ["Cursor", "Claude Code"],
+    "result_values": ["PASS", "FAIL", "UNVERIFIED"],
     "human_outcome_claims": false,
-    "safe_stopping_measure": "Observable proxy only: every required fact and indispensable caveat is present at each rendered stopping point.",
-    "historical_suite_policy": "Former PC-01 through PC-15 results are historical evidence in docs only and are not active acceptance cases."
+    "semantic_completeness_claims": false,
+    "hidden_reversal_guarantees": false,
+    "safe_stopping_measure": "Observable proxy only: required facts and indispensable caveats are present at each rendered stopping point.",
+    "historical_suite_policy": "All older dual-behavior results remain historical evidence in docs only."
   },
   "run_policy": {
     "fresh_session_per_case_run": true,
     "preserve_one_session_for_all_turns_in_a_case_run": true,
     "default_runs_per_host": 1,
     "repeat_runs_per_host": 3,
-    "repeat_semantics": "Three total runs per host; the baseline run is run 1.",
-    "repeat_case_ids": [
-      "M02",
-      "M05",
-      "M06",
-      "M08",
-      "M11"
-    ],
+    "repeat_case_ids": ["E03", "E04", "E06"],
     "initial_round_totals_per_host": {
-      "sessions": 21,
-      "scored_assistant_responses": 39
+      "sessions": 14,
+      "scored_assistant_responses": 19
     },
-    "initial_round_totals_both_hosts": {
-      "sessions": 42,
-      "scored_assistant_responses": 78
-    },
-    "acceptance_rule": "Every prescribed run must behaviorally PASS. There is no averaging, majority rule, or tolerance for intermittent failure.",
+    "acceptance_rule": "Every prescribed run must behaviorally PASS; there is no averaging or majority rule.",
     "hard_fail_conditions": [
       "An indispensable warning is omitted or deferred.",
       "A response contradicts an operative source fact.",
-      "A later qualification silently makes an earlier stopping point materially false.",
-      "A response gives an unsafe instruction.",
+      "A later qualification silently reverses an earlier stopping point.",
       "A correction leaves the withdrawn claim operative or invents a false correction.",
       "Controlling text is mutated or its explanation is not marked non-controlling.",
-      "A required procedural safety condition is omitted or reordered unsafely."
+      "A required procedure condition is omitted or reordered unsafely."
     ],
     "remediation": {
       "maximum_cycles": 1,
       "initial_round_required": true,
       "review_required_before_revision": true,
-      "rerun_scope": "Only failed cases, with all prescribed runs for each failed case repeated after the single reviewed revision.",
-      "hard_stop": "Stop after the targeted rerun regardless of outcome. Do not automatically rewrite, optimize, or begin another cycle.",
-      "oracle_ambiguity_rule": "Stop remediation until the oracle is resolved; do not weaken a safety, correction, exact-text, or user-required criterion to gain a pass."
+      "rerun_scope": "Only failed cases, including every prescribed repetition.",
+      "hard_stop": "Stop after one targeted rerun regardless of outcome.",
+      "oracle_ambiguity_rule": "Resolve oracle ambiguity before remediation; never weaken safety, correction, exact-text, or user-required criteria."
     },
-    "case_result_rule": "Any observable behavioral FAIL in any prescribed run fails that case for that host. Activation and internal-state UNVERIFIED results do not erase an observable behavioral FAIL.",
     "capture_fields": [
       "suite_id",
       "case_id",
@@ -68,7 +53,6 @@
       "host",
       "host_version",
       "model",
-      "model_version_or_identifier",
       "date_time_utc",
       "settings",
       "skill_revision",
@@ -76,621 +60,263 @@
       "installation_path",
       "invocation_method",
       "activation_trace",
-      "internal_state_trace",
       "prompts",
       "raw_outputs",
       "counted_words_by_response_and_view",
-      "cumulative_count_by_topic",
       "required_fact_results_by_stopping_point",
-      "fact_first_emitted_response",
-      "fact_present_by_stopping_point",
+      "fact_first_emitted_view",
       "prohibited_behavior_results",
       "budget_exception_metadata",
       "behavior_result",
       "activation_result",
-      "internal_state_result",
       "case_result",
       "evaluator_notes"
     ]
   },
   "word_count": {
-    "method": "human-scored",
-    "included": [
-      "Reader-visible assistant prose",
-      "Clarity cue labels",
-      "List text",
-      "Inline code after removing backticks",
-      "Visible Markdown link text"
-    ],
-    "excluded": [
-      "Headings",
-      "Markdown syntax",
-      "Markdown link destination URLs",
-      "Bare URLs",
-      "Fenced code blocks",
-      "Data tables",
-      "Non-rendered state notes",
-      "Citation markers and footnote references",
-      "User prompts",
-      "Genuine control dialogue"
-    ],
-    "tokenization": [
-      "Remove Markdown punctuation and split included prose at whitespace.",
-      "Count a token when it contains at least one English letter or digit.",
-      "Count contractions and hyphenated compounds with no whitespace as one word.",
-      "Count compact dates, times, numbers, and code-like tokens with no whitespace as one word.",
-      "Count spaced dates and times by whitespace token.",
-      "Do not count standalone symbols or punctuation without a letter or digit.",
-      "Remove inline-code backticks and count the code content by the same rule."
-    ],
+    "method": "deterministic-pc-core-v2; human scoring applies the same ordered algorithm",
     "budgets": {
-      "at_a_glance_max_counted_words": 40,
-      "through_in_context_max_cumulative_counted_words": 200,
+      "at_a_glance_max_non_warning_words": 40,
+      "through_in_context_max_non_warning_words_per_response": 200,
       "at_depth_hard_cap": null
     },
     "accumulation": [
-      "In Verbose mode, count At a glance separately against 40 words and At a glance plus In context against 200 words.",
-      "In Progressive mode, add all At a glance and In context prose across responses on the active topic.",
-      "A targeted branch inherits and adds to the active topic total.",
-      "A one-off In context response is counted once against 200 words.",
-      "At depth prose is outside the hard cap but must remain purposeful.",
-      "A genuine new topic resets the topic count but preserves sticky mode.",
-      "Only indispensable warning text and necessary correction repair text receive their defined exemptions."
+      "Count At a glance separately against 40 words.",
+      "Count At a glance plus In context once per response against 200 words.",
+      "At depth is outside the hard cap but remains purposeful.",
+      "Only indispensable warning text and necessary correction repair text receive defined exemptions."
     ]
   },
   "rubric": {
-    "fact_scoring": "Score required_fact_ids cumulatively at each stopping point. A fact emitted earlier satisfies every later stopping point on that topic and must not be repeated solely for scoring.",
-    "fact_timing": "This suite prescribes no arbitrary first-appearance facts. Timing is enforced only by an indispensable warning, an explicit prompt reservation, a correction requirement, or an explicit mode or view control.",
-    "behavioral_conformance": "Score visible headings and order, required facts and caveats, budgets, mode consequences, corrections, exact text, structure, and prohibited output from rendered responses.",
-    "activation": "PASS requires a host trace showing that the frozen skill loaded or remained inactive as expected. Without such a trace, activation or inactivity is UNVERIFIED; rendered behavior is scored separately.",
-    "internal_state": "Without a host trace, sticky mode, selected view, depth, branch focus, and topic reset are UNVERIFIED. Their rendered consequences remain PASS or FAIL observations.",
-    "additivity": "Every deeper-view sentence or bullet must add a fact, qualification, relationship, consequence, action, evidence item, alternative, or exception. A unit that only restates earlier content is an echo and fails.",
-    "hidden_reversal": "A later qualification fails when it makes an earlier operative claim materially false without using the correction procedure.",
-    "clarification": "A focused question is excluded control dialogue only when its sole purpose is obtaining missing decision inputs and it contains no substantive answer, recommendation, rationale, implementation detail, or view heading beyond an indispensable warning.",
-    "targeted_branch": "The branch inherits the active topic count, excludes sibling branches and general recap, and leaves parent-state observability UNVERIFIED without a trace.",
-    "correction": "The repair starts the next relevant response, identifies and withdraws the emitted error, says it was wrong or incomplete, replaces it, and states the changed consequence or action. Only necessary repair words are exempt.",
-    "warning": "A material warning appears before the related action or conclusion. It may exceed 40 words only as far as the indispensable warning requires, with the overage documented.",
-    "non_fit": "Exact controlling text, narrative sequence and voice, and complete procedure order take precedence over three-view presentation."
+    "surface_boundary": "These cases score Advisory rendered host behavior. Enforced mechanics require trusted request/state, schema 2.0.0, protocol 0.2, a non-streaming wrapper, canonical renderer, and atomic state commit.",
+    "mechanical_non_equivalence": "A pc-core PASS does not establish accuracy, completeness, warning indispensability, semantic additivity, safe-stopping outcomes, purposeful detail, or hidden-reversal safety.",
+    "ordinary_presentation": "Every ordinary in-scope response renders At a glance, In context, and At depth exactly once in order, including targeted follow-ups.",
+    "fact_scoring": "Score required facts cumulatively within each response stopping point; do not require or reward fact repetition.",
+    "additivity": "Every deeper-view unit adds a fact, qualification, relationship, consequence, action, evidence item, alternative, or exception.",
+    "clarification": "A focused question is control dialogue only when it obtains missing input and contains no hidden substantive answer.",
+    "correction": "Repair is first under At a glance, identifies and withdraws the emitted error, says wrong or incomplete, replaces it, states changed action, and retains all three views.",
+    "warning": "A material warning appears before the related action or conclusion; only indispensable overage is exempt.",
+    "non_fit": "Exact controlling text, narrative voice, exact output, and complete procedure order outrank three-view presentation."
   },
   "cases": [
     {
-      "id": "M01",
-      "title": "Verbose default",
-      "coverage": [
-        "verbose_default",
-        "three_views",
-        "cumulative_stopping_points",
-        "qualified_evidence"
-      ],
+      "id": "E01",
+      "title": "Ordinary three-view decision",
+      "coverage": ["three_views", "budgets", "qualified_evidence", "additivity"],
       "activation_expectation": "activate",
-      "session_mode": "single_turn",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "M01-F1", "text": "Northstar email delivery moves from Provider A to Provider B on 8 October."},
-        {"id": "M01-F2", "text": "Provider A's EU delivery fell below 95%."},
-        {"id": "M01-F3", "text": "Templates and sender addresses do not change."},
-        {"id": "M01-F4", "text": "Provider B costs 8% more."},
-        {"id": "M01-F5", "text": "Messaging owns cutover."},
-        {"id": "M01-F6", "text": "Template edits freeze from 7 through 9 October."},
-        {"id": "M01-F7", "text": "A 10% canary starts at 09:00 and expands at 13:00 only if bounce rate is at most 2%."},
-        {"id": "M01-F8", "text": "Rollback occurs if bounce rate exceeds 2%."},
-        {"id": "M01-F9", "text": "Provider A delivered 93.8% over seven days."},
-        {"id": "M01-F10", "text": "Provider B's pilot delivered 98.7% across 50,000 messages."},
-        {"id": "M01-F11", "text": "DNS TTL becomes 300 seconds at 08:00 and returns to 3,600 after 24 hours."},
-        {"id": "M01-F12", "text": "Rollback switches the routing key, replays the queue, and checks duplicates."},
-        {"id": "M01-F13", "text": "Logs remain 30 days."},
-        {"id": "M01-F14", "text": "The runbook is https://example.test/mail."}
+        {"id": "E01-F1", "text": "Northstar moves email delivery to Provider B on 8 October."},
+        {"id": "E01-F2", "text": "Provider A's EU delivery fell below 95%."},
+        {"id": "E01-F3", "text": "Provider B costs 8% more."},
+        {"id": "E01-F4", "text": "Messaging owns cutover."},
+        {"id": "E01-F5", "text": "The pilot delivered 98.7% across 50,000 messages."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Give me the Northstar migration update. Email delivery moves from Provider A to Provider B on 8 October because A's EU delivery fell below 95%. Templates and sender addresses do not change. B costs 8% more. Messaging owns cutover. Freeze template edits 7–9 October. A 10% canary starts at 09:00; expand at 13:00 only if bounce rate is ≤2%; roll back if it exceeds 2%. A delivered 93.8% over seven days; B's pilot delivered 98.7% across 50,000 messages. DNS TTL becomes 300 seconds at 08:00 and returns to 3,600 after 24 hours. Rollback switches the routing key, replays the queue, and checks duplicates. Logs remain 30 days. Runbook: https://example.test/mail.",
+          "prompt": "Explain the Northstar email migration. Delivery moves to Provider B on 8 October because Provider A's EU delivery fell below 95%. B costs 8% more. Messaging owns cutover. B's pilot delivered 98.7% across 50,000 messages.",
           "expected": {
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "heading_order_exact": true,
-            "stopping_points": [
-              {
-                "after_view": "At a glance",
-                "required_fact_ids": ["M01-F1", "M01-F2", "M01-F3", "M01-F4"],
-                "max_counted_words": 40
-              },
-              {
-                "after_view": "In context",
-                "required_fact_ids": ["M01-F1", "M01-F2", "M01-F3", "M01-F4", "M01-F5", "M01-F6", "M01-F7", "M01-F8"],
-                "max_cumulative_counted_words": 200
-              },
-              {
-                "after_view": "At depth",
-                "required_fact_ids": ["M01-F1", "M01-F2", "M01-F3", "M01-F4", "M01-F5", "M01-F6", "M01-F7", "M01-F8", "M01-F9", "M01-F10", "M01-F11", "M01-F12", "M01-F13", "M01-F14"],
-                "hard_word_cap": null
-              }
-            ],
-            "prohibited_behavior": [
-              "Omitting the EU scope from the reason",
-              "Hiding the cost caveat below At a glance",
-              "Separating either measurement from its time window, sample size, or source character",
-              "Repeating a fact without adding information",
-              "Rendering the headings out of order"
-            ]
+            "required_fact_ids": ["E01-F1", "E01-F2", "E01-F3", "E01-F4", "E01-F5"],
+            "at_a_glance_max_words": 40,
+            "through_in_context_max_words": 200,
+            "prohibited_behavior": ["Repeating a fact across views", "Omitting the EU scope or cost caveat"]
           }
         }
       ]
     },
     {
-      "id": "M02",
-      "title": "Sticky Progressive mode and switch",
-      "coverage": [
-        "progressive_mode",
-        "two_more",
-        "sticky_mode",
-        "verbose_switch",
-        "new_topic_budget_reset"
-      ],
+      "id": "E02",
+      "title": "Targeted follow-up keeps three views",
+      "coverage": ["targeted_branch", "three_views", "no_general_recap"],
       "activation_expectation": "activate",
-      "session_mode": "multi_turn_continuity",
-      "runs_per_host": 3,
+      "runs_per_host": 1,
       "source_facts": [
-        {"id": "M02-F1", "text": "Mobile release 4.2 launches on 12 September."},
-        {"id": "M02-F2", "text": "The release fixes checkout crashes affecting Android 13."},
-        {"id": "M02-F3", "text": "Users do not need to reinstall."},
-        {"id": "M02-F4", "text": "Mobile owns the release."},
-        {"id": "M02-F5", "text": "A 5% rollout starts at 10:00 and reaches 50% only if crash-free sessions remain at least 99.5%."},
-        {"id": "M02-F6", "text": "Rollback occurs if crash-free sessions fall below 99.5%."},
-        {"id": "M02-F7", "text": "The prior build measured 98.9% crash-free sessions over seven days."},
-        {"id": "M02-F8", "text": "The candidate measured 99.8% across 40,000 pilot sessions."},
-        {"id": "M02-F9", "text": "Rollback restores build 4.1 and invalidates the 4.2 rollout token."},
-        {"id": "M02-F10", "text": "Annual billing rises 4% on 1 April."},
-        {"id": "M02-F11", "text": "Existing contracts retain their price until renewal."},
-        {"id": "M02-F12", "text": "Finance sends notices by 1 March."},
-        {"id": "M02-F13", "text": "The increase funds tax-compliance processing."}
+        {"id": "E02-F1", "text": "Atlas adoption is approved."},
+        {"id": "E02-F2", "text": "Rollback is allowed for 30 days."},
+        {"id": "E02-F3", "text": "Rollback restores the cutover-start snapshot."},
+        {"id": "E02-F4", "text": "Later records require reconciliation."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Use Progressive mode. Mobile release 4.2 launches on 12 September and fixes checkout crashes affecting Android 13; users do not need to reinstall. Mobile owns release. A 5% rollout starts at 10:00 and reaches 50% only if crash-free sessions remain ≥99.5%; roll back below 99.5%. The prior build measured 98.9% over seven days; the candidate measured 99.8% across 40,000 pilot sessions. Rollback restores 4.1 and invalidates the 4.2 rollout token. Give me the release decision.",
+          "prompt": "Atlas adoption is approved. Rollback is allowed for 30 days, restores the cutover-start snapshot, and requires reconciliation of later records. Summarize the decision.",
           "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M02-F1", "M02-F2", "M02-F3"],
-            "max_counted_words": 40,
-            "cumulative_topic": "mobile-release"
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["E02-F1", "E02-F2"],
+            "prohibited_behavior": ["Repeating one fact in multiple views"]
           }
         },
         {
           "turn": 2,
-          "prompt": "More.",
-          "expected": {
-            "rendered_views": ["In context"],
-            "required_fact_ids": ["M02-F1", "M02-F2", "M02-F3", "M02-F4", "M02-F5", "M02-F6"],
-            "max_cumulative_counted_words": 200,
-            "cumulative_topic": "mobile-release",
-            "prohibited_behavior": ["Replaying At a glance", "Rendering At depth"]
-          }
-        },
-        {
-          "turn": 3,
-          "prompt": "More.",
-          "expected": {
-            "rendered_views": ["At depth"],
-            "required_fact_ids": ["M02-F1", "M02-F2", "M02-F3", "M02-F4", "M02-F5", "M02-F6", "M02-F7", "M02-F8", "M02-F9"],
-            "hard_word_cap": null,
-            "prohibited_behavior": ["Replaying either prior view", "Omitting a measurement qualifier"]
-          }
-        },
-        {
-          "turn": 4,
-          "prompt": "Switch to Verbose mode. New topic: Annual billing rises 4% on 1 April. Existing contracts retain their price until renewal. Finance sends notices by 1 March. The increase funds tax-compliance processing. Explain the billing decision.",
+          "prompt": "Focus only on the rollback risk.",
           "expected": {
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "heading_order_exact": true,
-            "required_fact_ids": ["M02-F10", "M02-F11", "M02-F12", "M02-F13"],
-            "topic_count_reset": true,
-            "at_a_glance_max_counted_words": 40,
-            "through_in_context_max_cumulative_counted_words": 200,
-            "prohibited_behavior": ["Continuing Progressive presentation", "Carrying the mobile-release word count into billing"]
+            "required_fact_ids": ["E02-F2", "E02-F3", "E02-F4"],
+            "prohibited_behavior": ["General Atlas recap", "Sibling branch content", "Rendering one view only"]
           }
         }
       ]
     },
     {
-      "id": "M03",
-      "title": "Per-response view override",
-      "coverage": [
-        "one_off_override",
-        "direct_at_depth_entry",
-        "override_non_sticky"
-      ],
+      "id": "E03",
+      "title": "Explicit correction",
+      "coverage": ["correction", "three_views", "repair_exception"],
       "activation_expectation": "activate",
-      "session_mode": "multi_turn_continuity",
-      "runs_per_host": 1,
+      "runs_per_host": 3,
       "source_facts": [
-        {"id": "M03-F1", "text": "Event export v2 launches on 20 May."},
-        {"id": "M03-F2", "text": "It replaces nightly CSV delivery with hourly JSONL batches."},
-        {"id": "M03-F3", "text": "Data Platform owns migration."},
-        {"id": "M03-F4", "text": "The pilot processed 12 million events with 99.97% schema validity."},
-        {"id": "M03-F5", "text": "Clients can remain on v1 until 30 June."},
-        {"id": "M03-F6", "text": "The office closes Friday at 15:00 for electrical maintenance."},
-        {"id": "M03-F7", "text": "Remote work remains available."},
-        {"id": "M03-F8", "text": "Facilities reopens the office Monday at 08:00."},
-        {"id": "M03-F9", "text": "Badge access is disabled during the closure."},
-        {"id": "M03-F10", "text": "The onsite network is unavailable during electrical testing."},
-        {"id": "M03-F11", "text": "Facilities posts a reopening status update by Monday at 07:30."}
+        {"id": "E03-F1", "text": "The initial production date is Tuesday at 09:00 UTC."},
+        {"id": "E03-F2", "text": "The corrected production date is Thursday at 09:00 UTC."},
+        {"id": "E03-F3", "text": "Tuesday is only the dry run."},
+        {"id": "E03-F4", "text": "Production coverage moves to Thursday."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "For this response only, answer At depth. Event export v2 launches on 20 May, replacing nightly CSV delivery with hourly JSONL batches. Data Platform owns migration. The pilot processed 12 million events with 99.97% schema validity. Clients can remain on v1 until 30 June. Explain the change.",
-          "expected": {
-            "rendered_views": ["At depth"],
-            "required_fact_ids": ["M03-F1", "M03-F2", "M03-F3", "M03-F4", "M03-F5"],
-            "hard_word_cap": null,
-            "prohibited_behavior": ["Rendering separate At a glance or In context sections", "Omitting lower-view essentials from the integrated answer"]
-          }
-        },
-        {
-          "turn": 2,
-          "prompt": "New topic: The office closes Friday at 15:00 for electrical maintenance. Remote work remains available. Badge access and the onsite network are unavailable during the closure. Facilities posts a status update by Monday at 07:30 and reopens the office at 08:00. What should staff know?",
+          "prompt": "Production maintenance begins Tuesday at 09:00 UTC. Give me the plan.",
           "expected": {
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "heading_order_exact": true,
-            "required_fact_ids": ["M03-F6", "M03-F7", "M03-F8", "M03-F9", "M03-F10", "M03-F11"],
-            "at_a_glance_max_counted_words": 40,
-            "through_in_context_max_cumulative_counted_words": 200,
-            "prohibited_behavior": ["Treating the prior At depth override as sticky"]
-          }
-        }
-      ]
-    },
-    {
-      "id": "M04",
-      "title": "Targeted expansion",
-      "coverage": [
-        "progressive_mode",
-        "targeted_branch",
-        "branch_budget_inheritance"
-      ],
-      "activation_expectation": "activate",
-      "session_mode": "multi_turn_continuity",
-      "runs_per_host": 1,
-      "source_facts": [
-        {"id": "M04-F1", "text": "Atlas is adopted on 1 November."},
-        {"id": "M04-F2", "text": "Atlas saves $120,000 annually."},
-        {"id": "M04-F3", "text": "Security approval requires customer keys to remain in the organization's KMS."},
-        {"id": "M04-F4", "text": "Migration takes two weekends."},
-        {"id": "M04-F5", "text": "Rollback is allowed for 30 days."},
-        {"id": "M04-F6", "text": "Rollback restores the cutover-start snapshot."},
-        {"id": "M04-F7", "text": "Records created afterward require reconciliation."},
-        {"id": "M04-F8", "text": "The incident commander approves rollback."}
-      ],
-      "turns": [
-        {
-          "turn": 1,
-          "prompt": "Use Progressive mode. We plan to adopt Atlas on 1 November, saving $120,000 annually. Security approved it only if customer keys remain in our KMS. Migration takes two weekends. Reserve rollback mechanics for a follow-up: rollback is allowed for 30 days, restores the cutover-start snapshot, requires reconciliation of records created afterward, and must be approved by the incident commander. Give me the adoption decision.",
-          "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M04-F1", "M04-F2", "M04-F3", "M04-F4"],
-            "max_counted_words": 40,
-            "cumulative_topic": "atlas",
-            "prohibited_behavior": ["Emitting reserved rollback mechanics"]
-          }
-        },
-        {
-          "turn": 2,
-          "prompt": "Expand only the rollback risk.",
-          "expected": {
-            "rendered_views": ["In context"],
-            "required_fact_ids": ["M04-F1", "M04-F2", "M04-F3", "M04-F4", "M04-F5", "M04-F6", "M04-F7", "M04-F8"],
-            "max_cumulative_counted_words": 200,
-            "cumulative_topic": "atlas",
-            "prohibited_behavior": [
-              "Replaying adoption, savings, KMS, or migration-duration facts",
-              "Resetting the cumulative count",
-              "Adding a general Atlas recap"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "M05",
-      "title": "Material safety warning",
-      "coverage": [
-        "progressive_mode",
-        "material_warning",
-        "safety_precedence",
-        "warning_budget_exception"
-      ],
-      "activation_expectation": "activate",
-      "session_mode": "single_turn",
-      "runs_per_host": 3,
-      "source_facts": [
-        {"id": "M05-F1", "text": "Failover left both the payment primary and replica writable."},
-        {"id": "M05-F2", "text": "Restarting either before reconciliation can diverge order histories."},
-        {"id": "M05-F3", "text": "The divergence can lose acknowledged payments."},
-        {"id": "M05-F4", "text": "Writes must be frozen now."},
-        {"id": "M05-F5", "text": "The incident commander must be paged."},
-        {"id": "M05-F6", "text": "Restart is allowed only after the commander confirms reconciliation is complete."},
-        {"id": "M05-F7", "text": "The next reconciliation report is at 14:30."}
-      ],
-      "turns": [
-        {
-          "turn": 1,
-          "prompt": "Use Progressive mode. Should I restart the payment primary? Failover left both primary and replica writable. Restarting either before reconciliation can diverge order histories and lose acknowledged payments. Freeze writes now, page the incident commander, and restart only after the commander confirms reconciliation is complete. The next report is at 14:30.",
-          "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M05-F1", "M05-F2", "M05-F3", "M05-F4", "M05-F5", "M05-F6", "M05-F7"],
-            "target_counted_words": 40,
-            "warning_exception": "Only indispensable warning words beyond 40 are permitted and the overage must be recorded.",
-            "must_begin_with": "A prohibition against restarting now or a semantic equivalent.",
-            "prohibited_behavior": [
-              "Giving restart steps",
-              "Placing the warning after background detail",
-              "Omitting potential payment loss",
-              "Treating 14:30 alone as restart authorization"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "M06",
-      "title": "Correction and continued expansion",
-      "coverage": [
-        "progressive_mode",
-        "correction",
-        "correction_budget_exception",
-        "depth_preservation",
-        "post_correction_more"
-      ],
-      "activation_expectation": "activate",
-      "session_mode": "multi_turn_continuity",
-      "runs_per_host": 3,
-      "source_facts": [
-        {"id": "M06-F1", "text": "The initially supplied production date is Tuesday at 09:00 UTC."},
-        {"id": "M06-F2", "text": "The corrected production date is Thursday at 09:00 UTC."},
-        {"id": "M06-F3", "text": "Tuesday is only the dry run."},
-        {"id": "M06-F4", "text": "Production coverage must move to Thursday."},
-        {"id": "M06-F5", "text": "The database owner validates backups before production."},
-        {"id": "M06-F6", "text": "The incident commander approves cutover."},
-        {"id": "M06-F7", "text": "Operations publishes status every 30 minutes."}
-      ],
-      "turns": [
-        {
-          "turn": 1,
-          "prompt": "Use Progressive mode. Production maintenance begins Tuesday at 09:00 UTC. Schedule production coverage for that window. The database owner validates backups before production, the incident commander approves cutover, and Operations publishes status every 30 minutes. Give me the immediate plan.",
-          "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M06-F1"],
-            "max_counted_words": 40,
-            "cumulative_topic": "maintenance"
+            "required_fact_ids": ["E03-F1"]
           }
         },
         {
           "turn": 2,
           "prompt": "Correction: the runbook says Thursday at 09:00 UTC. Tuesday is only the dry run. Move production coverage to Thursday.",
           "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M06-F1", "M06-F2", "M06-F3", "M06-F4"],
-            "correction_exemption": "Only words needed to identify, withdraw, replace, and state the changed action are exempt.",
-            "must_begin_with": "An explicit repair identifying Tuesday as the withdrawn production date and saying it was wrong or incomplete.",
-            "prohibited_behavior": [
-              "Silently substituting Thursday",
-              "Leaving Tuesday and Thursday both operative as production dates",
-              "Repeating unaffected ownership detail as exempt repair text",
-              "Inventing a reason for the source error"
-            ]
-          }
-        },
-        {
-          "turn": 3,
-          "prompt": "More.",
-          "expected": {
-            "rendered_views": ["In context"],
-            "required_fact_ids": ["M06-F1", "M06-F2", "M06-F3", "M06-F4", "M06-F5", "M06-F6", "M06-F7"],
-            "max_cumulative_counted_words": 200,
-            "accumulation_rule": "Resume from the pre-correction total; exempt repair words do not add to it.",
-            "prohibited_behavior": ["Replaying the repair", "Using Tuesday as the production date", "Skipping to At depth"]
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["E03-F1", "E03-F2", "E03-F3", "E03-F4"],
+            "must_begin_under_at_a_glance_with": "An explicit repair saying the Tuesday production claim was wrong or incomplete.",
+            "prohibited_behavior": ["Silent substitution", "Leaving both dates operative", "Inventing an error cause"]
           }
         }
       ]
     },
     {
-      "id": "M07",
-      "title": "Clarification control dialogue",
-      "coverage": [
-        "progressive_mode",
-        "clarification",
-        "control_dialogue",
-        "state_preservation"
-      ],
+      "id": "E04",
+      "title": "Material safety warning",
+      "coverage": ["warning", "safety_precedence", "warning_exception"],
       "activation_expectation": "activate",
-      "session_mode": "multi_turn_continuity",
-      "runs_per_host": 1,
+      "runs_per_host": 3,
       "source_facts": [
-        {"id": "M07-F1", "text": "The assistant needs the environment scope."},
-        {"id": "M07-F2", "text": "The assistant needs validation status."},
-        {"id": "M07-F3", "text": "The assistant needs rollback availability."},
-        {"id": "M07-F4", "text": "The environment is staging."},
-        {"id": "M07-F5", "text": "Validation passed."},
-        {"id": "M07-F6", "text": "The rollback switch is available."},
-        {"id": "M07-F7", "text": "Error rate and latency must be monitored before any production decision."}
+        {"id": "E04-F1", "text": "Both payment primary and replica are writable."},
+        {"id": "E04-F2", "text": "Restart can diverge order histories and lose acknowledged payments."},
+        {"id": "E04-F3", "text": "Writes must be frozen and the incident commander paged."},
+        {"id": "E04-F4", "text": "Restart requires confirmed reconciliation."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Use Progressive mode. Should I enable the new index now?",
+          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can diverge order histories and lose acknowledged payments. Freeze writes, page the incident commander, and restart only after confirmed reconciliation.",
+          "expected": {
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["E04-F1", "E04-F2", "E04-F3", "E04-F4"],
+            "must_begin_with": "A prohibition against restarting now.",
+            "prohibited_behavior": ["Restart steps", "Deferred warning", "Omitted payment-loss consequence"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "title": "Clarification control dialogue",
+      "coverage": ["clarification", "control_dialogue", "three_views_after_answer"],
+      "activation_expectation": "activate",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "E05-F1", "text": "Environment and validation status are missing."},
+        {"id": "E05-F2", "text": "The environment is staging."},
+        {"id": "E05-F3", "text": "Validation passed and rollback is available."},
+        {"id": "E05-F4", "text": "Staging readiness is not production approval."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Should I enable the new index now?",
           "expected": {
             "rendered_views": [],
-            "required_fact_ids": ["M07-F1", "M07-F2", "M07-F3"],
-            "control_dialogue_counted_words": 0,
-            "prohibited_behavior": [
-              "Giving a recommendation",
-              "Adding rationale or implementation guidance",
-              "Rendering a view heading",
-              "Asking more than one focused question"
-            ]
+            "required_fact_ids": ["E05-F1"],
+            "prohibited_behavior": ["Recommendation", "View heading", "More than one focused question"]
           }
         },
         {
           "turn": 2,
-          "prompt": "Staging. Validation passed, and the rollback switch is available.",
+          "prompt": "Staging. Validation passed, and rollback is available.",
           "expected": {
-            "rendered_views": ["At a glance"],
-            "required_fact_ids": ["M07-F4", "M07-F5", "M07-F6", "M07-F7"],
-            "max_counted_words": 40,
-            "prior_control_dialogue_counted_words": 0,
-            "prohibited_behavior": [
-              "Treating staging readiness as production approval",
-              "Omitting monitoring before a production decision",
-              "Counting the clarification question"
-            ]
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["E05-F2", "E05-F3", "E05-F4"],
+            "prohibited_behavior": ["Treating staging as production approval"]
           }
         }
       ]
     },
     {
-      "id": "M08",
-      "title": "Controlling legal text hybrid",
-      "coverage": [
-        "positive_activation",
-        "legal_hybrid",
-        "exact_text",
-        "non_controlling_summary"
-      ],
+      "id": "E06",
+      "title": "Controlling legal text",
+      "coverage": ["exact_text", "non_controlling_summary", "non_fit"],
       "activation_expectation": "activate",
-      "session_mode": "single_turn",
       "runs_per_host": 3,
       "source_facts": [
-        {"id": "M08-F1", "text": "Supplier shall retain Customer Data solely for thirty (30) days following termination, except to the extent retention is required by applicable law, in which case Supplier shall isolate such data and cease all other processing."},
-        {"id": "M08-F2", "text": "The default retention period is 30 days after termination."},
-        {"id": "M08-F3", "text": "Applicable law may require longer retention."},
-        {"id": "M08-F4", "text": "Legally retained data must be isolated."},
-        {"id": "M08-F5", "text": "All other processing of legally retained data must cease."}
+        {"id": "E06-F1", "text": "Supplier shall retain Customer Data solely for thirty (30) days following termination."},
+        {"id": "E06-F2", "text": "The summary is non-controlling."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Reproduce this controlling clause exactly, then provide a separately labeled plain-language explanation of at most 40 words: Supplier shall retain Customer Data solely for thirty (30) days following termination, except to the extent retention is required by applicable law, in which case Supplier shall isolate such data and cease all other processing.",
+          "prompt": "Reproduce exactly, then summarize in at most 20 words: Supplier shall retain Customer Data solely for thirty (30) days following termination.",
           "expected": {
             "rendered_views": [],
-            "required_fact_ids": ["M08-F1", "M08-F2", "M08-F3", "M08-F4", "M08-F5"],
-            "controlling_text_exact": "Supplier shall retain Customer Data solely for thirty (30) days following termination, except to the extent retention is required by applicable law, in which case Supplier shall isolate such data and cease all other processing.",
+            "required_fact_ids": ["E06-F1", "E06-F2"],
+            "controlling_text_exact": "Supplier shall retain Customer Data solely for thirty (30) days following termination.",
             "summary_label_must_contain": "Non-controlling",
-            "summary_max_counted_words": 40,
-            "prohibited_behavior": [
-              "Editing, shortening, or paraphrasing the controlling clause",
-              "Interleaving the summary with the clause",
-              "Forcing three-view headings",
-              "Presenting the summary as a substitute",
-              "Adding legal advice or unsupported conclusions"
-            ]
+            "summary_max_words": 20,
+            "prohibited_behavior": ["Mutated source", "Three-view headings", "Summary presented as controlling"]
           }
         }
       ]
     },
     {
-      "id": "M09",
+      "id": "E07",
       "title": "Narrative non-fit",
-      "coverage": [
-        "narrative_non_fit",
-        "voice_preservation",
-        "negative_activation"
-      ],
+      "coverage": ["narrative", "voice_preservation", "negative_activation"],
       "activation_expectation": "remain_inactive",
-      "session_mode": "single_turn",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "M09-F1", "text": "The scene is first person and past tense."},
-        {"id": "M09-F2", "text": "Lina enters the empty station."},
-        {"id": "M09-F3", "text": "The display changes from DELAYED to CANCELLED."},
-        {"id": "M09-F4", "text": "She hears a child laugh behind the locked kiosk."},
-        {"id": "M09-F5", "text": "She says exactly: Who's there?"},
-        {"id": "M09-F6", "text": "The lights go out."},
-        {"id": "M09-F7", "text": "The scene is 120 through 140 words with no headings or bullets."}
+        {"id": "E07-F1", "text": "The scene is first person and past tense."},
+        {"id": "E07-F2", "text": "The scene has no headings or bullets."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Write a 120–140-word first-person scene, not a summary. Events must occur in this order: Lina enters the empty station; the display changes from DELAYED to CANCELLED; she hears a child laugh behind the locked kiosk; she says exactly, \"Who's there?\"; the lights go out. Use past tense. No headings or bullets.",
+          "prompt": "Write a 120-word first-person past-tense scene with no headings or bullets.",
           "expected": {
             "rendered_views": [],
-            "required_fact_ids": ["M09-F1", "M09-F2", "M09-F3", "M09-F4", "M09-F5", "M09-F6", "M09-F7"],
-            "user_length_min_words": 120,
-            "user_length_max_words": 140,
-            "prohibited_behavior": [
-              "Conclusion-first summary",
-              "Clarity cues",
-              "Headings",
-              "Bullets",
-              "Reordered events",
-              "Altered required dialogue"
-            ]
+            "required_fact_ids": ["E07-F1", "E07-F2"],
+            "prohibited_behavior": ["Protocol headings", "Bullets", "Conclusion-first summary"]
           }
         }
       ]
     },
     {
-      "id": "M10",
+      "id": "E08",
       "title": "Sequential procedure non-fit",
-      "coverage": [
-        "procedure_non_fit",
-        "complete_sequence",
-        "negative_activation"
-      ],
+      "coverage": ["procedure", "complete_sequence", "negative_activation"],
       "activation_expectation": "remain_inactive",
-      "session_mode": "single_turn",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "M10-F1", "text": "The incident commander declares restore mode."},
-        {"id": "M10-F2", "text": "The operator blocks application writes."},
-        {"id": "M10-F3", "text": "The backup checksum must equal the manifest; otherwise stop and escalate without restoring."},
-        {"id": "M10-F4", "text": "Restore the backup to staging."},
-        {"id": "M10-F5", "text": "Run the integrity suite; on failure keep writes blocked and escalate."},
-        {"id": "M10-F6", "text": "The incident commander approves production cutover."},
-        {"id": "M10-F7", "text": "Cut over and then reopen writes."}
+        {"id": "E08-F1", "text": "Block application writes before restore."},
+        {"id": "E08-F2", "text": "Stop if the checksum differs from the manifest."},
+        {"id": "E08-F3", "text": "Restore to staging before production approval."},
+        {"id": "E08-F4", "text": "Reopen writes only after cutover."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Write the complete production restore procedure from these controlling steps. Preserve order and prerequisites: (1) Incident commander declares restore mode. (2) Operator blocks application writes. (3) Verify backup checksum equals the manifest; if not, stop and escalate—do not restore. (4) Restore to staging. (5) Run the integrity suite; if any check fails, keep writes blocked and escalate. (6) Incident commander approves production cutover. (7) Cut over, then reopen writes. Add a brief overview only if it helps.",
+          "prompt": "Write the complete restore procedure in order: block writes; verify checksum and stop on mismatch; restore to staging; obtain production approval; cut over; reopen writes.",
           "expected": {
             "rendered_views": [],
-            "required_fact_ids": ["M10-F1", "M10-F2", "M10-F3", "M10-F4", "M10-F5", "M10-F6", "M10-F7"],
-            "optional_overview_max_counted_words": 40,
-            "required_step_order": ["M10-F1", "M10-F2", "M10-F3", "M10-F4", "M10-F5", "M10-F6", "M10-F7"],
-            "prohibited_behavior": [
-              "Reordering steps",
-              "Withholding later steps for conversational expansion",
-              "Breaking the procedure into three view fragments",
-              "Omitting either stop condition",
-              "Reopening writes before cutover",
-              "Inventing commands"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "M11",
-      "title": "Negative activation",
-      "coverage": [
-        "negative_activation",
-        "exact_format"
-      ],
-      "activation_expectation": "remain_inactive",
-      "session_mode": "single_turn",
-      "runs_per_host": 3,
-      "source_facts": [
-        {"id": "M11-F1", "text": "17 multiplied by 19 equals 323."}
-      ],
-      "turns": [
-        {
-          "turn": 1,
-          "prompt": "Calculate 17 × 19. Return only the integer.",
-          "expected": {
-            "rendered_views": [],
-            "required_fact_ids": ["M11-F1"],
-            "trimmed_output_exact": "323",
-            "prohibited_behavior": ["Any heading", "Any cue", "Any explanation", "Any mode presentation"]
+            "required_fact_ids": ["E08-F1", "E08-F2", "E08-F3", "E08-F4"],
+            "prohibited_behavior": ["Three-view fragmentation", "Reordered steps", "Omitted stop condition", "Early write reopening"]
           }
         }
       ]

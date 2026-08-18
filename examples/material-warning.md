@@ -1,6 +1,6 @@
 # Material warning
 
-- **Expected mode and views:** Default Verbose mode renders all views; the prohibition and data-loss warning appear first in At a glance.
+- **Expected views:** All views render; the prohibition and data-loss warning appear first in At a glance.
 - **Required facts:** Early deletion can make data unreadable; the old key remains restricted through migration; recovery is verified before destruction.
 - **Budget:** At a glance is at most 40 counted words unless safety requires more; At a glance plus In context is at most 200.
 

@@ -10,26 +10,34 @@ Packaging alone does not establish ChatGPT Skills access, Codex compatibility,
 OpenAI review, approval, publication, or support. The publication evidence
 recorded below is separate from the local packaging result.
 
+ChatGPT remains the Option 1 **Advisory prompt-only** surface. The archive does
+not contain `pc-core`, a backend, an MCP server, hook configuration, local
+state, or any runtime dependency. Deterministic local enforcement is available
+only outside this ZIP for explicitly invoked local-agent wrappers. Its only
+ordinary response contract is one response containing At a glance, In context,
+and At depth in order.
+
 ## Current gate
 
-The local package was rebuilt against final skill SHA-256
-`5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562`.
+The v0.2.1 package was rebuilt against prompt-only skill SHA-256
+`ab8d3ba8e9aa02530f97d21af15ff371ec0df02055b6e2f0cff665c36c59a749`.
 Two consecutive builds produced the same archive SHA-256:
-`439bf9ce41ca558c622d7d0b31e2a453fcc3a11fe3dbf73e284fd90d46113479`.
+`d5e447abc41132a3e5d0580b5afc5231230317dead1adcee5767085159cbde23`.
 
-That packaging result does not clear the behavior gate. Cursor round one ended
-with 6 cases passing and 5 failing; the one permitted targeted remediation
-round ended with 0 passing and 5 failing. All response budgets passed, and
-there were no safety-warning or procedural-safety failures, but strict
-acceptance still requires every prescribed run to pass. The mandatory hard
-stop has been reached.
+The v0.2.1 ZIP remains Advisory and has not been uploaded. That packaging
+result does not clear a behavior gate. The latest ChatGPT evidence is
+user-provided and not an independently reproduced acceptance run.
 
-Upload, submission, or publication does not clear that failed behavior gate.
-This record does not authorize or imply another remediation round.
+The bounded Cursor wrapper remediation rerun completed against the frozen
+pre-trigger-revision skill: 10 of 17 responses were mechanically certified and
+7 were withheld; `E02`, `E06`, and `E07` passed, while `E03`, `E04`, and `E05`
+failed. It exercised mechanical wrapper fixes but is not a result for this
+v0.2.1 ZIP. Strict semantic and behavioral acceptance remains unmet. Upload,
+submission, or publication would not clear that failed behavior gate.
 
-## Publication record
+## Historical publication record
 
-On 2026-08-17, the user reported that the ChatGPT plugin was published at
+On 2026-08-17, the user reported that an older ChatGPT plugin was published at
 [`https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
 The plugin ID is `plugins_6a82efdddbb48191b2785354515e1be2`. This report
 supersedes earlier repository statements that upload, submission, or
@@ -41,30 +49,82 @@ controls. It did not expose the plugin's listing metadata or install controls.
 The fetch therefore confirms that the route exists, not that the listing is
 visible to an authenticated account or that the plugin can be installed.
 
-No authenticated listing or install flow was independently exercised, and no
-ChatGPT activation or rendered response was scored. Publication is
-user-confirmed; listing visibility, installability, activation, and behavior
-remain independently **UNVERIFIED**. The report also does not independently
-document the upload, submission, review, approval, or publication sequence.
+No authenticated listing or install flow was independently exercised. The
+older publication is user-confirmed; listing visibility, installability, and
+activation remain independently **UNVERIFIED**. The URL is retained as
+historical publication evidence and does not establish that v0.2.1 was
+uploaded. The report also does not independently document the upload,
+submission, review, approval, or publication sequence.
 
-The publication report does not change the non-release-ready status, the failed
-Cursor strict acceptance result, or the Claude Code hold. Professional name and
-trademark clearance remains unresolved; publication is not evidence of
-clearance.
+### Historical user-provided live behavior transcript
+
+On 2026-08-17, the user supplied a transcript they identified as a live
+interaction with the published older dual-behavior plugin. It is user-provided
+historical evidence and was not independently captured or reproduced. Its
+visible protocol results are:
+
+- **Default Verbose rendering:** `PASS`; all three views appeared in order.
+- **Progressive acknowledgment and sticky transitions:** `PASS`; the transcript
+  showed **At a glance → In context → At depth**.
+- **Safe stopping and caveats:** `PASS`.
+- **At-a-glance budgets:** `FAIL`; gold ≈103 prose words and silver ≈210 prose
+  words excluding tables and citations.
+- **Cumulative prose through In context:** `FAIL`; gold ≈330+ words and silver
+  ≈600+ words.
+- **Additivity and no fact-only repetition:** `FAIL`.
+- **Switch back to Verbose:** acknowledgment observed; actual subsequent
+  Verbose behavior `UNVERIFIED`.
+
+The transcript changes ChatGPT behavior status from unverified to **observed
+but non-conformant**. It does not independently establish activation,
+compatibility, or support. No financial fact in the gold or silver responses
+was independently verified; the behavioral scores do not establish factual
+accuracy or suitability.
+
+This evidence applies to the user-identified older published plugin session,
+not to v0.2, the later trigger transcript, or the v0.2.1 ZIP.
+
+### Latest user-provided pre-v0.2.1 trigger transcript
+
+On 2026-08-18, the user supplied a second transcript after reporting a new
+plugin upload. The repository did not independently verify which portal bytes
+were installed or capture the conversation, and the transcript preceded the
+v0.2.1 trigger-recall patch. In the supplied transcript:
+
+- the first `gold prices and forecasts` response omitted all three required
+  headings, so visible v0.2 output conformance `FAILED`;
+- after the user challenged the omission, ChatGPT rendered the three headings
+  but described removed Progressive/Verbose presentation modes; and
+- the response itself said it had failed to activate the skill, but no
+  independent host activation trace exists.
+
+This is evidence of missed implicit trigger recall plus stale or non-loaded
+behavior, not evidence that the v0.2 body requested those modes. The bounded
+v0.2.1 change front-loads the discovery description and adds local
+activation-only regression prompts. It can improve recall but cannot guarantee
+implicit ChatGPT invocation. The output body and local enforcement semantics
+are unchanged. The current v0.2.1 ZIP has not been uploaded or live-tested in
+ChatGPT.
+
+The historical publication report, transcript evidence, and bounded Cursor
+wrapper rerun do not change the non-release-ready status or failed strict
+acceptance result. The Claude Code adapter is structurally tested, but live
+behavior remains `UNVERIFIED` because it requires paid Anthropic API access.
+Professional name and trademark clearance remains unresolved; publication is
+not evidence of clearance.
 
 ## Package contents
 
 Run the deterministic packager from the repository root:
 
 ```sh
-source /Users/firaskafri/Work/code/lms-api/.venv/bin/activate
-python3 tools/package_openai_plugin.py
+python3.11 -m tools.package_openai_plugin
 ```
 
 It creates this ignored artifact:
 
 ```text
-dist/progressive-clarity-openai-plugin-0.1.0.zip
+dist/progressive-clarity-openai-plugin-0.2.1.zip
 ```
 
 The ZIP contains exactly:
@@ -82,10 +142,10 @@ settings. It rejects unexpected files in the canonical skill directory,
 validates the documented manifest, publisher-name, asset-path, SVG, and square
 image constraints, rereads the completed ZIP, and fails if any packaged file
 differs byte-for-byte from its repository source. Its output reports the
-SHA-256 digest and byte count for the archive and every entry. For the final
-frozen source, the archive is 30,659 bytes and has
+SHA-256 digest and byte count for the archive and every entry. For the revised
+prompt-only source, the archive is 19,413 bytes and has
 SHA-256
-`439bf9ce41ca558c622d7d0b31e2a453fcc3a11fe3dbf73e284fd90d46113479`.
+`d5e447abc41132a3e5d0580b5afc5231230317dead1adcee5767085159cbde23`.
 
 The two original visual assets use a restrained three-level nested-view motif
 with flat midnight and mint colors. They contain no text, gradients, external
@@ -103,12 +163,11 @@ references, scripts, or third-party marks:
 Run:
 
 ```sh
-source /Users/firaskafri/Work/code/lms-api/.venv/bin/activate
-python3 -m json.tool .codex-plugin/plugin.json >/dev/null
-python3 tools/validate_repository.py
-python3 tools/package_openai_plugin.py
-unzip -t dist/progressive-clarity-openai-plugin-0.1.0.zip
-unzip -Z1 dist/progressive-clarity-openai-plugin-0.1.0.zip
+python3.11 -m json.tool .codex-plugin/plugin.json >/dev/null
+python3.11 -m tools.validate_repository
+python3.11 -m tools.package_openai_plugin
+unzip -t dist/progressive-clarity-openai-plugin-0.2.1.zip
+unzip -Z1 dist/progressive-clarity-openai-plugin-0.2.1.zip
 ```
 
 Run the packager twice without changing source inputs and compare the reported
@@ -128,7 +187,62 @@ publication.
 
 Do not treat a valid ZIP, a successful local install, or a portal upload as
 behavioral compatibility evidence. Activation and rendered behavior are
-separate evidence dimensions, and this package has no passing result for them.
+separate evidence dimensions. The historical older-build user-provided
+transcript records non-conformant rendered behavior. It is not current v0.2
+evidence, and activation remains independently unverified.
+
+## Manual v0.2.1 portal update
+
+These steps are prepared for the authorized publisher. They were not performed
+by this repository work and must not be treated as a portal-state record.
+
+1. Rebuild the archive from the intended final checkout and confirm its
+   SHA-256 and five-entry inventory against this document.
+2. Sign in to the [OpenAI Platform](https://platform.openai.com/), select the
+   organization that owns `plugins_6a82efdddbb48191b2785354515e1be2`, and
+   confirm **Apps Management: Write**.
+3. Confirm that the selected verified developer identity is exactly
+   `FIRAS HASHEM AHMAD AL KAFRI`.
+4. Open the existing plugin and create a new draft version. Do not create a
+   separate plugin: updates must retain package name `progressive-clarity`.
+5. Keep the submission type **Skills only** and upload
+   `dist/progressive-clarity-openai-plugin-0.2.1.zip`.
+6. Confirm the parsed manifest reports version `0.2.1`, the same package name,
+   the identity above, and the two packaged SVG paths. Review and explicitly
+   accept any portal-reported manifest normalization only if it preserves the
+   intended fields.
+7. Set or confirm the listing copy from the uploaded manifest:
+   - display name: `Progressive Clarity`;
+   - short description: `Three views, one response`;
+   - long description: `Prompt-only guidance that asks models to render At a
+     glance, In context, and At depth in order, preserve stopping-point caveats,
+     and avoid fact repetition while leaving semantic conformance advisory.`
+8. Remove any starter prompt or test case that asks for a mode switch, sticky
+   mode, staged view advancement, or Progressive behavior. Supply five positive
+   and three negative reviewer-reproducible cases for the single v0.2 contract.
+9. Review category, website, support, privacy, terms, availability, and policy
+   attestations against the actual publisher and prompt-only data handling. Do
+   not inherit an older value without checking it.
+10. Use the release notes below, run the portal package and security checks,
+    and inspect every warning. Save the draft without submission until the
+    current live-host evidence and listing materials are approved.
+11. After separate authorization, select **Submit for Review**. Submission
+    starts review; it does not publish. If OpenAI approves the new version,
+    obtain separate authorization before publishing the replacement.
+
+Exact release notes:
+
+> Updates the Progressive Clarity v0.2 advisory plugin from package version
+> 0.2.0 to 0.2.1. Front-loads the skill description as the default formatter
+> for ordinary user-facing factual answers, including forecasts, and states the
+> required three-view output before precise exclusions. The response contract,
+> skill body, and skills-only runtime boundary are unchanged. This improves
+> implicit trigger recall but does not guarantee ChatGPT or Codex invocation.
+
+After an approved replacement is published, uninstall or remove the old
+installed plugin version, install v0.2.1, and start a fresh chat before running
+`gold prices and forecasts` without naming the skill. An existing conversation
+may retain stale instructions or state and is not a valid clean trigger check.
 
 ## Check ChatGPT Skills access
 
@@ -203,6 +317,9 @@ SVG branding assets, the ZIP contains no scripts, MCP server configuration, app
 mapping, hooks, network dependency, executable bit, analytics, telemetry, or
 `agents/openai.yaml`.
 
+The local `pc_core/`, `adapters/`, and `tests/` trees are deliberately outside
+the archive inventory. ChatGPT does not require or call them.
+
 OpenAI scans uploaded skills, but that scan does not replace source review.
 Treat every submitted instruction and file as security-sensitive. Review the
 final ZIP inventory before any future upload and rerun the byte-equivalence
@@ -217,12 +334,18 @@ identity must be the person or business actually authorized to publish.
 
 The reported publication does not resolve:
 
-- failed Cursor strict acceptance and the completed bounded-cycle hard stop;
-- Claude Code behavior, which remains on hold for insufficient API credit and
-  **UNVERIFIED**;
+- the Advisory v0.2.1 ZIP, which has not been uploaded, or the revised
+  prompt-only skill's unrun ChatGPT, Cursor, and Claude behavior;
+- failed preceding Cursor strict acceptance and that cycle's hard stop;
+- Claude Code behavior, which requires paid Anthropic API access and remains
+  **UNVERIFIED** despite structural adapter tests;
 - ChatGPT listing metadata, authenticated visibility, installability,
-  activation, and rendered behavior, which remain independently
-  **UNVERIFIED**;
+  and activation, which remain independently **UNVERIFIED**;
+- the latest user-provided pre-v0.2.1 transcript's missed initial three-view
+  output and obsolete-mode explanation, which v0.2.1 has not retested;
+- historical older-build ChatGPT rendered behavior, which is observed but
+  non-conformant in the user-provided transcript, with actual post-switch-back
+  Verbose behavior still **UNVERIFIED** and no evidentiary effect on v0.2;
 - independently reviewable records of the upload, submission, review, approval,
   portal validation, security scans, and publication sequence;
 - independent confirmation that the selected OpenAI Platform identity matched
@@ -233,3 +356,7 @@ The reported publication does not resolve:
 
 Publication does not establish behavioral compatibility, installation support,
 release readiness, or professional name clearance.
+
+The deterministic package build establishes only local byte integrity. It does
+not establish semantic completeness, hidden-reversal safety, or behavior of
+the published portal artifact.

@@ -18,6 +18,8 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
+.pc-core/
 
 # Node
 node_modules/

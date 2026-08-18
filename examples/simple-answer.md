@@ -1,6 +1,6 @@
 # Simple answer
 
-- **Expected mode and views:** Default Verbose mode renders At a glance, In context, and At depth with visible headings.
+- **Expected views:** At a glance, In context, and At depth render in order.
 - **Required facts:** Default stashing excludes untracked and ignored files; `-u` includes untracked files; `-a` includes ignored files; tracked staged and unstaged changes need neither flag.
 - **Budget:** At a glance is at most 40 counted words; At a glance plus In context is at most 200.
 

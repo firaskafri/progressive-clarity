@@ -1,10 +1,12 @@
 # Document template
 
-Document mode is an informative Verbose-style adaptation of Progressive Clarity for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
+Document adaptation is an informative three-view use of Progressive Clarity
+for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
 
 Use the visible sections only when they help readers choose a stopping point. For tutorials, procedures, controlling legal text, and voice-dependent writing, use the hybrid guidance at the end.
 
-Version 0.1 word-budget guidance applies to English prose only. Use the human counting rules in `SPEC.md`; no non-English budget claim is made.
+Version 0.2 word-budget guidance applies to English prose only. Use the
+counting rules in `SPEC.md`; no non-English budget claim is made.
 
 ```markdown
 # <Conclusion written as a specific claim>

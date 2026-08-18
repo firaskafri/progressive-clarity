@@ -1,10 +1,12 @@
 # Protocol examples
 
-These fictional examples demonstrate Verbose and Progressive composition, sticky mode switching, one-off view overrides, expansion, correction, safety precedence, and non-fit behavior. They are examples of expected behavior, not host evaluation fixtures.
+These fictional examples demonstrate the single three-view composition,
+targeted follow-ups, correction, clarification, safety precedence, and non-fit
+behavior. They are expected-behavior examples, not host evaluation fixtures.
 
 Each example states:
 
-- the expected mode and view sequence;
+- the expected view sequence or non-fit structure;
 - the facts that must remain visible at the relevant stopping point;
 - the applicable budget;
 - a prompt and representative response.
@@ -16,10 +18,7 @@ Word counts cover English assistant response prose only and follow the human sco
 - [Simple answer](simple-answer.md)
 - [Decision](decision.md)
 - [Status update](status-update.md)
-- [Explicit view requests](explicit-views.md)
-- [Mode switching and persistence](mode-switching.md)
-- [Two consecutive expansions](two-more.md)
-- [Targeted expansion](targeted-expansion.md)
+- [Targeted follow-up](targeted-expansion.md)
 - [Clarification control dialogue](clarification.md)
 - [Material warning](material-warning.md)
 - [Correction](correction.md)

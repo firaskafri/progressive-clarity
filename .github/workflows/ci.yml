@@ -24,35 +24,65 @@ jobs:
         with:
           version: "0.11.8"
 
-      - name: Verify frozen dual-mode inputs
+      - name: Verify frozen protocol inputs
         run: |
           sha256sum --check --strict <<'EOF'
-          ff72cb498d93f6a8d8e972798e664e64df5bbc1c99f6e0a47db819331c18e16d  SPEC.md
-          5051c55286533cecf65a7963bf7fab68471986e851dbd65a21bceda0683d7562  skills/progressive-clarity/SKILL.md
-          4c27a740e2e02e54f97889618397a6417c82e089b9bb44919b92642e59289680  evals/cases.json
+          74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8  SPEC.md
+          ab8d3ba8e9aa02530f97d21af15ff371ec0df02055b6e2f0cff665c36c59a749  skills/progressive-clarity/SKILL.md
+          8788528b11667b99a8ba398efe1dd17da3b302c687e584e5c07ca94f84f17eb4  evals/cases.json
           EOF
           python3 - <<'PY'
           import json
           from pathlib import Path
 
           suite = json.loads(Path("evals/cases.json").read_text(encoding="utf-8"))
-          assert suite["schema_version"] == "2.0.0"
+          assert suite["schema_version"] == "4.0.0"
           PY
 
-      - name: Validate dual-mode repository
+      - name: Validate repository
         run: |
           python3 -m json.tool evals/cases.json >/dev/null
-          python3 tools/validate_repository.py
+          python3 -m tools.validate_repository
+
+      - name: Test deterministic pc-core
+        run: |
+          uv run --python 3.11 --no-project \
+            python -m unittest discover -s tests -v
+          uv run --python 3.11 --no-project \
+            python -m compileall -q pc_core tests tools
+          uvx --from ruff==0.12.9 ruff check pc_core tests tools
+
+      - name: Verify installable Python package
+        run: |
+          uv build --out-dir "$RUNNER_TEMP/pc-dist"
+          mkdir -p "$RUNNER_TEMP/pc-project/.pc-core"
+          uv venv --python 3.11 \
+            "$RUNNER_TEMP/pc-project/.pc-core/venv"
+          uv pip install \
+            --python "$RUNNER_TEMP/pc-project/.pc-core/venv/bin/python" \
+            "$RUNNER_TEMP"/pc-dist/*.whl
+          (
+            cd "$RUNNER_TEMP/pc-project"
+            ".pc-core/venv/bin/python" -I -c \
+              'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.2"'
+            ".pc-core/venv/bin/pc-core" --help >/dev/null
+            hook_output="$(
+              printf '%s\n' \
+                '{"last_assistant_message":"## At a glance\nOne.\n\n## In context\nTwo.\n\n## At depth\nThree.","stop_hook_active":false}' \
+                | ".pc-core/venv/bin/pc-core" hook claude-stop
+            )"
+            test "$hook_output" = '{}'
+          )
 
       - name: Build deterministic OpenAI plugin
         run: |
           python3 -m json.tool .codex-plugin/plugin.json >/dev/null
-          python3 tools/package_openai_plugin.py
-          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.1.0.zip)"
-          python3 tools/package_openai_plugin.py
-          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.1.0.zip)"
+          python3 -m tools.package_openai_plugin
+          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.2.1.zip)"
+          python3 -m tools.package_openai_plugin
+          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.2.1.zip)"
           test "$first_hash" = "$second_hash"
-          unzip -t dist/progressive-clarity-openai-plugin-0.1.0.zip
+          unzip -t dist/progressive-clarity-openai-plugin-0.2.1.zip
 
       - name: Check out pinned skills-ref
         env:
