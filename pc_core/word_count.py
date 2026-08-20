@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
 
 
 _FENCE_OPEN = re.compile(r"^ {0,3}(?P<marker>`{3,}|~{3,})")
@@ -55,7 +54,8 @@ _MARKDOWN_PUNCTUATION = str.maketrans(
 )
 
 
-def _without_fences(lines: list[str]) -> list[str | None]:
+def without_fenced_lines(lines: list[str]) -> list[str | None]:
+    """Replace fenced-code lines with None while preserving line positions."""
     kept: list[str | None] = []
     fence_character: str | None = None
     fence_length = 0
@@ -127,7 +127,7 @@ def _without_html_comments(lines: list[str | None]) -> list[str | None]:
 
 def _included_lines(markdown: str) -> list[str]:
     normalized = markdown.replace("\r\n", "\n").replace("\r", "\n")
-    lines = _without_fences(normalized.split("\n"))
+    lines = without_fenced_lines(normalized.split("\n"))
     excluded_headings: set[int] = set()
     for index, line in enumerate(lines):
         if line is None:
@@ -228,8 +228,3 @@ def lexical_similarity(left: str, right: str) -> float:
     if not left_tokens or not right_tokens:
         return 0.0
     return len(left_tokens & right_tokens) / len(left_tokens | right_tokens)
-
-
-def unique_in_order(values: Iterable[str]) -> tuple[str, ...]:
-    """Return first occurrences while preserving deterministic order."""
-    return tuple(dict.fromkeys(values))

@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import os
+import hashlib
 import re
-import tempfile
 from pathlib import Path
-from typing import TextIO
 
+from pc_core.json_io import parse_json, write_json_atomic
 from pc_core.validation import (
     ValidationReport,
     diagnostic_repair_text,
@@ -17,22 +15,19 @@ from pc_core.validation import (
 
 
 _SAFE_ID = re.compile(r"[^A-Za-z0-9._-]+")
-
-
-def _read_object(stdin: TextIO) -> dict[str, object]:
-    value = json.load(stdin)
-    if not isinstance(value, dict):
-        raise ValueError("hook input must be a JSON object")
-    return value
+_SAFE_ID_PREFIX_LENGTH = 64
+_SAFE_ID_DIGEST_LENGTH = 16
 
 
 def _safe_id(value: object) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError("hook conversation and generation ids must be strings")
-    sanitized = _SAFE_ID.sub("_", value)
-    if not sanitized:
-        raise ValueError("hook id has no safe characters")
-    return sanitized[:160]
+    sanitized = _SAFE_ID.sub("_", value).strip("._-") or "id"
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return (
+        f"{sanitized[:_SAFE_ID_PREFIX_LENGTH]}-"
+        f"{digest[:_SAFE_ID_DIGEST_LENGTH]}"
+    )
 
 
 def _cursor_report_path(data: dict[str, object], state_dir: Path) -> Path:
@@ -41,31 +36,10 @@ def _cursor_report_path(data: dict[str, object], state_dir: Path) -> Path:
     return state_dir / f"cursor-{conversation}-{generation}.json"
 
 
-def _atomic_json(path: Path, value: object) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(
-        prefix=f".{path.name}.",
-        suffix=".tmp",
-        dir=path.parent,
-        text=True,
-    )
-    temporary = Path(temporary_name)
-    try:
-        os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump(value, handle, ensure_ascii=False, sort_keys=True)
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
 def _load_report(path: Path) -> dict[str, object] | None:
     if not path.is_file() or path.is_symlink():
         return None
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = parse_json(path.read_text(encoding="utf-8"))
     return value if isinstance(value, dict) else None
 
 
@@ -87,7 +61,7 @@ def cursor_after_response(
     if not isinstance(text, str):
         raise ValueError("Cursor afterAgentResponse input is missing text")
     report = validate_rendered_markdown(text)
-    _atomic_json(
+    write_json_atomic(
         _cursor_report_path(data, state_dir),
         report.to_dict(include_next_state=False),
     )
@@ -96,7 +70,9 @@ def cursor_after_response(
 
 def cursor_stop(data: dict[str, object], state_dir: Path) -> dict[str, object]:
     """Ask Cursor for one retry after an observed mechanical violation."""
-    report_data = _load_report(_cursor_report_path(data, state_dir))
+    report_path = _cursor_report_path(data, state_dir)
+    report_data = _load_report(report_path)
+    report_path.unlink(missing_ok=True)
     loop_count = data.get("loop_count")
     if (
         report_data is None

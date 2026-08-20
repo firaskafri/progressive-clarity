@@ -2,7 +2,7 @@
 
 - **Expected structure:** Non-fit procedure with an optional orientation followed by the complete natural step sequence.
 - **Required facts:** Verifiers receive the new public key before signers switch; both keys overlap; old signatures expire before revocation; rollback remains possible.
-- **Budget:** The orientation is at most 40 counted words. The ordered procedure is not forced into conversational view increments.
+- **Budget:** Full-format budgets are not applicable to this non-fit procedure.
 
 ## Prompt
 
@@ -10,11 +10,9 @@ Show me how to rotate an application signing key without interrupting verificati
 
 ## Response
 
-### At a glance
+### Orientation
 
-<!-- words:procedure-glance:start -->
 Use an overlap period: publish the new verifier before signing with the new key, then retire the old key only after old signatures expire. Keep rollback access throughout.
-<!-- words:procedure-glance:end -->
 
 ### Procedure
 

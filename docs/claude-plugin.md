@@ -1,5 +1,160 @@
 # Claude plugin and custom Skill distribution
 
+## Current v0.4 distribution target
+
+Progressive Clarity v0.4 has two Claude distribution forms. Both are
+instruction-only and reuse the canonical
+`skills/progressive-clarity/SKILL.md` body and `LICENSE`:
+
+- a repository-root Claude plugin; and
+- a minimal Claude.ai custom-Skill upload.
+
+Both carry the Advisory topic-oriented profile. The model uses visible context
+to infer topic continuity and return to an earlier topic. Ordinary and narrow
+exploration is Focused; the first substantial orientation, decision or summary
+checkpoint, material re-synthesis, and material correction use Full output.
+Every deeper Full view must be dominated by new information; necessary short
+anchors may recur, but complete earlier propositions and recaps may not.
+Neither package contains `pc-core`, adapters, hooks, durable topic state, a
+backend, an MCP server, executable code, network access, or analytics.
+
+### Target package names
+
+Both v0.4 Claude artifacts target version `0.4.2`:
+
+```text
+dist/progressive-clarity-claude-plugin-0.4.2.zip
+dist/progressive-clarity-claude-ai-skill-0.4.2.zip
+```
+
+The plugin inventory is:
+
+```text
+.claude-plugin/plugin.json
+skills/progressive-clarity/LICENSE
+skills/progressive-clarity/SKILL.md
+```
+
+The custom-Skill inventory is:
+
+```text
+progressive-clarity/LICENSE
+progressive-clarity/SKILL.md
+```
+
+The generated custom-Skill frontmatter must retain only the supported `name`,
+`description`, and `license` fields, with a description that accurately
+describes the v0.4 topic-oriented Focused/Full cadence. The generated body and
+license must remain byte-equivalent to their canonical sources except for the
+documented generated frontmatter replacement.
+
+### Build and inspect
+
+Run from the repository root with Python 3.11 or newer:
+
+```sh
+python3.11 -m tools.package_claude_plugin
+python3.11 -m tools.package_claude_skill
+python3.11 -m json.tool .claude-plugin/plugin.json >/dev/null
+unzip -t dist/progressive-clarity-claude-plugin-0.4.2.zip
+unzip -t dist/progressive-clarity-claude-ai-skill-0.4.2.zip
+unzip -Z1 dist/progressive-clarity-claude-plugin-0.4.2.zip
+unzip -Z1 dist/progressive-clarity-claude-ai-skill-0.4.2.zip
+```
+
+Run `claude plugin validate . --strict` only when the installed Claude Code
+version supports that option. Preserve an unsupported-option or authentication
+error as a tooling result; do not replace it with an inference claim.
+
+Installed Claude Code 2.1.72 reported `✔ Validation passed` for
+`claude plugin validate .`. Its help exposes no `--strict` option, so strict
+installed-CLI validation remains unavailable with that version.
+
+Two consecutive local builds from unchanged inputs produced matching bytes:
+
+- Claude plugin: 23,664 bytes, SHA-256
+  `a4d0bb9dca2c6e7d1986bd634c8f8b8b1f1b65359cb67dc33877e11c785efbba`;
+- Claude.ai custom Skill: 22,439 bytes, SHA-256
+  `e051684925d205a8436c14979104ba95bacba1c1d39183ffde4b72843c3f2c9a`.
+
+The generated custom-Skill description is 182 characters. Its packaged body
+and canonical body both have SHA-256
+`6de616e837e6f8d9d51f4ee140a4c1095ce93f25106c59a183a1806cd16c7726`.
+
+The exact Claude plugin inventory is:
+
+- `.claude-plugin/plugin.json`: 584 bytes, SHA-256
+  `5694b3456c5fa8e09e043a261d77f81ad217df9595004a638e6aee1063064103`;
+- `skills/progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
+  `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
+  and
+- `skills/progressive-clarity/SKILL.md`: 11,282 bytes, SHA-256
+  `2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21`.
+
+The exact Claude.ai Skill inventory is:
+
+- `progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
+  `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
+  and
+- `progressive-clarity/SKILL.md`: 10,797 bytes, SHA-256
+  `0daca30998f87ae43b4d73a7cf427d494da710003f3d64f7d2582dd18a250a66`.
+
+Historical v0.2 hashes below identify only their old artifacts.
+
+### Local use after a successful rebuild
+
+Claude Code can load the source root or rebuilt plugin ZIP:
+
+```sh
+claude --plugin-dir /path/to/progressive-clarity
+claude --plugin-dir /path/to/progressive-clarity/dist/progressive-clarity-claude-plugin-0.4.2.zip
+```
+
+The custom-Skill upload target is:
+
+```text
+dist/progressive-clarity-claude-ai-skill-0.4.2.zip
+```
+
+An archive that passes local validation is not automatically accepted by
+Claude.ai, a custom-plugin uploader, an organization marketplace, or the public
+community directory. Upload, review, approval, catalog synchronization, and
+installation require separate authorization and evidence.
+
+The project-local Claude Code Stop hook remains
+**Advisory/block-and-retry**. It checks visible Full formatting when the
+reserved headings are present. Heading-free output is nonblocking because it
+may be a valid Focused or purpose-specific response. The hook cannot certify
+topic inference, selected presentation, or output already displayed; use the
+non-streaming wrapper for fail-closed local output.
+
+### Current evidence boundary
+
+No `0.4.2` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+v0.3.0–v0.3.2 ChatGPT observations are recorded separately in
+[Verification](verification.md); they do not establish Claude behavior. Claude
+skill selection, topic inference, topic resumption, presentation choice, and
+rendered behavior are **UNVERIFIED**. No `0.4.2` Claude.ai upload,
+custom-plugin upload, community-directory submission, approval, publication,
+or installability is claimed.
+
+## Historical/superseded v0.3.x evidence
+
+The v0.3.x local packages and user-provided ChatGPT results are historical.
+They showed generally successful cadence, budgets, topic return, warning
+containment, and narrative/procedure exclusions, but recurring Full
+restatement plus bounded proportionality, numeric-label, correction,
+clarification, and controlling-label failures. Portal-byte identity and visible
+Skill activation were not independently verified. No ChatGPT observation
+establishes Claude behavior or transfers to v0.4.
+
+## Historical v0.2 Claude packaging and evidence
+
+Everything below this heading is retained as historical v0.2 documentation and
+evidence. References to “current,” old artifact versions, hashes, upload paths,
+dated local checks, and user-provided Claude transcripts describe the v0.2
+record only. Their labels are preserved and do not establish v0.4 behavior.
+
 Progressive Clarity has two Claude distribution forms. Both are
 instruction-only and reuse the canonical
 `skills/progressive-clarity/SKILL.md` body and `LICENSE`. Neither package
@@ -48,7 +203,7 @@ path, subject to the target account's controls.
 The deterministic upload archive is:
 
 ```text
-dist/progressive-clarity-claude-ai-skill-0.2.1.zip
+dist/progressive-clarity-claude-ai-skill-0.2.2.zip
 ```
 
 It contains exactly:
@@ -61,11 +216,11 @@ progressive-clarity/SKILL.md
 The folder name and generated frontmatter `name` are both
 `progressive-clarity`. The packaged copy uses only the cross-product
 frontmatter fields `name`, `description`, and `license`. Its generated
-description is 197 characters:
+description is 187 characters:
 
-> Use for ordinary user-facing factual answers, explanations, recommendations,
-> comparisons, decisions, status updates, and summaries that need three
-> concise, additive views with safe stopping points.
+> Default formatter. MUST use for every ordinary factual
+> answer/explanation/recommendation/comparison/decision/status
+> update/forecast/summary. Output At a glance, In context, then At depth.
 
 The canonical frontmatter is not shortened or rewritten. The packager replaces
 frontmatter only in the generated ZIP entry, then verifies that the body after
@@ -98,9 +253,9 @@ for each pair must match. Additional non-inference checks are:
 python -m json.tool .claude-plugin/plugin.json >/dev/null
 claude plugin validate . --strict
 unzip -t dist/progressive-clarity-claude-plugin-0.2.1.zip
-unzip -t dist/progressive-clarity-claude-ai-skill-0.2.1.zip
+unzip -t dist/progressive-clarity-claude-ai-skill-0.2.2.zip
 unzip -Z1 dist/progressive-clarity-claude-plugin-0.2.1.zip
-unzip -Z1 dist/progressive-clarity-claude-ai-skill-0.2.1.zip
+unzip -Z1 dist/progressive-clarity-claude-ai-skill-0.2.2.zip
 ```
 
 `claude plugin validate` is a local structural validator and does not require a
@@ -110,6 +265,15 @@ will validate, preserve the exact CLI error as an unresolved tooling blocker;
 do not replace it with a live inference test.
 
 `dist/` is ignored. Generated ZIPs are release artifacts, not maintained source.
+
+### Superseded v0.2.1 Claude.ai artifact
+
+Before the v0.2.2 custom-Skill rebuild below, the retained local
+`dist/progressive-clarity-claude-ai-skill-0.2.1.zip` was 16,712 bytes with
+SHA-256
+`77e7f9569790d424f229df67205b0b8b700b4a6e311fa22c9309e8f0457e8a62`.
+That digest is a historical local-byte identity only; it does not establish an
+upload or host result.
 
 ### Current local verification record
 
@@ -122,11 +286,13 @@ On 2026-08-18, without authentication or a model request:
   unavailable until the local CLI is updated;
 - the manifest passed the current SchemaStore
   `claude-code-plugin-manifest.json` with Python `jsonschema` 4.26.0;
+- the generated Free Skill passed `agentskills validate` from `skills-ref`
+  0.1.1;
 - both archives passed `unzip -t` and exact inventory checks;
 - two consecutive builds produced plugin SHA-256
   `4b44393e9e52bbe35874e5f62d8c7bf2fbca852b5a36f7877d4e6b9226f6b46c`
   and custom-Skill SHA-256
-  `77e7f9569790d424f229df67205b0b8b700b4a6e311fa22c9309e8f0457e8a62`;
+  `f4b8a5ca75cff3e8b18814841439d1866f16d34292116022be0481ab29424498`;
 - canonical and packaged body SHA-256 values both equal
   `3e2eb0208cb9d01205a67acd5991cd93e449e84c4a744de6fb4e9222c7fca451`;
   and
@@ -137,6 +303,29 @@ The public GitHub remote was anonymously reachable at commit
 `aeaed474ca9d3b0198b956a9ec7028f9ca769513`, but the Claude packaging changes
 were local and uncommitted. The public directory cannot review these new bytes
 until an authorized commit and push occur.
+
+### Latest user-provided Claude Free activation evidence
+
+On 2026-08-18, the user provided a Claude Free transcript for an Orion factual
+summary. The repository did not independently capture the conversation, inspect
+host activation traces, or verify any Orion facts. The bounded results are:
+
+- **Implicit activation: FAIL.** The initial factual summary did not load
+  Progressive Clarity or produce the required three views.
+- **Explicit follow-up body conformance: PASS.** After the user challenged the
+  omission, the transcript showed Claude reading the skill and producing At a
+  glance, In context, and At depth in order.
+- **Budgets: PASS.** The follow-up met the visible 40/200 prose budgets.
+- **Additivity: PASS.** The follow-up views added information without visible
+  fact-only repetition.
+- **Factual content: NOT VERIFIED.** These scores cover presentation behavior
+  only.
+
+This evidence supports one activation-recall change: front-load the generated
+Claude.ai description with the default-formatter and mandatory-trigger language
+already present in the canonical description. It does not change the canonical
+skill body, protocol, local enforcement, or public plugin, and it does not prove
+that Claude Free will invoke the skill automatically on a future prompt.
 
 ## Upload the custom Skill on Claude.ai Free
 
@@ -149,7 +338,7 @@ Enterprise accounts. Code execution and file creation must be enabled.
 3. Open **Customize → Skills**.
 4. Select **+ → + Create skill → Upload a skill**.
 5. Choose
-   `dist/progressive-clarity-claude-ai-skill-0.2.1.zip`.
+   `dist/progressive-clarity-claude-ai-skill-0.2.2.zip`.
 6. Confirm that the displayed name and description match the generated
    metadata, then enable the skill.
 
@@ -166,6 +355,20 @@ the 64-character lowercase-hyphenated name, matching root folder, required
 Plugins are different: Anthropic currently limits Claude plugins in chat,
 Desktop, and Cowork to paid Pro, Max, Team, and Enterprise plans. The Free
 distribution path is the custom-Skill ZIP above, not the plugin ZIP.
+
+### Optional Profile Preferences reinforcement
+
+For Claude web, manually paste the following into Profile Preferences:
+
+```text
+Use Progressive Clarity as my default formatter. MUST use it for every ordinary user-facing factual answer, explanation, recommendation, comparison, decision, status update, forecast, or summary, even when I do not name the skill. Output exactly three additive views in this order: ## At a glance, ## In context, ## At depth. Keep At a glance to at most 40 counted English words and combined prose through In context to at most 200. Allocate each fact once; deeper views only add information. Preserve indispensable caveats, safety, and explicit corrections. Exclude bare values, exact-output replies, pure code/data transformations, complete sequential procedures, verbatim-only reproduction, narrative or voice-dependent writing, and tasks with no user-facing answer.
+```
+
+This preference is not included in either ZIP and cannot be configured by the
+packager. Each user must add and maintain it manually. Profile Preferences are
+the closest available always-on reinforcement for Claude web, but they are not
+a formal activation or conformance guarantee and may be overridden by
+higher-priority instructions or host behavior.
 
 ## Use the plugin with Claude Code or Claude
 
@@ -283,9 +486,11 @@ repository's current state.
 
 ## Update flow
 
-The manifest declares an explicit semantic version, so bump it for every plugin
-release. Then rebuild both ZIPs, rerun strict validation, compare inventories
-and hashes, and publish only the intended source commit.
+The public plugin manifest declares an explicit semantic version, so bump it
+only for a public plugin release. The Claude.ai Free artifact has an independent
+`PACKAGE_VERSION` in `tools/package_claude_skill.py`; version `0.2.2` advances
+only that generated ZIP. Rebuild the intended artifact, rerun validation, and
+compare inventories and hashes before distribution.
 
 After community publication, pushes to the public GitHub repository are picked
 up by Anthropic's mirroring CI and screened again; the submission form does not

@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-import os
+import argparse
 import re
-import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from tools.package_common import (
+    RELEASE_VERSION,
+    SEMVER_PATTERN,
+    load_canonical_skill_source,
+    parse_json_object,
+    read_regular_file,
+    sha256,
+    write_archive,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / ".codex-plugin" / "plugin.json"
@@ -33,32 +39,20 @@ EXPECTED_INTERFACE_KEYS = {
     "logo",
 }
 PUBLISHER_NAME = "FIRAS HASHEM AHMAD AL KAFRI"
+EXPECTED_PLUGIN_NAME = "progressive-clarity"
 ASSET_FIELDS = ("composerIcon", "logo")
-EXPECTED_SKILL_FILES = ("SKILL.md", "LICENSE")
 MIN_IMAGE_DIMENSION = 48
 MAX_IMAGE_DIMENSION = 4096
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
-ARCHIVE_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
-PLUGIN_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
-SEMVER_PATTERN = re.compile(
-    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
-    r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
-    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+FORBIDDEN_SVG_ELEMENTS = frozenset(
+    {"a", "foreignobject", "iframe", "image", "script", "style", "use"}
 )
+PLUGIN_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
-
-def sha256(data: bytes) -> str:
-    """Return the SHA-256 digest for bytes."""
-    return hashlib.sha256(data).hexdigest()
-
-
-def load_manifest() -> dict[str, object]:
+def load_manifest() -> tuple[dict[str, object], bytes]:
     """Load and validate the tracked plugin manifest."""
-    if MANIFEST_PATH.is_symlink() or not MANIFEST_PATH.is_file():
-        raise ValueError("plugin manifest must be a regular file")
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    if not isinstance(manifest, dict):
-        raise ValueError("plugin manifest must be a JSON object")
+    manifest_bytes = read_regular_file(MANIFEST_PATH, "OpenAI plugin manifest")
+    manifest = parse_json_object(manifest_bytes, "OpenAI plugin manifest")
     if set(manifest) != EXPECTED_MANIFEST_KEYS:
         raise ValueError(
             "plugin manifest must contain exactly: "
@@ -71,10 +65,16 @@ def load_manifest() -> dict[str, object]:
     author = manifest["author"]
     skills = manifest["skills"]
     interface = manifest["interface"]
-    if not isinstance(name, str) or not PLUGIN_NAME_PATTERN.fullmatch(name):
-        raise ValueError("plugin name does not meet OpenAI package-name rules")
+    if (
+        not isinstance(name, str)
+        or not PLUGIN_NAME_PATTERN.fullmatch(name)
+        or name != EXPECTED_PLUGIN_NAME
+    ):
+        raise ValueError("plugin name does not match the canonical package identity")
     if not isinstance(version, str) or not SEMVER_PATTERN.fullmatch(version):
         raise ValueError("plugin version must be semantic versioning")
+    if version != RELEASE_VERSION:
+        raise ValueError(f"plugin version must be {RELEASE_VERSION}")
     if (
         not isinstance(description, str)
         or not description.strip()
@@ -104,7 +104,7 @@ def load_manifest() -> dict[str, object]:
         )
     for field in ASSET_FIELDS:
         asset_path(interface[field])
-    return manifest
+    return manifest, manifest_bytes
 
 
 def asset_path(value: object) -> Path:
@@ -120,16 +120,32 @@ def asset_path(value: object) -> Path:
     return resolved
 
 
-def validate_svg_asset(path: Path) -> None:
+def validate_svg_asset(source: bytes, path: Path) -> None:
     """Validate the documented OpenAI square-image constraints."""
-    if path.stat().st_size > MAX_IMAGE_BYTES:
+    if len(source) > MAX_IMAGE_BYTES:
         raise ValueError(f"plugin asset exceeds 5 MiB: {path}")
     try:
-        root = ET.fromstring(path.read_bytes())
+        root = ET.fromstring(source)
     except ET.ParseError as exc:
         raise ValueError(f"plugin asset is not valid XML: {path} ({exc})") from exc
     if root.tag.rsplit("}", 1)[-1] != "svg":
         raise ValueError(f"plugin asset root must be svg: {path}")
+    for element in root.iter():
+        element_name = element.tag.rsplit("}", 1)[-1].casefold()
+        if element_name in FORBIDDEN_SVG_ELEMENTS:
+            raise ValueError(
+                f"plugin asset contains active SVG element {element_name}: {path}"
+            )
+        for attribute, value in element.attrib.items():
+            attribute_name = attribute.rsplit("}", 1)[-1].casefold()
+            if (
+                attribute_name.startswith("on")
+                or attribute_name == "href"
+                or "url(" in value.casefold()
+            ):
+                raise ValueError(
+                    f"plugin asset contains active SVG attribute: {path}"
+                )
 
     try:
         width = float(root.attrib["width"])
@@ -145,19 +161,31 @@ def validate_svg_asset(path: Path) -> None:
             f"plugin asset dimensions must be square and consistent: {path}"
         )
     if not MIN_IMAGE_DIMENSION <= width <= MAX_IMAGE_DIMENSION:
-        raise ValueError(
-            f"plugin asset dimensions must be 48-4096 pixels: {path}"
-        )
+        raise ValueError(f"plugin asset dimensions must be 48-4096 pixels: {path}")
 
 
-def source_entries(manifest: dict[str, object]) -> dict[str, bytes]:
+def source_entries(
+    manifest: dict[str, object],
+    manifest_bytes: bytes,
+) -> dict[str, bytes]:
     """Return the only files permitted in the published archive."""
-    actual_skill_entries = sorted(path.name for path in SKILL_DIR.iterdir())
-    if actual_skill_entries != sorted(EXPECTED_SKILL_FILES):
+    if parse_json_object(
+        manifest_bytes,
+        "OpenAI plugin manifest",
+    ) != manifest:
         raise ValueError(
-            "canonical skill contents changed; expected only "
-            + ", ".join(EXPECTED_SKILL_FILES)
+            "OpenAI manifest data and validated bytes do not match"
         )
+    if (
+        ASSET_DIR.is_symlink()
+        or not ASSET_DIR.is_dir()
+        or not ASSET_DIR.resolve().is_relative_to(ROOT.resolve())
+    ):
+        raise ValueError(
+            "plugin asset directory must be a regular in-repository "
+            f"directory: {ASSET_DIR}"
+        )
+    canonical = load_canonical_skill_source(SKILL_DIR, root=ROOT)
 
     interface = manifest["interface"]
     if not isinstance(interface, dict):
@@ -171,71 +199,47 @@ def source_entries(manifest: dict[str, object]) -> dict[str, bytes]:
             + ", ".join(expected_asset_entries)
         )
 
-    entries = {".codex-plugin/plugin.json": MANIFEST_PATH.read_bytes()}
+    entries = {".codex-plugin/plugin.json": manifest_bytes}
     for source in assets.values():
-        if source.is_symlink() or not source.is_file():
-            raise ValueError(f"plugin asset must be a regular file: {source}")
-        validate_svg_asset(source)
-        entries[source.relative_to(ROOT).as_posix()] = source.read_bytes()
-    for filename in EXPECTED_SKILL_FILES:
-        source = SKILL_DIR / filename
-        if source.is_symlink() or not source.is_file():
-            raise ValueError(f"canonical skill source must be a regular file: {source}")
-        entries[f"skills/progressive-clarity/{filename}"] = source.read_bytes()
+        source_bytes = read_regular_file(source, "plugin asset")
+        validate_svg_asset(source_bytes, source)
+        entries[source.relative_to(ROOT).as_posix()] = source_bytes
+    canonical_files = {
+        "LICENSE": canonical.license,
+        "SKILL.md": canonical.skill,
+    }
+    for filename, content in canonical_files.items():
+        entries[f"skills/progressive-clarity/{filename}"] = content
     return entries
 
-
-def zip_info(name: str) -> zipfile.ZipInfo:
-    """Create normalized ZIP metadata for one regular file."""
-    info = zipfile.ZipInfo(name, date_time=ARCHIVE_TIMESTAMP)
-    info.compress_type = zipfile.ZIP_STORED
-    info.create_system = 3
-    info.external_attr = (0o100644 & 0xFFFF) << 16
-    return info
-
-
-def verify_archive(archive_path: Path, entries: dict[str, bytes]) -> None:
-    """Confirm archive inventory, metadata, and bytes match canonical output."""
-    with zipfile.ZipFile(archive_path) as archive:
-        names = archive.namelist()
-        if names != sorted(entries):
-            raise ValueError(f"unexpected archive inventory: {names}")
-        if archive.comment:
-            raise ValueError("archive comment must be empty")
-        for name, expected_bytes in entries.items():
-            info = archive.getinfo(name)
-            if (
-                info.date_time != ARCHIVE_TIMESTAMP
-                or info.compress_type != zipfile.ZIP_STORED
-                or info.create_system != 3
-                or info.external_attr >> 16 != 0o100644
-                or info.extra
-                or info.comment
-            ):
-                raise ValueError(f"packaged metadata is not normalized: {name}")
-            if archive.read(name) != expected_bytes:
-                raise ValueError(f"packaged bytes differ from source: {name}")
-
-
-def main() -> int:
-    """Build the archive, verify it, and print its reproducible inventory."""
-    manifest = load_manifest()
-    entries = source_entries(manifest)
+def build_archive(output_dir: Path = DIST_DIR) -> tuple[Path, dict[str, bytes]]:
+    """Build, verify, and atomically publish one normalized archive."""
+    manifest, manifest_bytes = load_manifest()
+    entries = source_entries(manifest, manifest_bytes)
     archive_name = f"{manifest['name']}-openai-plugin-{manifest['version']}.zip"
-    archive_path = DIST_DIR / archive_name
-    temporary_path = archive_path.with_suffix(".zip.tmp")
+    archive_path = output_dir / archive_name
 
-    DIST_DIR.mkdir(exist_ok=True)
+    write_archive(archive_path, entries)
+    return archive_path, entries
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Build the archive and print its reproducible inventory."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DIST_DIR,
+        help="Directory for the generated plugin archive.",
+    )
+    args = parser.parse_args(argv)
+
+    archive_path, entries = build_archive(args.output_dir.resolve())
     try:
-        with zipfile.ZipFile(temporary_path, mode="w") as archive:
-            for name in sorted(entries):
-                archive.writestr(zip_info(name), entries[name])
-        os.replace(temporary_path, archive_path)
-    finally:
-        temporary_path.unlink(missing_ok=True)
-
-    verify_archive(archive_path, entries)
-    print(f"archive={archive_path.relative_to(ROOT)}")
+        display_path = archive_path.relative_to(ROOT)
+    except ValueError:
+        display_path = archive_path
+    print(f"archive={display_path}")
     print(f"archive_sha256={sha256(archive_path.read_bytes())}")
     for name in sorted(entries):
         print(f"entry={name} sha256={sha256(entries[name])} bytes={len(entries[name])}")

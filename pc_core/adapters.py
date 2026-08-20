@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Mapping, Protocol, Sequence
+
+from pc_core.json_io import JsonContractError, parse_json
 
 
 class HostInvocationError(RuntimeError):
@@ -21,6 +23,16 @@ class HostCandidate:
     text: str
     session_id: str
     metadata: Mapping[str, object]
+
+    def __post_init__(self) -> None:
+        """Validate session identity and snapshot host metadata."""
+        if not isinstance(self.session_id, str) or not self.session_id:
+            raise ValueError("host candidate session_id must be non-empty text")
+        object.__setattr__(
+            self,
+            "metadata",
+            MappingProxyType(dict(self.metadata)),
+        )
 
 
 class HostAdapter(Protocol):
@@ -83,7 +95,15 @@ class JsonCliHostAdapter:
                 timeout=self.timeout_seconds,
                 check=False,
             )
-        except (OSError, subprocess.TimeoutExpired) as exc:
+        except UnicodeError as exc:
+            raise HostInvocationError(
+                f"{self.name} returned process output that is not valid UTF-8"
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise HostInvocationError(
+                f"{self.name} timed out after {self.timeout_seconds} seconds"
+            ) from exc
+        except OSError as exc:
             raise HostInvocationError(
                 f"{self.name} invocation failed before completion: {exc}"
             ) from exc
@@ -95,8 +115,8 @@ class JsonCliHostAdapter:
                 f"stderr_bytes={len(stderr_bytes)} stderr_sha256={stderr_digest}"
             )
         try:
-            payload = json.loads(completed.stdout)
-        except json.JSONDecodeError as exc:
+            payload = parse_json(completed.stdout)
+        except JsonContractError as exc:
             raise HostInvocationError(
                 f"{self.name} did not return one JSON result object: {exc}"
             ) from exc
@@ -119,7 +139,7 @@ class JsonCliHostAdapter:
         metadata = {
             key: value
             for key, value in payload.items()
-            if key != self.spec.result_field
+            if key not in {self.spec.result_field, self.spec.session_field}
         }
         return HostCandidate(
             text=result,

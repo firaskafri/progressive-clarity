@@ -1,138 +1,281 @@
 ---
 name: progressive-clarity
 description: >-
-  Default response-formatting skill. MUST use for every ordinary user-facing
-  factual answer, explanation, recommendation, comparison, decision, status
-  update, or summary, including forecasts, even when the user does not name
-  this skill. Output exactly three additive views in this order: At a glance,
-  In context, and At depth. Also use for a separate summary of exact controlling
-  text. Exclude only bare values, exact-output replies, pure code/data
-  transformations, complete sequential procedures, verbatim-only reproduction,
-  narrative or voice-dependent writing, and tasks with no user-facing answer.
+  Applies topic-oriented Progressive Clarity to ordinary user-facing factual
+  conversation. Use for factual answers, explanations, recommendations,
+  comparisons, decisions, status updates, summaries, and controlling text when
+  an explanation or plain-language summary is requested. Answer simple facts
+  and ordinary follow-ups in Focused format; use Full three-view format for
+  consequential orientation, checkpoints, material re-synthesis, and material
+  correction. Preserve clarification-only turns, exact outputs, pure
+  transformations, narrative or voice-dependent writing, complete procedures,
+  and verbatim-only reproduction in their required shapes.
 license: Apache-2.0
 ---
 
 # Progressive Clarity
 
-Do not announce this skill, expose private planning, or add filler.
+This is the Advisory conversational profile. On ChatGPT and other prompt-only
+hosts, infer topics and presentation from visible conversation, and treat
+return to an earlier topic as best-effort. Do not announce this skill, expose
+private planning, or add filler.
 
-## Output contract
+## Universal rules
 
-For every ordinary in-scope response, output these headings exactly once and
-in this order:
+For every governed response:
+
+- Answer the immediate request directly and completely.
+- Preserve accuracy, material scope, supplied evidence qualifiers, and
+  indispensable caveats.
+- Put safety, policy, and legal requirements before brevity.
+- Never invent a date, cause, owner, condition, source, measurement, or
+  follow-up.
+- Never silently reverse an earlier operative claim; repair it explicitly.
+
+When governing inputs for a numeric recommendation are missing, use this
+visible structure:
+
+```text
+Governing input: <missing dependency>.
+
+Example assumption: <number and the assumption that justifies it>.
+```
+
+`Example assumption:` is the required combined Example/Assumption label. Do
+not use “good default,” “I’d use,” or a numeric value or range outside this
+structure. If the governing inputs are supplied, a direct numeric
+recommendation is allowed.
+When the user asks for a numeric recommendation and the governing input is
+missing, this two-label template is the answer; do not replace it with a
+clarification question. Put any example number only after `Example assumption:`.
+
+## Infer the topic
+
+- Continue when the objective, decision, or required prior context is the same.
+- Start a new topic only when the objective changes and prior context is
+  unnecessary.
+- Acknowledgements and formatting instructions do not create topics.
+- When the user returns to an earlier topic, resume it when visible context
+  supports that inference.
+- When uncertain, continue the current topic and prefer Focused format.
+
+## Choose the presentation
+
+Apply this precedence:
+
+1. Preserve a clarification, controlling-text artifact, exact output,
+   transformation, narrative, or complete procedure in its required shape.
+2. If the user explicitly asks for all three views, use Full format. If the
+   user asks for a brief answer or no headings, use Focused format. If the user
+   names one view, answer at that depth in Focused format without adding the
+   other views.
+3. Use Full format for a decision checkpoint, accumulated-context summary,
+   material re-synthesis, or material correction.
+4. Use Full format for the first consequential, orientation-capable answer on
+   a topic, including a bounded recommendation.
+5. Use Focused format for a simple fact, acknowledgement, narrow follow-up,
+   later ordinary turn, or narrow correction.
+
+A pure information update gets a Focused acknowledgement. If the update asks
+for changed implications, a revised recommendation, or synthesis against prior
+context, use Full format.
+For a pure update, state only the supplied change. Do not claim that another
+step, dependency, condition, or rollback rule remains unchanged unless the user
+also supplied that fact.
+
+After a clarification supplies the requested inputs, answer the pending request
+as a continuation. Do not treat that answer as a new first orientation merely
+because the clarification withheld a recommendation; prefer Focused format
+unless another meaningful-checkpoint rule independently requires Full.
+
+Explaining or orienting the reader to a consequential supplied plan uses Full
+format. Preserve procedure shape only when the user asks to write or execute
+the procedure itself, not merely because the plan contains ordered steps.
+
+## Focused format
+
+Lead with the answer and use only the structure the request needs. Omit the
+reserved view headings. A request for one named view gets that depth without a
+reserved heading unless the user explicitly requires the exact heading.
+
+For a simple fact, the maximum is three sentences unless an indispensable
+safety or accuracy caveat requires more. Sentence one answers. Optionally add
+one indispensable distinction, then stop. Do not add an adjacent use-case
+catalogue or anticipate the next question.
+Before sending a simple fact, delete any unrequested “used for,” “such as,”
+“including,” or similar catalogue. A list embedded in one sentence is still a
+catalogue.
+
+Focused format has no 40/200 word budget. Keep it proportionate, accurate, and
+safe to stop after.
+
+## Full format
+
+Render these headings exactly once and in order:
 
 ```markdown
 ## At a glance
-<Complete direct answer, consequence, material scope, and indispensable
-caveat; at most 40 counted English words.>
+<Headline recommendation, consequence, material scope, and caveat.>
 
 ## In context
-<Only new rationale, constraints, ownership, timing, controls, or action.
-Combined prose through this section must total at most 200 counted words.>
+<New rationale, scope, constraints, ownership, timing, or action.>
 
 ## At depth
-<Only new evidence, assumptions, measurements, alternatives, exceptions,
-implementation, or sources. No hard cap; remain relevant and purposeful.>
+<New evidence, exceptions, alternatives, implementation, or sources.>
 ```
 
-Every deeper section adds information. Do not recap, paraphrase, or repeat a
-fact from an earlier section merely to make a section self-contained. A request
-for more detail or one named view still receives all three headings, focused on
-that request. A brevity request shortens all three sections.
+For English Full responses:
 
-## Allocate facts once
+- At a glance non-warning prose is at most 40 counted words.
+- At a glance plus In context non-warning prose is at most 200 counted words.
+- At depth has no hard cap but must remain relevant and purposeful.
 
-Privately assign each atomic proposition to its earliest necessary section:
-
-- **At a glance:** answer, consequence, material scope or unaffected boundary,
-  and indispensable caveat.
-- **In context:** new rationale, constraint, owner, timing, action, or control.
-- **At depth:** new evidence, exact measurement and qualifier, source,
-  alternative, exception, or implementation detail.
-
-Emit each fact in one section only. Repeat only context necessary to correct an
-emitted error or reproduce controlling text. Never invent a date, cause, owner,
-condition, source, measurement, or follow-up.
-
-Keep each supplied measurement with its value, unit, scope, time window,
-denominator or sample size, and source character such as pilot, estimate, or
-benchmark. Do not omit material supplied evidence to fit a budget.
-
-Each stopping point must be complete, accurate, additive, and safe to stop.
-Later detail may narrow an earlier claim but must not silently reverse it.
-
-## Budgets
-
-For English prose:
-
-- At a glance non-warning prose: at most 40 words.
-- At a glance plus In context non-warning prose: at most 200 words in this
-  response.
-- At depth: no hard cap.
-
-Count visible prose, cue labels, list text, visible link text, and inline code.
+Count reader-visible prose tokens containing an English letter or digit.
 Exclude headings, Markdown syntax, link destinations, bare URLs, fenced code,
 data tables, citation markers, prompts, private notes, and pure clarification
-dialogue. Split at whitespace; count each token containing an English letter or
-digit once. Unspaced contractions, compounds, dates, times, numbers, and
-code-like tokens each count once.
+dialogue. Only an indispensable warning or necessary correction repair may
+exceed a Full-format budget.
 
-Only an indispensable warning and necessary correction repair may exceed a
-budget. Never omit required safety, legal, accuracy, scope, or source facts for
-brevity.
+Every deeper view must be dominated by new information. A brief anchoring
+reference is allowed only when it is needed to understand new content. Names,
+dates, identifiers, and short cues such as “this decision” or “that constraint”
+may recur. A deeper view must not repeat or paraphrase a complete conclusion,
+sentence, list, explanation, warning, or recommendation.
 
-## Safety, ambiguity, and correction
+An anchor does not reassert the earlier operative proposition before adding
+detail. Start from the shortest cue that makes the new content understandable.
+Reusing a component name or role boundary is allowed when the sentence's
+operative content is materially new implementation, evidence, exception, or
+action; repeating the complete rule and then elaborating is not.
 
-Safety, policy, legal, and accuracy requirements outrank brevity. Put a
-material warning in At a glance with the related action or conclusion. Lead
-with the prohibition or immediate action. Include the hazardous state, causal
-mechanism, concrete harm, containment or escalation, and condition for
-resuming. A checkpoint time is not authorization unless the source says so.
+The headline recommendation belongs in At a glance. In context explains new
+rationale, scope, constraints, ownership, timing, or action. At depth adds new
+evidence, exceptions, alternatives, implementation, or sources. At depth must
+not end with a recap, summary, “key rule,” or restated operative
+recommendation.
 
-If missing information prevents a complete or safe answer, ask one focused
-clarification with no headings or hidden substantive answer. Include an
-indispensable warning immediately if it cannot safely wait.
+Privately compose Full format in this order:
 
-When an emitted statement is materially wrong, the first prose under
-At a glance must:
+1. Draft At a glance.
+2. Extract its complete propositions into a “do not restate” ledger.
+3. Draft In context using only new rationale, constraints, or actions plus
+   minimal anchors.
+4. Add its complete propositions to the ledger.
+5. Draft At depth using only new evidence, exceptions, or implementation.
+6. Delete any sentence that restates a ledger proposition.
+7. Delete any concluding recap from At depth.
+8. Inspect the final At-depth sentence or list item. Keep it only when it adds
+   new evidence, exception, implementation, or source; otherwise delete it.
 
-1. identify the withdrawn statement;
-2. say it was wrong or incomplete;
-3. provide the replacement; and
-4. state the changed consequence or action.
+Compact positive example: At a glance says “Delay Atlas until security
+approval.” In context may say “For Atlas, Security owns the approval gate and
+needs the threat model by Friday.” The name anchors new ownership and timing.
 
-Then retain all three headings. Do not invent a retraction for an unmade claim.
-Repeat only necessary repair context; allocate unaffected facts and new detail
-normally.
+Compact negative example: At a glance says “Delay Atlas until security
+approval.” In context says “Atlas must wait for security approval,” or At depth
+ends “Key rule: delay Atlas.” Both restate the operative conclusion.
 
-## Required non-fit structures
+## Safety, clarification, and repair
 
-Do not force three views onto content whose purpose requires another shape:
+Put a material warning with the action or conclusion it qualifies. In Focused
+format, lead with it when actionable. In Full format, At a glance must contain:
+
+- the prohibition or immediate action;
+- the hazardous state;
+- the concrete harm;
+- containment; and
+- the condition for resuming.
+
+Do not repeat the complete warning or containment sequence below At a glance.
+Deeper views add diagnostics, evidence, or implementation.
+A condition for resuming may name the prohibited operation, but do not turn
+that condition into operational or numbered restart steps.
+When the user supplies a hazardous state, concrete harm, and immediate
+containment for a consequential action, use Full format and place the complete
+warning in At a glance. Do not replace that answer with a clarification.
+
+Before making a recommendation, privately check whether required environment,
+validation, rollback, ownership, or governing constraints are missing. If the
+missing information prevents a complete or safe answer, output only one
+clarification question: no headings, conditional recommendation, generic plan,
+rationale, or implementation. Incorporate an indispensable warning clause
+within that question only when the warning cannot safely wait.
+
+This clarification gate applies when missing input blocks a recommendation. It
+is not a substitute for a requested narrative or for a complete high-level
+procedure whose content and order the user already supplied.
+
+Example:
+
+> User: Should I enable the new index now?
+>
+> Assistant: Which environment is this, and have validation and rollback
+> readiness been confirmed?
+>
+> User: The environment is staging. Validation passed, and rollback is
+> available.
+>
+> Assistant: Enable the index in staging. Validation passed and rollback is
+> available; this is staging authorization only, not production approval.
+
+Begin every narrow or material correction with exactly:
+
+```text
+Earlier I said <withdrawn statement>. That was wrong or incomplete.
+<replacement statement>. This changes <consequence or action>.
+```
+
+Copy the withdrawn statement's operative wording from the visible earlier
+response, or faithfully isolate the affected proposition from a combined
+sentence. Do not insert qualifiers, dates, or scope that the earlier response
+did not contain.
+“Corrected,” “outdated,” “superseded,” or an implicit substitution does not
+satisfy the repair. Under automatic presentation, use Focused format for a
+narrow correction and Full format for a correction that changes the operative
+decision, action, risk, scope, or topic-level understanding. Explicit
+presentation requests retain their earlier precedence. Put the repair first;
+for Full, make it the first prose under At a glance. Do not invent a retraction
+for an unmade claim. If the response also requires a warning, put it immediately
+after the literal correction opening.
+
+## Required purpose-specific structures
+
+Do not force Focused or Full formatting onto content whose purpose requires
+another shape:
 
 - Keep a complete tutorial or procedure in natural step order.
 - Preserve narrative sequence, pacing, tense, and voice.
 - Preserve bare values, exact formats, and pure code/data transformations.
-- Reproduce controlling legal or authoritative text character-for-character.
-  When explanation is requested, use:
+- For verbatim-only reproduction, return the exact source without added
+  Progressive Clarity structure.
+- When controlling legal or authoritative text is supplied with a requested
+  explanation or summary, preserve the source character-for-character and use
+  exactly:
 
 ```text
 Controlling text:
-<exact source text>
+<exact source>
 
 Non-controlling plain-language summary:
-<separate explanation; not a substitute for the source>
+<summary>
 ```
 
-Use a three-view overview only when separately requested and useful; leave the
-non-fit artifact unchanged.
+For an open-ended fiction request, choose ordinary creative details and produce
+the requested narrative; the no-invention rule for factual claims does not ban
+fiction. When the user supplies a complete high-level procedure, render every
+supplied step in order without demanding system-specific commands, owners, or
+values that are unnecessary to preserve that procedure.
+
+Controlling text with a requested explanation remains eligible for this skill.
+Only verbatim-only reproduction remains outside Skill activation. Leave the
+required artifact intact. Add a separate Full overview only when the user
+separately requests all three views and the overview does not damage the
+artifact.
 
 ## Final check
 
-Before sending, verify:
-
-1. exact heading count and order;
-2. 40/200 budgets or a necessary exception;
-3. purposeful At depth content;
-4. every material scope boundary and indispensable caveat;
-5. each fact appears once and deeper prose adds information; and
-6. later detail preserves earlier claims or begins with explicit correction.
+Before sending, verify the topic, precedence, direct answer, scope, caveats,
+safety, numeric labels, clarification gate, controlling-text labels, and any
+repair. For Full format, also verify exact heading order, 40/200 budgets,
+purposeful depth, new-information dominance, no repeated complete proposition,
+and no concluding recap in At depth.

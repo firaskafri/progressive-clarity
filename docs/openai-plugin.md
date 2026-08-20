@@ -1,5 +1,124 @@
 # OpenAI plugin packaging and publication
 
+## Current v0.4 package target
+
+The repository root remains the copy-free OpenAI plugin source.
+`.codex-plugin/plugin.json` points to the root `skills/` directory, which
+contains the canonical `skills/progressive-clarity/` package; packaging does
+not maintain a second skill body.
+
+Package version `0.4.2` carries the Advisory topic-oriented profile:
+
+- the model infers topic continuity from visible conversation;
+- simple facts and ordinary or narrow exploration use Focused output;
+- Full output is automatic for the first substantial topic overview,
+  decision or summary checkpoints, material re-synthesis, and material
+  correction; every deeper view must be dominated by new information while
+  permitting necessary short anchors; and
+- purpose-specific shapes and explicit presentation requests take precedence.
+
+The ZIP is instruction-only. It does not contain `pc-core`, a backend, MCP
+server, hook configuration, durable topic state, executable code, or a runtime
+dependency. It does not inherit local-wrapper mechanical certification.
+
+### Target artifact and inventory
+
+The target archive name is:
+
+```text
+dist/progressive-clarity-openai-plugin-0.4.2.zip
+```
+
+Its intended inventory remains:
+
+```text
+.codex-plugin/plugin.json
+assets/progressive-clarity-composer.svg
+assets/progressive-clarity-logo.svg
+skills/progressive-clarity/LICENSE
+skills/progressive-clarity/SKILL.md
+```
+
+Build it from the repository root:
+
+```sh
+python3.11 -m tools.package_openai_plugin
+python3.11 -m json.tool .codex-plugin/plugin.json >/dev/null
+python3.11 -m tools.validate_repository
+unzip -t dist/progressive-clarity-openai-plugin-0.4.2.zip
+unzip -Z1 dist/progressive-clarity-openai-plugin-0.4.2.zip
+```
+
+Two consecutive local builds from unchanged inputs produced the same
+25,277-byte archive with SHA-256
+`ba7e6c2e97ab3dc01ac81c9d2695ad5e504574de2b8bf50bbf7dc2c69d1251df`.
+The canonical packaged skill SHA-256 is
+`2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21`.
+The exact current inventory is:
+
+- `.codex-plugin/plugin.json`: 857 bytes, SHA-256
+  `89ad8c61af198736be5d33ff82fcb012399631ee9fb1ae8d6e8cd3ab9dc87366`;
+- `assets/progressive-clarity-composer.svg`: 513 bytes, SHA-256
+  `bf37be72d058568f451efb22cace2703c684a2aaa6b8a1ae21309a4a9911add9`;
+- `assets/progressive-clarity-logo.svg`: 529 bytes, SHA-256
+  `e0b487bcf7852dc2fb4074f90f86e1fb468b04a02bb54f7f6e963bd258275a92`;
+- `skills/progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
+  `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
+  and
+- `skills/progressive-clarity/SKILL.md`: 11,282 bytes, SHA-256
+  `2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21`.
+
+These checks establish local byte determinism and inventory integrity only.
+
+### Current v0.4 publication and behavior status
+
+No `0.4.2` upload, publication, or live ChatGPT run was performed. Activation,
+topic inference, topic resumption, Focused/Full selection, and rendered
+conformance remain **UNVERIFIED**. Local archive validation establishes source
+and byte integrity only.
+
+### Historical/superseded v0.3.x ChatGPT evidence
+
+On 2026-08-19, the user reported publishing and installing package `0.3.0` in
+ChatGPT. The repository did not independently observe the portal workflow or
+match installed bytes to the local archive.
+
+The user supplied two Redis lifecycle transcripts. The first missed the
+automatic Full transition. The second selected the correct Focused → Full →
+Focused → Full cadence and passed both shallow budgets, but failed strict
+Focused proportionality and Full cross-view additivity. Those observations
+belong to package `0.3.0`; they motivated the bounded `0.3.1` guidance patch.
+
+The user then supplied the complete `0.3.1` ChatGPT initial round. T08
+narrative and T09 procedure passed; T01–T07 and T10 failed. Full budgets and
+most cadence checks passed, but cross-view repetition was systemic. Additional
+failures covered Focused proportionality, unsupported numeric defaults,
+correction wording, clarification selection, warning completeness, and the
+literal non-controlling label. Those results motivated the targeted `0.3.2`
+remediation and do not establish activation without a host indicator.
+
+The user later supplied observations identified as v0.3.2. Cadence, explicit
+overrides, Full budgets, topic return, safety containment, and non-fit
+narrative/procedure behavior generally worked. Complete conclusions and warning
+or recovery sequences still repeated in deeper views; simple facts, numeric
+labels, correction openings, clarification, and the literal controlling-text
+summary label retained failures. T02's latest run, T08, and T09 were bounded
+passes; T10 topic return passed but its initial Full conclusion repeated. T03
+used an under-specified oracle, and T06 isolation was suspect because facts
+appeared before the user supplied them.
+
+All v0.3.x evidence is user-provided. Portal-byte identity and visible Skill
+activation were not independently verified, and no v0.3.x result transfers to
+v0.4.
+
+## Historical v0.2 packaging, publication, and evidence
+
+Everything below this heading is retained as historical v0.2 documentation and
+evidence. References to “current,” old package versions, hashes, artifact
+sizes, portal steps, release notes, and user-provided transcripts describe the
+v0.2 record only. Their original result labels are preserved and do not transfer
+to v0.4.
+
 Progressive Clarity uses the repository root as its copy-free OpenAI plugin
 source. The required manifest is `.codex-plugin/plugin.json`, and its
 `skills` field points to the existing root `skills/` directory. The repository
@@ -24,9 +143,11 @@ The v0.2.1 package was rebuilt against prompt-only skill SHA-256
 Two consecutive builds produced the same archive SHA-256:
 `d5e447abc41132a3e5d0580b5afc5231230317dead1adcee5767085159cbde23`.
 
-The v0.2.1 ZIP remains Advisory and has not been uploaded. That packaging
-result does not clear a behavior gate. The latest ChatGPT evidence is
-user-provided and not an independently reproduced acceptance run.
+The v0.2.1 ZIP remains Advisory. On 2026-08-18, the user reported uploading and
+installing it in ChatGPT. The repository did not independently capture those
+actions or identify the portal artifact by digest. The packaging result does
+not clear a behavior gate. The current ChatGPT evidence is user-provided and is
+not an independently reproduced full acceptance run.
 
 The bounded Cursor wrapper remediation rerun completed against the frozen
 pre-trigger-revision skill: 10 of 17 responses were mechanically certified and
@@ -52,9 +173,10 @@ visible to an authenticated account or that the plugin can be installed.
 No authenticated listing or install flow was independently exercised. The
 older publication is user-confirmed; listing visibility, installability, and
 activation remain independently **UNVERIFIED**. The URL is retained as
-historical publication evidence and does not establish that v0.2.1 was
-uploaded. The report also does not independently document the upload,
-submission, review, approval, or publication sequence.
+historical publication evidence and does not establish the separate
+user-reported v0.2.1 upload or installation. The older report also does not
+independently document the upload, submission, review, approval, or publication
+sequence.
 
 ### Historical user-provided live behavior transcript
 
@@ -84,7 +206,7 @@ accuracy or suitability.
 This evidence applies to the user-identified older published plugin session,
 not to v0.2, the later trigger transcript, or the v0.2.1 ZIP.
 
-### Latest user-provided pre-v0.2.1 trigger transcript
+### Earlier user-provided pre-v0.2.1 trigger transcript
 
 On 2026-08-18, the user supplied a second transcript after reporting a new
 plugin upload. The repository did not independently verify which portal bytes
@@ -103,8 +225,53 @@ behavior, not evidence that the v0.2 body requested those modes. The bounded
 v0.2.1 change front-loads the discovery description and adds local
 activation-only regression prompts. It can improve recall but cannot guarantee
 implicit ChatGPT invocation. The output body and local enforcement semantics
-are unchanged. The current v0.2.1 ZIP has not been uploaded or live-tested in
-ChatGPT.
+are unchanged.
+
+### User-reported v0.2.1 upload and installation
+
+On 2026-08-18, the user reported uploading package v0.2.1 and installing it in
+ChatGPT. This is a user-provided portal-state report. The repository did not
+independently observe the upload or install, inspect an authenticated listing,
+match the installed portal bytes to the local ZIP, or obtain upload,
+submission, review, approval, portal-validation, security-scan, or publication
+records.
+
+### User-provided v0.2.1 complex gold-forecast transcript
+
+On 2026-08-18, after the reported upload and installation, the user supplied a
+complex gold-forecast transcript identified as v0.2.1 behavior. The required
+three-view structure triggered, but the 40-word At-a-glance budget, 200-word
+cumulative shallow budget, and additivity requirement failed. The transcript
+is therefore **observed but non-conformant**.
+
+The repository did not independently capture or reproduce the session. No
+financial fact in the response was independently verified, and the behavioral
+result does not establish financial accuracy or suitability.
+
+### User-provided v0.2.1 fixed-facts smoke
+
+Later on 2026-08-18, the user supplied a fresh fixed-facts smoke identified as
+v0.2.1 behavior. Its named visible checks all passed:
+
+- automatic trigger;
+- exactly **At a glance**, **In context**, and **At depth**, once and in order;
+- 26 words in **At a glance**;
+- approximately 50 cumulative shallow words through **In context**;
+- coverage of the supplied fixed facts;
+- additivity; and
+- the negative exact-output control, whose response was exactly `323`.
+
+This is a bounded pass for those checks only. The repository did not
+independently capture or reproduce the session or receive a host activation
+trace. Fixed-fact coverage does not establish completeness beyond the supplied
+facts, and the negative control does not establish all non-fit behavior. The
+smoke neither identifies the installed portal bytes nor cancels the separate
+complex transcript's failures. It does not establish universal v0.2.1
+conformance.
+
+Together, the two current transcripts show that implicit activation and
+rendered conformance remain probabilistic: one fresh bounded smoke passed while
+one complex response failed core budgets and additivity.
 
 The historical publication report, transcript evidence, and bounded Cursor
 wrapper rerun do not change the non-release-ready status or failed strict
@@ -185,16 +352,21 @@ final-directory validation. This repository does not contain independently
 reviewable portal-validation or security-scan output for the reported
 publication.
 
-Do not treat a valid ZIP, a successful local install, or a portal upload as
-behavioral compatibility evidence. Activation and rendered behavior are
-separate evidence dimensions. The historical older-build user-provided
-transcript records non-conformant rendered behavior. It is not current v0.2
-evidence, and activation remains independently unverified.
+Do not treat a valid ZIP, a local install, or the user-reported portal upload
+and installation as behavioral compatibility evidence. Activation and rendered
+behavior are separate evidence dimensions. The historical older-build
+transcript remains non-conformant. For current v0.2.1, the user-provided
+fixed-facts smoke passed its visible automatic-trigger check while the complex
+gold-forecast transcript failed core conformance checks; the host activation
+mechanism and installed bytes remain independently unverified.
 
-## Manual v0.2.1 portal update
+## Portal update checklist and evidence boundary
 
-These steps are prepared for the authorized publisher. They were not performed
-by this repository work and must not be treated as a portal-state record.
+The user reported completing a v0.2.1 upload and installation on 2026-08-18,
+but the repository did not observe the portal workflow and does not claim that
+the steps below were followed. Keep this checklist for a future replacement or
+re-upload. It is operational guidance, not a reconstruction of the reported
+portal actions.
 
 1. Rebuild the archive from the intended final checkout and confirm its
    SHA-256 and five-entry inventory against this document.
@@ -239,10 +411,10 @@ Exact release notes:
 > skill body, and skills-only runtime boundary are unchanged. This improves
 > implicit trigger recall but does not guarantee ChatGPT or Codex invocation.
 
-After an approved replacement is published, uninstall or remove the old
-installed plugin version, install v0.2.1, and start a fresh chat before running
-`gold prices and forecasts` without naming the skill. An existing conversation
-may retain stale instructions or state and is not a valid clean trigger check.
+For any future v0.2.1 replacement, uninstall or remove the previously installed
+copy, install the replacement, and start a fresh chat before running `gold
+prices and forecasts` without naming the skill. An existing conversation may
+retain stale instructions or state and is not a valid clean trigger check.
 
 ## Check ChatGPT Skills access
 
@@ -332,17 +504,24 @@ identity must be the person or business actually authorized to publish.
 
 ## Remaining verification and release limitations
 
-The reported publication does not resolve:
+The reported actions and transcript evidence do not resolve:
 
-- the Advisory v0.2.1 ZIP, which has not been uploaded, or the revised
-  prompt-only skill's unrun ChatGPT, Cursor, and Claude behavior;
+- the revised prompt-only skill's unrun Cursor and Claude behavior or the
+  absence of an independently executed full ChatGPT acceptance run;
 - failed preceding Cursor strict acceptance and that cycle's hard stop;
 - Claude Code behavior, which requires paid Anthropic API access and remains
   **UNVERIFIED** despite structural adapter tests;
-- ChatGPT listing metadata, authenticated visibility, installability,
-  and activation, which remain independently **UNVERIFIED**;
-- the latest user-provided pre-v0.2.1 transcript's missed initial three-view
-  output and obsolete-mode explanation, which v0.2.1 has not retested;
+- authenticated ChatGPT listing metadata, the installed portal bytes, and
+  independent records of the user-reported v0.2.1 upload and installation;
+- the current complex gold-forecast transcript's failed 40/200 budgets and
+  additivity;
+- universal conformance beyond the fresh fixed-facts smoke's named
+  automatic-trigger, exact-heading/order, budget, supplied-fact-coverage,
+  additivity, and exact `323` passes;
+- the host activation mechanism, which remains independently **UNVERIFIED**
+  even though the fixed-facts smoke visibly triggered automatically;
+- the earlier user-provided pre-v0.2.1 transcript's missed initial three-view
+  output and obsolete-mode explanation;
 - historical older-build ChatGPT rendered behavior, which is observed but
   non-conformant in the user-provided transcript, with actual post-switch-back
   Verbose behavior still **UNVERIFIED** and no evidentiary effect on v0.2;

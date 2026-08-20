@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import Protocol
 
+from pc_core.json_io import JsonContractError, parse_json
 from pc_core.model import (
     PROTOCOL_VERSION,
     STATE_SCHEMA_VERSION,
@@ -18,6 +19,19 @@ from pc_core.model import (
 
 class StateError(RuntimeError):
     """Report state loading or commit failures."""
+
+
+def _require_current_state(state: ConversationState) -> None:
+    """Reject incompatible state objects before exposing or persisting them."""
+    if state.schema_version != STATE_SCHEMA_VERSION:
+        raise StateError(
+            f"unsupported state schema {state.schema_version}; "
+            f"expected {STATE_SCHEMA_VERSION}"
+        )
+    if state.protocol_version != PROTOCOL_VERSION:
+        raise StateError(
+            f"state protocol {state.protocol_version}; expected {PROTOCOL_VERSION}"
+        )
 
 
 class StateStoreProtocol(Protocol):
@@ -45,23 +59,34 @@ class FileStateStore:
         if not self.path.is_file():
             raise StateError(f"state path must be a regular file: {self.path}")
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
+            data = parse_json(self.path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                schema_version = data.get("schema_version")
+                protocol_version = data.get("protocol_version")
+                if schema_version != STATE_SCHEMA_VERSION:
+                    raise StateError(
+                        f"unsupported state schema {schema_version}; "
+                        f"expected {STATE_SCHEMA_VERSION}"
+                    )
+                if protocol_version != PROTOCOL_VERSION:
+                    raise StateError(
+                        f"state protocol {protocol_version}; "
+                        f"expected {PROTOCOL_VERSION}"
+                    )
             state = ConversationState.from_dict(data)
-        except (OSError, json.JSONDecodeError, SchemaError) as exc:
+        except (
+            OSError,
+            UnicodeError,
+            JsonContractError,
+            SchemaError,
+        ) as exc:
             raise StateError(f"cannot load state {self.path}: {exc}") from exc
-        if state.schema_version != STATE_SCHEMA_VERSION:
-            raise StateError(
-                f"unsupported state schema {state.schema_version}; "
-                f"expected {STATE_SCHEMA_VERSION}"
-            )
-        if state.protocol_version != PROTOCOL_VERSION:
-            raise StateError(
-                f"state protocol {state.protocol_version}; expected {PROTOCOL_VERSION}"
-            )
+        _require_current_state(state)
         return state
 
     def commit(self, state: ConversationState) -> None:
         """Write, sync, and atomically replace the state file."""
+        _require_current_state(state)
         if self.path.is_symlink():
             raise StateError(f"refusing to replace symlink state path: {self.path}")
         try:
@@ -83,8 +108,8 @@ class FileStateStore:
             )
             temporary = Path(temporary_name)
             try:
-                os.fchmod(descriptor, 0o600)
                 with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                    os.fchmod(handle.fileno(), 0o600)
                     handle.write(payload)
                     handle.flush()
                     os.fsync(handle.fileno())
@@ -105,6 +130,7 @@ class MemoryStateStore:
 
     def __init__(self, state: ConversationState | None = None) -> None:
         self.state = state or ConversationState.initial()
+        _require_current_state(self.state)
         self.commit_count = 0
 
     def load(self) -> ConversationState:
@@ -113,5 +139,6 @@ class MemoryStateStore:
 
     def commit(self, state: ConversationState) -> None:
         """Commit state and record the transaction count."""
+        _require_current_state(state)
         self.state = state
         self.commit_count += 1

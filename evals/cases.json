@@ -1,50 +1,40 @@
 {
-  "schema_version": "4.0.0",
-  "suite_id": "progressive-clarity-v0.2-advisory-host-acceptance",
+  "schema_version": "5.0.0",
+  "suite_id": "progressive-clarity-v0.4-topic-oriented-advisory-host-acceptance",
   "protocol": {
     "path": "SPEC.md",
-    "version": "0.2 draft",
-    "sha256": "74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8"
+    "version": "0.4",
+    "sha256": "27a75963599cbb156e910d9ee6fc1b6b741c23cde2ddd094bc733edc67443aa7"
   },
   "scope": {
     "language": "English",
     "conformance_surface": "Advisory prompt-only host behavior",
-    "current_revision_execution": "UNVERIFIED: no current v0.2 Cursor, Claude Code, or ChatGPT acceptance run exists.",
-    "local_enforced_mechanics": "Covered separately by pc-core tests and a synthetic non-streaming wrapper. Mechanical PASS does not satisfy this semantic host suite.",
-    "hosts": ["Cursor", "Claude Code"],
+    "current_revision_execution": "UNVERIFIED: no current v0.4 host acceptance run exists.",
+    "local_enforced_mechanics": "Covered separately by pc-core policy, state, validation, and wrapper tests.",
+    "hosts": ["ChatGPT", "Cursor", "Claude Code"],
     "result_values": ["PASS", "FAIL", "UNVERIFIED"],
     "human_outcome_claims": false,
     "semantic_completeness_claims": false,
-    "hidden_reversal_guarantees": false,
-    "safe_stopping_measure": "Observable proxy only: required facts and indispensable caveats are present at each rendered stopping point.",
-    "historical_suite_policy": "All older dual-behavior results remain historical evidence in docs only."
+    "hidden_state_claims": false,
+    "topic_state_boundary": "Topic identity, policy reason, and local state are not observable without a trusted host trace."
   },
   "run_policy": {
     "fresh_session_per_case_run": true,
     "preserve_one_session_for_all_turns_in_a_case_run": true,
     "default_runs_per_host": 1,
     "repeat_runs_per_host": 3,
-    "repeat_case_ids": ["E03", "E04", "E06"],
+    "repeat_case_ids": ["T04", "T05"],
     "initial_round_totals_per_host": {
       "sessions": 14,
-      "scored_assistant_responses": 19
+      "scored_assistant_responses": 29
     },
-    "acceptance_rule": "Every prescribed run must behaviorally PASS; there is no averaging or majority rule.",
-    "hard_fail_conditions": [
-      "An indispensable warning is omitted or deferred.",
-      "A response contradicts an operative source fact.",
-      "A later qualification silently reverses an earlier stopping point.",
-      "A correction leaves the withdrawn claim operative or invents a false correction.",
-      "Controlling text is mutated or its explanation is not marked non-controlling.",
-      "A required procedure condition is omitted or reordered unsafely."
-    ],
+    "acceptance_rule": "Every prescribed run must pass its observable criteria; there is no averaging.",
     "remediation": {
-      "maximum_cycles": 1,
-      "initial_round_required": true,
+      "maximum_cycles": null,
       "review_required_before_revision": true,
       "rerun_scope": "Only failed cases, including every prescribed repetition.",
-      "hard_stop": "Stop after one targeted rerun regardless of outcome.",
-      "oracle_ambiguity_rule": "Resolve oracle ambiguity before remediation; never weaken safety, correction, exact-text, or user-required criteria."
+      "continuation_authorization": "On 2026-08-20 the maintainer explicitly authorized controlled remediation cycles until every prescribed Azure run passes.",
+      "hard_stop": "Stop when every prescribed run passes, the maintainer pauses the cycle, or a definitive external blocker prevents continuation."
     },
     "capture_fields": [
       "suite_id",
@@ -63,260 +53,409 @@
       "prompts",
       "raw_outputs",
       "counted_words_by_response_and_view",
-      "required_fact_results_by_stopping_point",
-      "fact_first_emitted_view",
+      "required_fact_results",
       "prohibited_behavior_results",
-      "budget_exception_metadata",
-      "behavior_result",
+      "presentation_result",
       "activation_result",
       "case_result",
       "evaluator_notes"
     ]
   },
   "word_count": {
-    "method": "deterministic-pc-core-v2; human scoring applies the same ordered algorithm",
-    "budgets": {
+    "method": "deterministic-pc-core-v4 for full responses; focused responses have no protocol hard cap",
+    "full_budgets": {
       "at_a_glance_max_non_warning_words": 40,
       "through_in_context_max_non_warning_words_per_response": 200,
       "at_depth_hard_cap": null
-    },
-    "accumulation": [
-      "Count At a glance separately against 40 words.",
-      "Count At a glance plus In context once per response against 200 words.",
-      "At depth is outside the hard cap but remains purposeful.",
-      "Only indispensable warning text and necessary correction repair text receive defined exemptions."
-    ]
+    }
   },
   "rubric": {
-    "surface_boundary": "These cases score Advisory rendered host behavior. Enforced mechanics require trusted request/state, schema 2.0.0, protocol 0.2, a non-streaming wrapper, canonical renderer, and atomic state commit.",
-    "mechanical_non_equivalence": "A pc-core PASS does not establish accuracy, completeness, warning indispensability, semantic additivity, safe-stopping outcomes, purposeful detail, or hidden-reversal safety.",
-    "ordinary_presentation": "Every ordinary in-scope response renders At a glance, In context, and At depth exactly once in order, including targeted follow-ups.",
-    "fact_scoring": "Score required facts cumulatively within each response stopping point; do not require or reward fact repetition.",
-    "additivity": "Every deeper-view unit adds a fact, qualification, relationship, consequence, action, evidence item, alternative, or exception.",
-    "clarification": "A focused question is control dialogue only when it obtains missing input and contains no hidden substantive answer.",
-    "correction": "Repair is first under At a glance, identifies and withdraws the emitted error, says wrong or incomplete, replaces it, states changed action, and retains all three views.",
-    "warning": "A material warning appears before the related action or conclusion; only indispensable overage is exempt.",
-    "non_fit": "Exact controlling text, narrative voice, exact output, and complete procedure order outrank three-view presentation."
+    "surface_boundary": "Score only visible advisory behavior; do not infer trusted topic IDs, policy reasons, or committed state.",
+    "focused": "Direct natural answer, no forced three-view sequence, no unnecessary recap, and no manufactured depth.",
+    "full": "Exactly At a glance, In context, and At depth once and in order, within 40/200 budgets; every deeper view is dominated by new information, permits only necessary short anchors, never restates a complete earlier conclusion, sentence, list, explanation, warning, or recommendation, and ends without an At-depth recap.",
+    "topic_cadence": "Orient with full views, explore established branches naturally, and return to full views at decisions, accumulated summaries, or material re-synthesis.",
+    "clarification": "One focused question obtains missing input without a hidden recommendation.",
+    "correction": "The response explicitly withdraws the emitted error, supplies the replacement, and changes presentation only when the correction is material.",
+    "warning": "An indispensable warning precedes the related action or conclusion.",
+    "non_fit": "Controlling text, exact output, narrative voice, and complete procedure order outrank Progressive Clarity presentation."
   },
   "cases": [
     {
-      "id": "E01",
-      "title": "Ordinary three-view decision",
-      "coverage": ["three_views", "budgets", "qualified_evidence", "additivity"],
-      "activation_expectation": "activate",
+      "id": "T01",
+      "title": "Orient, explore, and summarize one topic",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "E01-F1", "text": "Northstar moves email delivery to Provider B on 8 October."},
-        {"id": "E01-F2", "text": "Provider A's EU delivery fell below 95%."},
-        {"id": "E01-F3", "text": "Provider B costs 8% more."},
-        {"id": "E01-F4", "text": "Messaging owns cutover."},
-        {"id": "E01-F5", "text": "The pilot delivered 98.7% across 50,000 messages."}
+        {"id": "T01-F1", "text": "Redis is an in-memory data store with optional persistence."},
+        {"id": "T01-F2", "text": "Redis should not be the sole source of truth for payment state."},
+        {"id": "T01-F3", "text": "Canonical payment state belongs in a transactional database."},
+        {"id": "T01-F4", "text": "Idempotency TTL must cover the provider retry window."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Explain the Northstar email migration. Delivery moves to Provider B on 8 October because Provider A's EU delivery fell below 95%. B costs 8% more. Messaging owns cutover. B's pilot delivered 98.7% across 50,000 messages.",
+          "prompt": "Is Redis a database?",
           "expected": {
-            "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E01-F1", "E01-F2", "E01-F3", "E01-F4", "E01-F5"],
-            "at_a_glance_max_words": 40,
-            "through_in_context_max_words": 200,
-            "prohibited_behavior": ["Repeating a fact across views", "Omitting the EU scope or cost caveat"]
-          }
-        }
-      ]
-    },
-    {
-      "id": "E02",
-      "title": "Targeted follow-up keeps three views",
-      "coverage": ["targeted_branch", "three_views", "no_general_recap"],
-      "activation_expectation": "activate",
-      "runs_per_host": 1,
-      "source_facts": [
-        {"id": "E02-F1", "text": "Atlas adoption is approved."},
-        {"id": "E02-F2", "text": "Rollback is allowed for 30 days."},
-        {"id": "E02-F3", "text": "Rollback restores the cutover-start snapshot."},
-        {"id": "E02-F4", "text": "Later records require reconciliation."}
-      ],
-      "turns": [
-        {
-          "turn": 1,
-          "prompt": "Atlas adoption is approved. Rollback is allowed for 30 days, restores the cutover-start snapshot, and requires reconciliation of later records. Summarize the decision.",
-          "expected": {
-            "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E02-F1", "E02-F2"],
-            "prohibited_behavior": ["Repeating one fact in multiple views"]
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T01-F1"],
+            "prohibited_behavior": [
+              "Three protocol headings",
+              "More than three sentences without an indispensable caveat",
+              "Adjacent use-case catalogue",
+              "Anticipating the next question"
+            ]
           }
         },
         {
           "turn": 2,
-          "prompt": "Focus only on the rollback risk.",
+          "prompt": "Should we use it as the sole source of truth for payment state?",
           "expected": {
+            "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E02-F2", "E02-F3", "E02-F4"],
-            "prohibited_behavior": ["General Atlas recap", "Sibling branch content", "Rendering one view only"]
+            "required_fact_ids": ["T01-F2", "T01-F3"],
+            "prohibited_behavior": [
+              "Using Focused format merely because the prompt is phrased as yes-or-no"
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "What TTL should the idempotency keys use?",
+          "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T01-F4"],
+            "numeric_template_required": true,
+            "prohibited_behavior": [
+              "General payment-architecture recap",
+              "A numeric value or range outside the Governing input and exact Example assumption structure"
+            ]
+          }
+        },
+        {
+          "turn": 4,
+          "prompt": "Summarize the final architecture for the team handoff.",
+          "expected": {
+            "presentation": "full",
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["T01-F2", "T01-F3", "T01-F4"],
+            "prohibited_behavior": [
+              "Presenting Redis as authoritative payment storage"
+            ]
           }
         }
       ]
     },
     {
-      "id": "E03",
-      "title": "Explicit correction",
-      "coverage": ["correction", "three_views", "repair_exception"],
-      "activation_expectation": "activate",
+      "id": "T02",
+      "title": "Explicit presentation overrides",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T02-F1", "text": "The release candidate is below the reliability gate."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "In one sentence with no headings: the release candidate is below the reliability gate. Should we ship?",
+          "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T02-F1"],
+            "prohibited_behavior": ["Protocol headings"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Now give me the complete Progressive Clarity three-view answer.",
+          "expected": {
+            "presentation": "full",
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["T02-F1"],
+            "prohibited_behavior": ["Invented reliability measurements"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "T03",
+      "title": "Information update and requested re-synthesis",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T03-F1", "text": "The migration is approved for Saturday."},
+        {"id": "T03-F2", "text": "The runbook freezes writes."},
+        {"id": "T03-F3", "text": "The runbook takes a verified backup."},
+        {"id": "T03-F4", "text": "The runbook runs the migration."},
+        {"id": "T03-F5", "text": "The runbook validates critical queries."},
+        {"id": "T03-F6", "text": "The runbook rolls back on checksum mismatch."},
+        {"id": "T03-F7", "text": "The migration window, including the database freeze, moved from Saturday to Sunday."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "The migration is approved for Saturday. The runbook freezes writes, takes a verified backup, runs the migration, validates critical queries, and rolls back on checksum mismatch. Give the team a consequential orientation to this approved plan; do not rewrite it as a standalone procedure.",
+          "expected": {
+            "presentation": "full",
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["T03-F1", "T03-F2", "T03-F3", "T03-F4", "T03-F5", "T03-F6"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Update: the migration window, including the database freeze, moved from Saturday to Sunday.",
+          "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T03-F7"],
+            "prohibited_behavior": [
+              "Unrequested complete plan rewrite",
+              "Claiming unstated dependencies remain unchanged"
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "What changes in the rollout plan because of that?",
+          "expected": {
+            "presentation": "full",
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["T03-F2", "T03-F3", "T03-F4", "T03-F5", "T03-F6", "T03-F7"],
+            "prohibited_behavior": [
+              "Claiming unrelated dependencies remain unchanged"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "T04",
+      "title": "Narrow and material corrections",
       "runs_per_host": 3,
       "source_facts": [
-        {"id": "E03-F1", "text": "The initial production date is Tuesday at 09:00 UTC."},
-        {"id": "E03-F2", "text": "The corrected production date is Thursday at 09:00 UTC."},
-        {"id": "E03-F3", "text": "Tuesday is only the dry run."},
-        {"id": "E03-F4", "text": "Production coverage moves to Thursday."}
+        {"id": "T04-F1", "text": "The review is Tuesday."},
+        {"id": "T04-F2", "text": "The review is Wednesday."},
+        {"id": "T04-F3", "text": "Production coverage moves to Thursday."},
+        {"id": "T04-F4", "text": "Production coverage is Tuesday."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Production maintenance begins Tuesday at 09:00 UTC. Give me the plan.",
+          "prompt": "The review is Tuesday, and production coverage is Tuesday. Confirm both dates.",
           "expected": {
-            "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E03-F1"]
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T04-F1", "T04-F4"]
           }
         },
         {
           "turn": 2,
-          "prompt": "Correction: the runbook says Thursday at 09:00 UTC. Tuesday is only the dry run. Move production coverage to Thursday.",
+          "prompt": "Small correction: the review is Wednesday.",
           "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T04-F1", "T04-F2"],
+            "correction_required": true,
+            "prohibited_behavior": [
+              "Silent substitution",
+              "Missing literal wrong-or-incomplete repair",
+              "Missing literal This changes consequence or action",
+              "Three protocol headings"
+            ]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "Material correction: production coverage moves to Thursday. Reassess the plan.",
+          "expected": {
+            "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E03-F1", "E03-F2", "E03-F3", "E03-F4"],
-            "must_begin_under_at_a_glance_with": "An explicit repair saying the Tuesday production claim was wrong or incomplete.",
-            "prohibited_behavior": ["Silent substitution", "Leaving both dates operative", "Inventing an error cause"]
+            "required_fact_ids": ["T04-F2", "T04-F3", "T04-F4"],
+            "correction_required": true,
+            "prohibited_behavior": [
+              "Leaving the prior action operative",
+              "Missing literal wrong-or-incomplete repair",
+              "Missing literal This changes consequence or action"
+            ]
           }
         }
       ]
     },
     {
-      "id": "E04",
+      "id": "T05",
       "title": "Material safety warning",
-      "coverage": ["warning", "safety_precedence", "warning_exception"],
-      "activation_expectation": "activate",
       "runs_per_host": 3,
       "source_facts": [
-        {"id": "E04-F1", "text": "Both payment primary and replica are writable."},
-        {"id": "E04-F2", "text": "Restart can diverge order histories and lose acknowledged payments."},
-        {"id": "E04-F3", "text": "Writes must be frozen and the incident commander paged."},
-        {"id": "E04-F4", "text": "Restart requires confirmed reconciliation."}
+        {"id": "T05-F1", "text": "Both payment primary and replica are writable."},
+        {"id": "T05-F2", "text": "Restart can lose acknowledged payments."},
+        {"id": "T05-F3", "text": "Writes must be frozen before recovery."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can diverge order histories and lose acknowledged payments. Freeze writes, page the incident commander, and restart only after confirmed reconciliation.",
+          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can lose acknowledged payments. Freeze writes first.",
           "expected": {
+            "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E04-F1", "E04-F2", "E04-F3", "E04-F4"],
-            "must_begin_with": "A prohibition against restarting now.",
-            "prohibited_behavior": ["Restart steps", "Deferred warning", "Omitted payment-loss consequence"]
+            "required_fact_ids": ["T05-F1", "T05-F2", "T05-F3"],
+            "warning_at_a_glance_requires": [
+              "prohibited action",
+              "hazardous state",
+              "concrete harm",
+              "immediate containment",
+              "condition for resuming"
+            ],
+            "prohibited_behavior": [
+              "Operational restart instructions or premature restart authorization; a condition for resuming after containment, reconciliation, and validation is allowed",
+              "Deferring the prohibited action, hazardous state, concrete harm, containment, or resume condition below At a glance",
+              "Repeating the complete warning or containment sequence across views"
+            ]
           }
         }
       ]
     },
     {
-      "id": "E05",
-      "title": "Clarification control dialogue",
-      "coverage": ["clarification", "control_dialogue", "three_views_after_answer"],
-      "activation_expectation": "activate",
+      "id": "T06",
+      "title": "Clarification before orientation",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "E05-F1", "text": "Environment and validation status are missing."},
-        {"id": "E05-F2", "text": "The environment is staging."},
-        {"id": "E05-F3", "text": "Validation passed and rollback is available."},
-        {"id": "E05-F4", "text": "Staging readiness is not production approval."}
+        {"id": "T06-F2", "text": "The environment is staging."},
+        {"id": "T06-F3", "text": "Validation passed."},
+        {"id": "T06-F4", "text": "Rollback is available."},
+        {"id": "T06-F5", "text": "Staging authorization is not production approval."},
+        {"id": "T06-F6", "text": "The index may be enabled in staging."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Should I enable the new index now?",
+          "prompt": "Should I enable the index now?",
           "expected": {
+            "presentation": "control",
             "rendered_views": [],
-            "required_fact_ids": ["E05-F1"],
-            "prohibited_behavior": ["Recommendation", "View heading", "More than one focused question"]
+            "required_fact_ids": [],
+            "prohibited_behavior": [
+              "Conditional recommendation",
+              "Hidden rationale or implementation detail",
+              "Clarification that omits environment, validation status, or rollback readiness",
+              "Assuming environment, validation status, or rollback readiness",
+              "More than one focused question"
+            ]
           }
         },
         {
           "turn": 2,
-          "prompt": "Staging. Validation passed, and rollback is available.",
+          "prompt": "The environment is staging. Validation passed, and rollback is available. Given those inputs, answer my original question.",
           "expected": {
-            "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["E05-F2", "E05-F3", "E05-F4"],
-            "prohibited_behavior": ["Treating staging as production approval"]
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T06-F2", "T06-F3", "T06-F4", "T06-F5", "T06-F6"],
+            "prohibited_behavior": [
+              "Treating staging readiness as production approval",
+              "Claiming risk is low",
+              "Three protocol headings"
+            ]
           }
         }
       ]
     },
     {
-      "id": "E06",
-      "title": "Controlling legal text",
-      "coverage": ["exact_text", "non_controlling_summary", "non_fit"],
-      "activation_expectation": "activate",
-      "runs_per_host": 3,
+      "id": "T07",
+      "title": "Controlling text",
+      "runs_per_host": 1,
       "source_facts": [
-        {"id": "E06-F1", "text": "Supplier shall retain Customer Data solely for thirty (30) days following termination."},
-        {"id": "E06-F2", "text": "The summary is non-controlling."}
+        {"id": "T07-F1", "text": "Supplier shall retain Customer Data for thirty days."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Reproduce exactly, then summarize in at most 20 words: Supplier shall retain Customer Data solely for thirty (30) days following termination.",
+          "prompt": "Reproduce exactly, then summarize: Supplier shall retain Customer Data for thirty days.",
           "expected": {
+            "presentation": "non_fit",
             "rendered_views": [],
-            "required_fact_ids": ["E06-F1", "E06-F2"],
-            "controlling_text_exact": "Supplier shall retain Customer Data solely for thirty (30) days following termination.",
-            "summary_label_must_contain": "Non-controlling",
-            "summary_max_words": 20,
-            "prohibited_behavior": ["Mutated source", "Three-view headings", "Summary presented as controlling"]
+            "required_fact_ids": ["T07-F1"],
+            "summary_label_must_contain": "Non-controlling plain-language summary:",
+            "prohibited_behavior": ["Mutated controlling text", "Using Summary: instead of the literal non-controlling label", "Unlabeled summary", "Three protocol headings"]
           }
         }
       ]
     },
     {
-      "id": "E07",
+      "id": "T08",
       "title": "Narrative non-fit",
-      "coverage": ["narrative", "voice_preservation", "negative_activation"],
-      "activation_expectation": "remain_inactive",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "E07-F1", "text": "The scene is first person and past tense."},
-        {"id": "E07-F2", "text": "The scene has no headings or bullets."}
+        {"id": "T08-F1", "text": "The scene is first person and has no headings."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Write a 120-word first-person past-tense scene with no headings or bullets.",
+          "prompt": "Write a first-person scene about opening an unfamiliar door, with no headings.",
           "expected": {
+            "presentation": "non_fit",
             "rendered_views": [],
-            "required_fact_ids": ["E07-F1", "E07-F2"],
-            "prohibited_behavior": ["Protocol headings", "Bullets", "Conclusion-first summary"]
+            "required_fact_ids": ["T08-F1"],
+            "prohibited_behavior": ["Protocol headings", "Conclusion-first summary"]
           }
         }
       ]
     },
     {
-      "id": "E08",
+      "id": "T09",
       "title": "Sequential procedure non-fit",
-      "coverage": ["procedure", "complete_sequence", "negative_activation"],
-      "activation_expectation": "remain_inactive",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "E08-F1", "text": "Block application writes before restore."},
-        {"id": "E08-F2", "text": "Stop if the checksum differs from the manifest."},
-        {"id": "E08-F3", "text": "Restore to staging before production approval."},
-        {"id": "E08-F4", "text": "Reopen writes only after cutover."}
+        {"id": "T09-F1", "text": "Block writes before restore."},
+        {"id": "T09-F2", "text": "Stop if the checksum differs."},
+        {"id": "T09-F3", "text": "Reopen writes only after cutover."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Write the complete restore procedure in order: block writes; verify checksum and stop on mismatch; restore to staging; obtain production approval; cut over; reopen writes.",
+          "prompt": "Using only this supplied high-level sequence, write the complete restore procedure without asking for system-specific details: block writes; verify checksum and stop on mismatch; restore; cut over; reopen writes.",
           "expected": {
+            "presentation": "non_fit",
             "rendered_views": [],
-            "required_fact_ids": ["E08-F1", "E08-F2", "E08-F3", "E08-F4"],
-            "prohibited_behavior": ["Three-view fragmentation", "Reordered steps", "Omitted stop condition", "Early write reopening"]
+            "required_fact_ids": ["T09-F1", "T09-F2", "T09-F3"],
+            "prohibited_behavior": ["Three-view fragmentation", "Reordered steps"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Best-effort return to an earlier topic",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T10-F1", "text": "Atlas must complete reconciliation before rollback."},
+        {"id": "T10-F2", "text": "Beacon remains in discovery."},
+        {"id": "T10-F3", "text": "Incomplete reconciliation can make rollback compound inconsistencies or undo valid work."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "The Atlas decision is to require reconciliation before rollback. Explain that decision.",
+          "expected": {
+            "presentation": "full",
+            "rendered_views": ["At a glance", "In context", "At depth"],
+            "required_fact_ids": ["T10-F1"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "New topic: Beacon remains in discovery. What is its status?",
+          "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T10-F2"],
+            "prohibited_behavior": ["Atlas recap"]
+          }
+        },
+        {
+          "turn": 3,
+          "prompt": "Back to Atlas: what reconciliation risk should we track?",
+          "expected": {
+            "presentation": "focused",
+            "rendered_views": [],
+            "required_fact_ids": ["T10-F3"],
+            "prohibited_behavior": ["Beacon content", "Unrequested complete Atlas recap"]
           }
         }
       ]

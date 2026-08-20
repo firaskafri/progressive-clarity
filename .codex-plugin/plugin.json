@@ -1,15 +1,15 @@
 {
   "name": "progressive-clarity",
-  "version": "0.2.1",
-  "description": "Prompt-only guidance for user-facing answers with three additive views in every ordinary in-scope response.",
+  "version": "0.4.3",
+  "description": "Prompt-only topic-oriented guidance that uses focused answers for ordinary exploration and predominantly new deeper views for orientation and checkpoints.",
   "author": {
     "name": "FIRAS HASHEM AHMAD AL KAFRI"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Progressive Clarity",
-    "shortDescription": "Three views, one response",
-    "longDescription": "Prompt-only guidance that asks models to render At a glance, In context, and At depth in order, preserve stopping-point caveats, and avoid fact repetition while leaving semantic conformance advisory.",
+    "shortDescription": "Orient, explore naturally",
+    "longDescription": "Prompt-only guidance that keeps simple facts and ordinary follow-ups focused, uses At a glance, In context, and At depth with predominantly new deeper information, and leaves topic inference and semantic conformance advisory.",
     "developerName": "FIRAS HASHEM AHMAD AL KAFRI",
     "composerIcon": "./assets/progressive-clarity-composer.svg",
     "logo": "./assets/progressive-clarity-logo.svg"

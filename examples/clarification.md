@@ -1,39 +1,25 @@
-# Clarification control dialogue
+# Index-enablement clarification gate
 
-- **Expected views:** No view renders until missing facts arrive; then all three views render.
-- **Required facts:** The assistant identifies environment and readiness before recommending activation; pure clarification preserves topic state and consumes no budget.
-- **Budget:** Control dialogue does not count. At a glance is at most 40 words; At a glance plus In context is at most 200.
+- **Expected presentation:** One clarification question only, then a Focused
+  staging decision after the missing inputs arrive.
+- **Required facts:** The assistant obtains environment, validation, and
+  rollback readiness before recommending activation; pure clarification
+  preserves topic state and consumes no budget.
+- **Budget:** Control dialogue and the Focused answer have no Full-format budget.
 
 ## User
 
-Tell me whether to enable the new index now.
+Should I enable the new index now?
 
 ## Assistant — control dialogue
 
-Is this staging or production, and have the backfill, query comparison, and rollback path been verified?
+Which environment is this, and have validation and rollback readiness been confirmed?
 
 ## User
 
-Staging. The backfill is complete, query comparison passed, and the rollback switch is available.
+The environment is staging. Validation passed, and rollback is available.
 
 ## Assistant
 
-### At a glance
-
-<!-- words:clarification-glance:start -->
-Enable the index in staging. Readiness checks passed and rollback is available; do not treat this as production approval.
-<!-- words:clarification-glance:end -->
-
-### In context
-
-<!-- words:clarification-context:start -->
-**Where it fits:** Staging limits exposure to internal validation.
-
-**What follows:** Assign an activation owner and observation window before switching traffic.
-<!-- words:clarification-context:end -->
-
-### At depth
-
-<!-- words:clarification-depth:start -->
-Capture baseline query latency and plans before activation. Define rollback thresholds for errors and latency, then compare representative traffic after the switch. Preserve the previous index until the observation window closes.
-<!-- words:clarification-depth:end -->
+Enable the index in staging. Validation passed and rollback is available; this
+is staging authorization only, not production approval.

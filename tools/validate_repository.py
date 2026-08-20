@@ -11,6 +11,20 @@ import tomllib
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+from pc_core.model import (
+    AT_A_GLANCE_MAX_NON_WARNING_WORDS,
+    THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS,
+)
+from tools.package_claude_plugin import load_manifest as load_claude_manifest
+from tools.package_claude_skill import (
+    PACKAGE_VERSION as CLAUDE_SKILL_VERSION,
+)
+from tools.package_claude_skill import generate_packaged_skill
+from tools.package_common import (
+    RELEASE_VERSION,
+    load_canonical_skill_source,
+    parse_json_object,
+)
 from tools.package_openai_plugin import load_manifest, source_entries
 
 
@@ -18,22 +32,31 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "progressive-clarity"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 FROZEN_FILES = {
-    Path("SPEC.md"): "74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8",
+    Path("SPEC.md"): (
+        "27a75963599cbb156e910d9ee6fc1b6b741c23cde2ddd094bc733edc67443aa7"
+    ),
     Path("skills/progressive-clarity/SKILL.md"): (
-        "ab8d3ba8e9aa02530f97d21af15ff371ec0df02055b6e2f0cff665c36c59a749"
+        "2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21"
     ),
     Path("evals/cases.json"): (
-        "8788528b11667b99a8ba398efe1dd17da3b302c687e584e5c07ca94f84f17eb4"
+        "9e10cc2191b33ca7f5a99e4f22659039de1f8c9f563440155175851616fd16d2"
     ),
 }
-EXPECTED_SCHEMA_VERSION = "4.0.0"
-EXPECTED_SUITE_ID = "progressive-clarity-v0.2-advisory-host-acceptance"
-EXPECTED_CASE_IDS = tuple(f"E{number:02d}" for number in range(1, 9))
-EXPECTED_REPEAT_CASE_IDS = ("E03", "E04", "E06")
+EXPECTED_SCHEMA_VERSION = "5.0.0"
+EXPECTED_SUITE_ID = (
+    "progressive-clarity-v0.4-topic-oriented-advisory-host-acceptance"
+)
+EXPECTED_CASE_IDS = tuple(f"T{number:02d}" for number in range(1, 11))
+EXPECTED_REPEAT_CASE_IDS = ("T04", "T05")
 EXPECTED_TOTALS_PER_HOST = {
     "sessions": 14,
-    "scored_assistant_responses": 19,
+    "scored_assistant_responses": 29,
 }
+EXPECTED_PACKAGE_VERSION = RELEASE_VERSION
+EXPECTED_WORD_COUNT_METHOD = (
+    "deterministic-pc-core-v4 for full responses; "
+    "focused responses have no protocol hard cap"
+)
 FACT_REFERENCE_FIELDS = {
     "required_fact_ids",
     "optional_fact_ids",
@@ -191,7 +214,16 @@ def validate_link(
         errors.append(f"{relative_source}: missing link target: {target}")
         return
     if parsed.fragment and resolved.is_file() and resolved.suffix.lower() == ".md":
-        anchors = anchor_cache.setdefault(resolved, markdown_anchors(resolved))
+        anchors = anchor_cache.get(resolved)
+        if anchors is None:
+            try:
+                anchors = markdown_anchors(resolved)
+            except (OSError, UnicodeError) as exc:
+                errors.append(
+                    f"{relative_source}: cannot inspect link target {target}: {exc}"
+                )
+                return
+            anchor_cache[resolved] = anchors
         fragment = unquote(parsed.fragment).lower()
         if fragment not in anchors:
             errors.append(f"{relative_source}: missing link anchor: {target}")
@@ -203,20 +235,51 @@ def validate_relative_links(errors: list[str]) -> None:
     for source in sorted(ROOT.rglob("*.md")):
         if set(source.relative_to(ROOT).parts) & IGNORED_REPOSITORY_PARTS:
             continue
-        text = markdown_without_fences(source.read_text(encoding="utf-8"))
+        try:
+            text = markdown_without_fences(source.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError) as exc:
+            errors.append(
+                f"{source.relative_to(ROOT)}: cannot inspect Markdown links: {exc}"
+            )
+            continue
         matches = list(LINK_PATTERN.finditer(text))
         matches.extend(REFERENCE_LINK_PATTERN.finditer(text))
         for match in matches:
             validate_link(source, match.group("target"), anchor_cache, errors)
 
 
-def validate_openai_plugin(errors: list[str]) -> None:
-    """Validate the OpenAI manifest, referenced assets, and package inputs."""
+def validate_distributions(errors: list[str]) -> None:
+    """Validate package inputs and coordinated distribution versions."""
+    versions: dict[str, object] = {
+        "Claude.ai Skill": CLAUDE_SKILL_VERSION,
+    }
     try:
-        manifest = load_manifest()
-        source_entries(manifest)
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        openai, openai_bytes = load_manifest()
+        source_entries(openai, openai_bytes)
+    except (OSError, ValueError) as exc:
         errors.append(f"OpenAI plugin: {exc}")
+    else:
+        versions["OpenAI plugin"] = openai.get("version")
+
+    try:
+        claude, _manifest_bytes = load_claude_manifest()
+    except (OSError, ValueError) as exc:
+        errors.append(f"Claude plugin: {exc}")
+    else:
+        versions["Claude plugin"] = claude.get("version")
+
+    try:
+        canonical = load_canonical_skill_source(SKILL_DIR, root=ROOT)
+        generate_packaged_skill(canonical.body)
+    except (OSError, ValueError) as exc:
+        errors.append(f"Claude.ai Skill: {exc}")
+
+    for label, version in versions.items():
+        if version != EXPECTED_PACKAGE_VERSION:
+            errors.append(
+                f"{label}: version must be {EXPECTED_PACKAGE_VERSION!r}, "
+                f"got {version!r}"
+            )
 
 
 def parse_frontmatter(text: str, errors: list[str]) -> dict[str, str]:
@@ -398,8 +461,8 @@ def validate_evaluation_suite(errors: list[str]) -> None:
     """Validate the frozen schema, totals, and referential constraints."""
     path = ROOT / "evals" / "cases.json"
     try:
-        suite = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        suite = parse_json_object(path.read_bytes(), "evals/cases.json")
+    except (OSError, ValueError) as exc:
         errors.append(f"evals/cases.json: invalid JSON ({exc})")
         return
 
@@ -418,8 +481,8 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         protocol = {}
     if protocol.get("path") != "SPEC.md":
         errors.append("evals/cases.json: protocol path must be SPEC.md")
-    if protocol.get("version") != "0.2 draft":
-        errors.append("evals/cases.json: protocol version must be 0.2 draft")
+    if protocol.get("version") != "0.4":
+        errors.append("evals/cases.json: protocol version must be 0.4")
     if protocol.get("sha256") != expected_protocol_hash:
         errors.append("evals/cases.json: protocol hash does not match frozen SPEC.md")
 
@@ -434,17 +497,32 @@ def validate_evaluation_suite(errors: list[str]) -> None:
     for field in (
         "human_outcome_claims",
         "semantic_completeness_claims",
-        "hidden_reversal_guarantees",
+        "hidden_state_claims",
     ):
         if scope.get(field) is not False:
             errors.append(f"evals/cases.json: scope.{field} must be false")
 
     word_count = suite.get("word_count")
-    if not isinstance(word_count, dict) or not str(
-        word_count.get("method", "")
-    ).startswith("deterministic-pc-core-v2"):
+    if (
+        not isinstance(word_count, dict)
+        or word_count.get("method") != EXPECTED_WORD_COUNT_METHOD
+    ):
         errors.append(
-            "evals/cases.json: word_count method must name deterministic pc-core v2"
+            "evals/cases.json: word_count method does not match pc-core v4"
+        )
+        word_count = {}
+    expected_budgets = {
+        "at_a_glance_max_non_warning_words": (
+            AT_A_GLANCE_MAX_NON_WARNING_WORDS
+        ),
+        "through_in_context_max_non_warning_words_per_response": (
+            THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS
+        ),
+        "at_depth_hard_cap": None,
+    }
+    if word_count.get("full_budgets") != expected_budgets:
+        errors.append(
+            "evals/cases.json: full_budgets do not match pc-core constants"
         )
 
     policy = suite.get("run_policy")
@@ -572,6 +650,23 @@ def validate_evaluation_suite(errors: list[str]) -> None:
                     "expected must be an object"
                 )
                 continue
+            presentation = expected.get("presentation")
+            if presentation not in {"focused", "full", "control", "non_fit"}:
+                errors.append(
+                    f"evals/cases.json: {case_id} turn {turn.get('turn')} "
+                    "presentation must be focused, full, control, or non_fit"
+                )
+            rendered_views = expected.get("rendered_views")
+            expected_views = (
+                ["At a glance", "In context", "At depth"]
+                if presentation == "full"
+                else []
+            )
+            if rendered_views != expected_views:
+                errors.append(
+                    f"evals/cases.json: {case_id} turn {turn.get('turn')} "
+                    f"rendered_views must be {expected_views}"
+                )
             validate_fact_references(
                 expected,
                 f"{case_id} turn {turn.get('turn')} expected",
@@ -723,9 +818,14 @@ def validate_python_package(errors: list[str]) -> None:
         return
     build = data.get("build-system")
     project = data.get("project")
-    wheel = data.get("tool", {}).get("hatch", {}).get("build", {}).get(
-        "targets", {}
-    ).get("wheel")
+    tool = data.get("tool")
+    hatch = tool.get("hatch") if isinstance(tool, dict) else None
+    hatch_build = hatch.get("build") if isinstance(hatch, dict) else None
+    targets = (
+        hatch_build.get("targets") if isinstance(hatch_build, dict) else None
+    )
+    wheel = targets.get("wheel") if isinstance(targets, dict) else None
+    sdist = targets.get("sdist") if isinstance(targets, dict) else None
     if build != {
         "requires": ["hatchling"],
         "build-backend": "hatchling.build",
@@ -736,11 +836,19 @@ def validate_python_package(errors: list[str]) -> None:
         return
     expected = {
         "name": "progressive-clarity-core",
-        "version": "0.2.1",
+        "version": EXPECTED_PACKAGE_VERSION,
+        "description": (
+            "Deterministic mechanics for topic-oriented Progressive Clarity"
+        ),
         "requires-python": ">=3.11",
         "dependencies": [],
         "license": "Apache-2.0",
         "license-files": ["LICENSES/Apache-2.0.txt"],
+        "authors": [{"name": "Firas Kafri"}],
+        "urls": {
+            "Homepage": "https://firaskafri.com/progressive-clarity/",
+            "Repository": "https://github.com/firaskafri/progressive-clarity",
+        },
         "scripts": {"pc-core": "pc_core.cli:main"},
     }
     for field, expected_value in expected.items():
@@ -750,6 +858,14 @@ def validate_python_package(errors: list[str]) -> None:
             )
     if wheel != {"packages": ["pc_core"]}:
         errors.append("pyproject.toml: wheel must contain only pc_core")
+    if sdist != {
+        "include": [
+            "/LICENSES/Apache-2.0.txt",
+            "/pc_core",
+            "/pyproject.toml",
+        ]
+    }:
+        errors.append("pyproject.toml: unexpected sdist inventory")
 
 
 def _hook_entry(
@@ -771,16 +887,19 @@ def _hook_entry(
     return entries[0]
 
 
-def validate_host_templates(errors: list[str]) -> None:
-    """Validate project-local Cursor and Claude hook schemas and retry bounds."""
-    cursor_path = ROOT / "adapters" / "cursor" / "hooks.json"
-    claude_path = ROOT / "adapters" / "claude-code" / "settings.json"
+def _read_host_template(
+    path: Path,
+    label: str,
+    errors: list[str],
+) -> object | None:
     try:
-        cursor = json.loads(cursor_path.read_text(encoding="utf-8"))
-        claude = json.loads(claude_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        errors.append(f"host adapters: invalid JSON ({exc})")
-        return
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"{label}: invalid JSON ({exc})")
+        return None
+
+
+def _validate_cursor_template(cursor: object, errors: list[str]) -> None:
     if (
         not isinstance(cursor, dict)
         or set(cursor) != {"version", "hooks"}
@@ -824,6 +943,9 @@ def validate_host_templates(errors: list[str]) -> None:
     }
     if cursor_stop is not None and cursor_stop != expected_stop:
         errors.append("adapters/cursor/hooks.json: invalid bounded stop hook")
+
+
+def _validate_claude_template(claude: object, errors: list[str]) -> None:
     if not isinstance(claude, dict) or set(claude) != {"$schema", "hooks"}:
         errors.append(
             "adapters/claude-code/settings.json: expected $schema and hooks only"
@@ -865,13 +987,33 @@ def validate_host_templates(errors: list[str]) -> None:
         errors.append("adapters/claude-code/settings.json: invalid Stop hook")
 
 
+def validate_host_templates(errors: list[str]) -> None:
+    """Validate project-local Cursor and Claude hook schemas independently."""
+    templates = (
+        (
+            ROOT / "adapters" / "cursor" / "hooks.json",
+            "adapters/cursor/hooks.json",
+            _validate_cursor_template,
+        ),
+        (
+            ROOT / "adapters" / "claude-code" / "settings.json",
+            "adapters/claude-code/settings.json",
+            _validate_claude_template,
+        ),
+    )
+    for path, label, validate in templates:
+        template = _read_host_template(path, label, errors)
+        if template is not None:
+            validate(template, errors)
+
+
 def main() -> int:
     """Run all repository validations and report every failure."""
     errors: list[str] = []
     validate_frozen_files(errors)
     validate_whitespace(errors)
     validate_relative_links(errors)
-    validate_openai_plugin(errors)
+    validate_distributions(errors)
     validate_skill_package(errors)
     validate_evaluation_suite(errors)
     validate_terminology(errors)

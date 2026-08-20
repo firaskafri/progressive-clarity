@@ -1,5 +1,255 @@
 # Local deterministic enforcement
 
+## Current v0.4 implementation
+
+The current `pc-core` source implements the Mechanical wrapper profile for
+Progressive Clarity protocol `0.4`. The wrapper request, model envelope, and
+persisted conversation-state schemas are all `3.0.0`. The locally built Python
+distribution is `progressive-clarity-core` version `0.4.2`; artifact hashes are
+recorded in [Verification](verification.md). This is a local release candidate,
+not a published release or host-compatibility result.
+
+The canonical skill and host packages use the separate Advisory conversational
+profile. They are prompt-only: they use the visible-conversation topic
+heuristic and Focused/Full cadence, but they do not call `pc-core`, maintain its
+state, or inherit its mechanical guarantees.
+
+### Certification boundary
+
+```text
+trusted wrapper request + committed v0.4 state
+                     |
+                     v
+          resolve topic and presentation
+                     |
+                     v
+            non-streaming host call
+                     |
+                     v
+       schema 3.0.0 / protocol 0.4 envelope
+                     |
+                     v
+             pc-core validation
+          | pass                 | fail
+          v                      v
+ canonical rendering      one complete repair
+          |                      |
+ atomic state commit       second failure => withhold
+```
+
+Presentation policy resolves before the host runs and remains fixed for the
+initial candidate and the single permitted repair. Invalid `start`, `continue`,
+or `resume` transitions fail before host invocation. After a second invalid
+candidate, the wrapper emits no candidate response and leaves committed state
+unchanged.
+
+### Trusted wrapper request
+
+`WrapperRequest` schema `3.0.0` has exactly:
+
+```json
+{
+  "schema_version": "3.0.0",
+  "prompt": "Explain the Atlas adoption decision.",
+  "topic_id": "atlas",
+  "topic_action": "start",
+  "turn_kind": "substantial",
+  "presentation_request": "auto",
+  "controlling_text": null,
+  "summary_max_words": null,
+  "non_fit_kind": null,
+  "required_facts": null
+}
+```
+
+`topic_action` is:
+
+- `start` for an unknown topic;
+- `continue` for the active topic; or
+- `resume` for a known inactive topic.
+
+`turn_kind` is `simple_fact`, `ordinary`, `narrow_followup`, `substantial`,
+`decision_checkpoint`, `summary_checkpoint`, `material_resynthesis`,
+`narrow_correction`, `material_correction`, `clarification`, `quotation`, or
+`non_fit`. `presentation_request` is `auto`, `focused`, or `full`.
+
+The caller supplies these classifications as trusted metadata. `pc-core`
+checks their structural consistency but does not prove that the caller chose
+the semantically correct topic or turn kind.
+
+### Deterministic presentation policy
+
+Purpose-specific shapes resolve first: clarification becomes `control`,
+quotation becomes `quotation`, and a non-fit artifact becomes `non_fit`.
+Otherwise, an explicit `focused` or `full` request controls the shape. Under
+`auto`:
+
+- the first `substantial` response for a topic without a committed overview is
+  Full (`views`);
+- `decision_checkpoint`, `summary_checkpoint`, `material_resynthesis`, and
+  `material_correction` are Full;
+- simple facts, ordinary or narrow follow-ups, later substantial turns, and
+  narrow corrections are Focused.
+
+A certified topic-wide overview sets `has_committed_overview` for that topic.
+An explicit Full rendering of a simple or narrow turn does not mark the topic
+as oriented.
+
+The envelope response kinds are:
+
+- `focused`: a direct natural answer without reserved protocol headings;
+- `views`: Full output with At a glance, In context, and At depth;
+- `control`: one clarification;
+- `quotation`: exact controlling text plus a separate summary; and
+- `non_fit`: a purpose-specific artifact such as exact output, a complete
+  procedure, a transformation, or narrative writing.
+
+### Topic-oriented state
+
+`ConversationState` schema `3.0.0` stores a conversation turn counter, the
+active topic ID, and a record for each known topic. Each topic record contains:
+
+- the selected branch;
+- the fact ledger;
+- host session IDs keyed by host; and
+- `has_committed_overview`.
+
+`StoredFact` retains only exact text and the first committed turn. Presentation
+placement is response-local: a proposition rendered in Focused output can
+later be allocated to the appropriate Full view. State does not permanently
+bind a fact to `focused`, `at_a_glance`, `in_context`, or `at_depth`.
+
+Earlier protocol state is unsupported even when it uses schema `3.0.0`. Do not
+point v0.4 commands at a v0.3 or v0.2 state file. Preserve old state needed as
+evidence and use a fresh path for v0.4, such as
+`conversation-state-v04.json`. A missing state file creates the empty v0.4
+state; a present file must declare schema `3.0.0` and protocol `0.4`.
+
+Treat state and audit reports as conversation-private because topic records
+contain facts and host session identifiers. Use one owner per state path;
+concurrent writers are unsupported.
+
+### Validate, render, and wrap
+
+Run from the repository root:
+
+```sh
+python3.11 -m pc_core validate candidate.json \
+  --state conversation-state-v04.json \
+  --request request.json
+```
+
+Validation without `--request` is structural inspection only. It cannot certify
+the selected topic or presentation and does not produce committable next state.
+
+Rendering requires the trusted request:
+
+```sh
+python3.11 -m pc_core render candidate.json \
+  --state conversation-state-v04.json \
+  --request request.json
+```
+
+A requestless render is refused: it exits without writing candidate Markdown
+because the result is not certifiable.
+
+Use the non-streaming wrappers when invalid output must be withheld:
+
+```sh
+python3.11 -m pc_core wrap \
+  --host cursor \
+  --request request.json \
+  --state conversation-state-v04.json \
+  --cwd /path/to/project \
+  --report pc-report.json
+
+python3.11 -m pc_core wrap \
+  --host claude-code \
+  --request request.json \
+  --state conversation-state-v04.json \
+  --cwd /path/to/project \
+  --report pc-report.json
+```
+
+For a fresh Cursor workspace, review and accept workspace trust interactively
+or explicitly add `--trust-workspace` for the reviewed `--cwd`. The wrapper
+never adds Cursor's trust flag implicitly. An optional `--report` path must be
+different from `--state` and `--request`; the CLI rejects a possible alias
+before host invocation.
+
+### Mechanical guarantees and exclusions
+
+For output labeled `MECHANICALLY_CERTIFIED`, the wrapper checks:
+
+- protocol and schema versions;
+- the trusted topic action, selected response kind, target-topic transition,
+  branch, turn, and fact-count arithmetic;
+- Full view order, non-empty prose, canonical headings, and English 40/200
+  budgets when `views` is selected, with structured warnings confined to At a
+  glance;
+- Focused content and exclusion of reserved protocol headings when `focused`
+  is selected;
+- exactly one heading-free question sentence when clarification `control` is
+  selected;
+- response-local fact allocation, stable cross-turn fact identity, declared
+  reuse, and exact caller-authoritative fact coverage when supplied;
+- correction structure and correction-before-warning rendering, trusted
+  quotation bytes and SHA-256, and byte-preserving rendering of accepted
+  non-fit payloads; equality to the intended artifact remains `UNVERIFIED`;
+- exact normalized lexical duplicate checks, with required verbatim artifact
+  bytes exempt; and
+- withholding before output plus same-directory atomic state replacement after
+  a pass.
+
+These checks do not establish factual accuracy, semantic completeness, the
+correctness of caller classifications, semantic fact atomicity or placement,
+warning necessity or sufficiency, human safe stopping, whether a recurring
+short anchor is necessary, whether a paraphrase restates a complete
+proposition, whether At depth ends in a semantic recap, purposeful depth,
+hidden-reversal safety, or host behavior outside the wrapper. Those properties
+remain Advisory or `UNVERIFIED`.
+
+### Advisory hooks
+
+The project-local Cursor and Claude Code hook templates inspect already
+generated Markdown. They remain **Advisory/block-and-retry**, not a
+certification boundary. In v0.4, heading-free output is nonblocking because it
+may be a valid Focused or purpose-specific response; absence of the three Full
+headings is recorded as `UNVERIFIED`, not a mechanical failure. Fenced or
+partial reserved headings are also nonblocking because they may belong to an
+exact artifact. For an exact three-heading sequence, hooks can reject an empty
+view. Budgets and lexical echoes remain `UNVERIFIED` because visible Markdown
+cannot identify structured warning, correction, or quotation exceptions.
+Cursor handoff reports are conversation-private and are deleted when consumed
+by the matching stop event.
+
+Hooks cannot determine whether Focused or Full was the correct policy, certify
+topic state, replace output already displayed by Cursor, or provide the
+wrapper's fail-closed guarantee.
+
+### Current evidence boundary
+
+No `0.4.2` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+v0.3.0–v0.3.2 ChatGPT observations do not inherit local wrapper certification
+and are recorded as historical evidence in [Verification](verification.md).
+Current Advisory activation, topic inference, topic resumption, presentation
+selection, and rendered conformance are **UNVERIFIED**. Local mechanics do not
+establish host compatibility.
+
+## Historical/superseded v0.3.x enforcement boundary
+
+The v0.3 request, envelope, and state shapes were also schema `3.0.0`, but their
+protocol value was `0.3`. Protocol v0.4 rejects those states and candidates
+rather than silently applying new semantics. Historical v0.3 package and host
+results do not transfer to this wrapper.
+
+## Historical v0.2 documentation and evidence
+
+Everything below this heading is retained as historical v0.2 documentation and
+evidence. References to “current,” package v0.2.1, schema 2.x, and dated host
+results describe the v0.2 record only; they are not v0.4 instructions or
+evidence.
+
 `pc-core` package v0.2.1 is the Python 3.11+ standard-library enforcement path
 for protocol v0.2 on local agents. For every ordinary in-scope `views`
 response, it buffers model candidates and releases only one canonical response
@@ -7,8 +257,10 @@ containing At a glance, In context, and At depth in order after mechanically
 decidable checks pass.
 
 ChatGPT does not use this path. Its package remains prompt-only with no backend,
-MCP server, hook, or local-state dependency. The Advisory v0.2.1 ChatGPT ZIP
-has not been uploaded.
+MCP server, hook, or local-state dependency. On 2026-08-18, the user reported
+uploading and installing the Advisory v0.2.1 ChatGPT ZIP. The repository did
+not independently capture those actions or identify the installed portal
+bytes, and the report does not connect ChatGPT to `pc-core`.
 
 ## Certification boundary
 
@@ -232,6 +484,17 @@ The preserved evidence is under
 Live Claude Code wrapper behavior remains `UNVERIFIED`: its argv and result
 parsing are structurally tested, but inference requires paid Anthropic API
 access and no paid live run was completed.
+
+The current ChatGPT evidence is separate from local enforcement. On
+2026-08-18, a user-provided complex gold-forecast transcript triggered the
+three-view structure but failed the 40/200 budgets and additivity, so it is
+non-conformant. A later fresh fixed-facts smoke passed automatic trigger, exact
+headings/order, a 26-word At a glance, approximately 50 cumulative shallow
+words, supplied-fact coverage, additivity, and a negative exact-output control
+whose response was exactly `323`. That smoke passes only those named checks.
+Neither transcript was independently captured or reproduced. Neither
+identifies the installed portal bytes or inherits this wrapper's mechanical
+certification.
 
 ## Reusable host interface
 

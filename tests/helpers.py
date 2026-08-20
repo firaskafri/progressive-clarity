@@ -1,15 +1,14 @@
-"""Name: Deterministic v0.2 test fixture builders.
+"""Name: Deterministic v0.4 test fixture builders.
 
-Description: Builds minimal valid requests and three-view envelopes without
-hiding the protocol fields under test.
+Description: Builds focused and three-view topic-oriented requests and
+envelopes without hiding protocol fields under test.
 Assumptions: pc-core's exported versions are authoritative.
-Expectations: Fixtures begin mechanically valid and callers mutate only the
-field needed for an edge or corner case.
+Expectations: Fixtures begin mechanically valid across new, continued, and
+resumed topics; callers mutate only the field needed for an edge case.
 """
 
 from __future__ import annotations
 
-import copy
 import json
 from typing import Any
 
@@ -26,10 +25,12 @@ def request_dict(
     *,
     prompt: str = "Explain the Atlas adoption decision.",
     topic_id: str = "atlas",
-    new_topic: bool = True,
-    intent: str = "ordinary",
+    topic_action: str = "start",
+    turn_kind: str = "substantial",
+    presentation_request: str = "auto",
     controlling_text: str | None = None,
     summary_max_words: int | None = None,
+    non_fit_kind: str | None = None,
     required_facts: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Return one complete trusted wrapper request document."""
@@ -37,10 +38,12 @@ def request_dict(
         "schema_version": WRAPPER_REQUEST_SCHEMA_VERSION,
         "prompt": prompt,
         "topic_id": topic_id,
-        "new_topic": new_topic,
-        "intent": intent,
+        "topic_action": topic_action,
+        "turn_kind": turn_kind,
+        "presentation_request": presentation_request,
         "controlling_text": controlling_text,
         "summary_max_words": summary_max_words,
+        "non_fit_kind": non_fit_kind,
         "required_facts": required_facts,
     }
 
@@ -52,14 +55,14 @@ def valid_request(**overrides: Any) -> WrapperRequest:
     return WrapperRequest.from_dict(data)
 
 
-def valid_verbose_dict() -> dict[str, Any]:
-    """Return a minimal valid new-topic verbose-only envelope."""
+def valid_full_dict() -> dict[str, Any]:
+    """Return a minimal valid new-topic full-view envelope."""
     return {
         "schema_version": ENVELOPE_SCHEMA_VERSION,
         "protocol_version": PROTOCOL_VERSION,
         "response_kind": "views",
         "topic_id": "atlas",
-        "new_topic": True,
+        "topic_action": "start",
         "state": {
             "turn_before": 0,
             "turn_after": 1,
@@ -125,16 +128,37 @@ def valid_verbose_dict() -> dict[str, Any]:
     }
 
 
-def valid_verbose_envelope() -> Envelope:
-    """Parse the minimal valid verbose-only envelope."""
-    return Envelope.from_dict(valid_verbose_dict())
+def valid_full_envelope() -> Envelope:
+    """Parse the minimal valid full-view envelope."""
+    return Envelope.from_dict(valid_full_dict())
 
 
-def copied_verbose_dict() -> dict[str, Any]:
-    """Return a deep mutable copy for one-field failure scenarios."""
-    return copy.deepcopy(valid_verbose_dict())
+def valid_focused_dict() -> dict[str, Any]:
+    """Return a minimal valid new-topic focused envelope."""
+    data = valid_full_dict()
+    data["response_kind"] = "focused"
+    data["state"]["next_fact_count"] = 1
+    data["facts"] = [
+        {
+            "id": "ATLAS-F1",
+            "text": "Atlas is a data platform.",
+            "allocation": "focused",
+            "reuse_reason": None,
+        }
+    ]
+    data["payload"] = {
+        "content": "Atlas is a data platform.",
+        "fact_ids": ["ATLAS-F1"],
+        "warning": None,
+        "correction": None,
+    }
+    return data
 
 
+def valid_focused_envelope() -> Envelope:
+    """Parse the minimal valid focused envelope."""
+    return Envelope.from_dict(valid_focused_dict())
 def envelope_json(data: dict[str, Any] | None = None) -> str:
     """Serialize a deterministic candidate as host output."""
-    return json.dumps(data or valid_verbose_dict(), ensure_ascii=False)
+    candidate = valid_full_dict() if data is None else data
+    return json.dumps(candidate, ensure_ascii=False)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Sequence
 
@@ -14,6 +15,7 @@ from pc_core.adapters import (
     cursor_adapter,
 )
 from pc_core.hooks import claude_stop, cursor_after_response, cursor_stop
+from pc_core.json_io import JsonContractError, parse_json, write_json_atomic
 from pc_core.model import (
     ConversationState,
     Envelope,
@@ -28,8 +30,31 @@ from pc_core.wrapper import CertifiedWrapper, WrapperFailure
 
 def _read_json(path: str) -> object:
     if path == "-":
-        return json.load(sys.stdin)
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+        return parse_json(sys.stdin.read())
+    return parse_json(Path(path).read_text(encoding="utf-8"))
+
+
+def _paths_may_alias(left: Path, right: Path) -> bool:
+    """Conservatively detect paths that may identify one filesystem entry."""
+    try:
+        resolved_left = left.resolve()
+        resolved_right = right.resolve()
+    except RuntimeError as exc:
+        raise SchemaError(f"cannot safely resolve output path: {exc}") from exc
+    if resolved_left == resolved_right:
+        return True
+    try:
+        if (
+            resolved_left.exists()
+            and resolved_right.exists()
+            and resolved_left.samefile(resolved_right)
+        ):
+            return True
+    except OSError:
+        return True
+    normalized_left = unicodedata.normalize("NFC", str(resolved_left)).casefold()
+    normalized_right = unicodedata.normalize("NFC", str(resolved_right)).casefold()
+    return normalized_left == normalized_right
 
 
 def _state(path: str | None) -> ConversationState:
@@ -42,14 +67,6 @@ def _request(path: str | None) -> WrapperRequest | None:
     if path is None:
         return None
     return WrapperRequest.from_dict(_read_json(path))
-
-
-def _write_report(path: Path, value: object) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
 
 
 def _validate_command(args: argparse.Namespace) -> int:
@@ -72,12 +89,13 @@ def _validate_command(args: argparse.Namespace) -> int:
 
 def _render_command(args: argparse.Namespace) -> int:
     envelope = Envelope.from_dict(_read_json(args.envelope))
+    request = _request(args.request)
     report = validate_envelope(
         envelope,
         state=_state(args.state),
-        request=_request(args.request),
+        request=request,
     )
-    if not report.mechanically_conformant:
+    if not report.mechanically_conformant or not report.certifiable:
         print(
             json.dumps(
                 report.to_dict(include_next_state=False),
@@ -95,6 +113,18 @@ def _render_command(args: argparse.Namespace) -> int:
 def _wrap_command(args: argparse.Namespace) -> int:
     request = WrapperRequest.from_dict(_read_json(args.request))
     cwd = Path(args.cwd).resolve()
+    state_path = Path(args.state)
+    if args.report is not None:
+        report_path = Path(args.report)
+        protected_paths = {
+            "--state": state_path,
+            "--request": Path(args.request),
+        }
+        for option, protected_path in protected_paths.items():
+            if _paths_may_alias(report_path, protected_path):
+                raise SchemaError(
+                    f"--report must use a different path from {option}"
+                )
     if args.trust_workspace and args.host != "cursor":
         raise SchemaError("--trust-workspace is supported only for Cursor")
     if args.host == "cursor":
@@ -110,7 +140,7 @@ def _wrap_command(args: argparse.Namespace) -> int:
             executable=args.executable or "claude",
             timeout_seconds=args.timeout,
         )
-    wrapper = CertifiedWrapper(host, FileStateStore(Path(args.state)))
+    wrapper = CertifiedWrapper(host, FileStateStore(state_path))
     try:
         result = wrapper.run(request)
     except WrapperFailure as exc:
@@ -128,24 +158,30 @@ def _wrap_command(args: argparse.Namespace) -> int:
         )
         return 1
     if args.report is not None:
-        _write_report(
-            Path(args.report),
-            {
-                "status": "MECHANICALLY_CERTIFIED",
-                "semantic_conformance": "UNVERIFIED",
-                "host": result.host,
-                "attempts": result.attempts,
-                "host_metadata": dict(result.host_metadata),
-                "validation": result.report.to_dict(),
-            },
-        )
+        try:
+            write_json_atomic(
+                Path(args.report),
+                {
+                    "status": "MECHANICALLY_CERTIFIED",
+                    "semantic_conformance": "UNVERIFIED",
+                    "host": result.host,
+                    "attempts": result.attempts,
+                    "host_metadata": dict(result.host_metadata),
+                    "validation": result.report.to_dict(),
+                },
+            )
+        except OSError as exc:
+            print(
+                f"pc-core: certified output committed, but report write failed: {exc}",
+                file=sys.stderr,
+            )
     sys.stdout.write(result.markdown)
     return 0
 
 
 def _hook_command(args: argparse.Namespace) -> int:
     try:
-        data = json.load(sys.stdin)
+        data = parse_json(sys.stdin.read())
         if not isinstance(data, dict):
             raise ValueError("hook input must be an object")
         if args.adapter == "cursor-after-response":
@@ -154,7 +190,7 @@ def _hook_command(args: argparse.Namespace) -> int:
             output = cursor_stop(data, Path(args.state_dir))
         else:
             output = claude_stop(data)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         if args.adapter == "claude-stop":
             output = {
                 "systemMessage": (
@@ -238,7 +274,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return int(args.handler(args))
     except (
         OSError,
-        json.JSONDecodeError,
+        UnicodeError,
+        JsonContractError,
         SchemaError,
         StateError,
         HostInvocationError,

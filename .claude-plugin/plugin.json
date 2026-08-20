@@ -1,12 +1,12 @@
 {
   "name": "progressive-clarity",
-  "version": "0.2.1",
-  "description": "Prompt-only guidance that formats ordinary user-facing answers as three additive views with concise stopping points, caveats, and purpose-specific exceptions.",
+  "version": "0.4.3",
+  "description": "Prompt-only topic-oriented guidance that keeps ordinary exploration focused and makes deeper Full views predominantly new.",
   "author": {
     "name": "Firas Kafri",
     "url": "https://github.com/firaskafri"
   },
-  "homepage": "https://github.com/firaskafri/progressive-clarity#readme",
+  "homepage": "https://firaskafri.com/progressive-clarity/",
   "repository": "https://github.com/firaskafri/progressive-clarity",
   "license": "Apache-2.0",
   "keywords": [

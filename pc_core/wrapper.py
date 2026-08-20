@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, replace
 from typing import Mapping
 
 from pc_core.adapters import HostAdapter
+from pc_core.json_io import JsonContractError, parse_json
 from pc_core.model import Envelope, SchemaError, WrapperRequest
+from pc_core.policy import resolve_turn
 from pc_core.prompts import build_generation_prompt, build_repair_prompt
 from pc_core.render import render_markdown
 from pc_core.state import StateStoreProtocol
@@ -81,8 +82,9 @@ class CertifiedWrapper:
     def run(self, request: WrapperRequest) -> CertifiedResult:
         """Generate at most twice, fail closed, and commit only a valid result."""
         state = self.state_store.load()
-        prompt = build_generation_prompt(request, state)
-        session_id = state.host_sessions.get(self.host.name)
+        resolved = resolve_turn(request, state)
+        prompt = build_generation_prompt(request, resolved)
+        session_id = resolved.topic.host_sessions.get(self.host.name)
         reports: list[ValidationReport] = []
         latest_metadata: Mapping[str, object] = {}
 
@@ -94,15 +96,16 @@ class CertifiedWrapper:
             session_id = candidate.session_id
             latest_metadata = candidate.metadata
             try:
-                raw_envelope = json.loads(candidate.text)
+                raw_envelope = parse_json(candidate.text)
                 envelope = Envelope.from_dict(raw_envelope)
-            except (json.JSONDecodeError, SchemaError) as exc:
+            except (JsonContractError, SchemaError) as exc:
                 report = _schema_failure(exc)
             else:
                 report = validate_envelope(
                     envelope,
                     state=state,
                     request=request,
+                    resolved=resolved,
                 )
                 if (
                     report.mechanically_conformant
@@ -110,18 +113,30 @@ class CertifiedWrapper:
                     and report.next_state is not None
                 ):
                     markdown = render_markdown(envelope)
-                    committed_state = replace(
-                        report.next_state,
+                    next_topic = report.next_state.topics[request.topic_id]
+                    committed_topic = replace(
+                        next_topic,
                         host_sessions={
-                            **report.next_state.host_sessions,
+                            **next_topic.host_sessions,
                             self.host.name: session_id,
                         },
+                    )
+                    committed_state = replace(
+                        report.next_state,
+                        topics={
+                            **report.next_state.topics,
+                            request.topic_id: committed_topic,
+                        },
+                    )
+                    committed_report = replace(
+                        report,
+                        next_state=committed_state,
                     )
                     self.state_store.commit(committed_state)
                     return CertifiedResult(
                         markdown=markdown,
                         envelope=envelope,
-                        report=report,
+                        report=committed_report,
                         attempts=attempt,
                         host=self.host.name,
                         host_metadata=latest_metadata,
@@ -130,13 +145,13 @@ class CertifiedWrapper:
             if attempt < MAX_ATTEMPTS:
                 prompt = build_repair_prompt(
                     request,
-                    state,
+                    resolved,
                     diagnostic_repair_text(report),
                 )
 
         raise WrapperFailure(
             (
-                "pc-core withheld output after two mechanically invalid "
+                f"pc-core withheld output after {MAX_ATTEMPTS} mechanically invalid "
                 "candidates; semantic conformance was not evaluated"
             ),
             attempts=MAX_ATTEMPTS,

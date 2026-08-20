@@ -1,28 +1,34 @@
 # Document template
 
-Document adaptation is an informative three-view use of Progressive Clarity
+Document adaptation is an informative use of Progressive Clarity's Full format
 for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
 
 Use the visible sections only when they help readers choose a stopping point. For tutorials, procedures, controlling legal text, and voice-dependent writing, use the hybrid guidance at the end.
 
-Version 0.2 word-budget guidance applies to English prose only. Use the
-counting rules in `SPEC.md`; no non-English budget claim is made.
+Version 0.4 Full-format word-budget guidance applies to English prose only. Use
+the counting rules in `SPEC.md`; no non-English budget claim is made.
+
+Privately draft At a glance, place its complete propositions in a “do not
+restate” ledger, draft In context with new rationale/constraints/actions plus
+minimal anchors, add those propositions to the ledger, and draft At depth with
+new evidence/exceptions/implementation. Delete every sentence that restates
+the ledger and every concluding At-depth recap.
 
 ```markdown
 # <Conclusion written as a specific claim>
 
 ## At a glance
 
-<!-- At a glance: no more than 40 counted prose words. -->
+<!-- At a glance: no more than 40 counted non-warning prose words. -->
 
 <Direct answer or central fact.> <Decision-relevant consequence.>
 <Indispensable caveat or warning, when present.>
 
 ## In context
 
-<!-- At a glance plus this section: no more than 200 counted prose words. -->
+<!-- Through this section: no more than 200 counted non-warning prose words. -->
 <!-- Keep only useful cues. -->
-<!-- Add information; do not repeat At a glance facts. -->
+<!-- New information must dominate; use only necessary brief anchors. -->
 
 - **Why it counts:** <Significance not already stated.>
 - **Where it fits:** <Relevant scope or relationship.>
@@ -32,7 +38,7 @@ counting rules in `SPEC.md`; no non-English budget claim is made.
 
 ## At depth
 
-<!-- No hard word cap; remain purposeful and do not restate earlier prose. -->
+<!-- No hard word cap; do not restate earlier complete propositions or recap. -->
 
 ### <Specific specialist concern>
 
@@ -64,16 +70,18 @@ Place an optional concise orientation before the ordered steps, then preserve th
 
 ### Controlling legal text
 
-Never edit the controlling text to fit this template. Put a clearly separate, non-controlling explanation before or after it.
+Never edit the controlling text to fit this template. When an explanation is
+requested, use the two literal labels below. Verbatim-only reproduction keeps
+only the exact source.
 
 ```markdown
-## Non-controlling informative summary
-
-<Plain-language explanation. This does not replace the controlling text.>
-
-## Controlling text
+Controlling text:
 
 <Verbatim legal text.>
+
+Non-controlling plain-language summary:
+
+<Plain-language explanation. This does not replace the controlling text.>
 ```
 
 ### Narrative or voice-dependent writing

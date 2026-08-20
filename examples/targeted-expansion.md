@@ -1,39 +1,22 @@
-# Targeted follow-up
+# Named single-view follow-up
 
-- **Expected views:** All three views focus only on the invalidation branch.
+- **Expected presentation:** Focused at the requested At depth level, without
+  forcing the other views or a reserved heading.
 - **Required facts:** The fill race, prevention mechanism, required tests,
   freshness alert, and rollback trigger appear without general caching recap.
-- **Budget:** At a glance is at most 40 words; prose through In context is at
-  most 200 words.
+- **Budget:** The Full-format 40/200 budget does not apply.
 
 ## Prompt
 
-For our staged search-cache rollout, expand only the invalidation risk. Do not
-recap request coalescing or general rollout policy.
+For our staged search-cache rollout, give me only the At depth view of the
+invalidation risk. Do not recap request coalescing or general rollout policy.
 
 ## Response
 
-### At a glance
+An in-flight fill can outlive a write and repopulate an obsolete value after
+invalidation. Capture a monotonic content version with each fill request, then
+compare it with the current version before storing; reject mismatches.
 
-<!-- words:targeted-glance:start -->
-Prevent stale overwrites by versioning cache entries or rejecting fills older
-than the latest invalidation. Keep rollback available until freshness checks
-pass.
-<!-- words:targeted-glance:end -->
-
-### In context
-
-<!-- words:targeted-context:start -->
-Writes can race with in-flight fills, allowing an obsolete value to arrive
-after deletion or update. Test delete, update, partial failure, and delayed-fill
-paths. Alert on result age rather than hit rate alone.
-<!-- words:targeted-context:end -->
-
-### At depth
-
-<!-- words:targeted-depth:start -->
-Record a monotonic content version with each invalidation and fill request.
-Before storing, compare the fill's captured version with the current version.
-Reject mismatches, count them, and trigger rollback when freshness errors exceed
-the rollout threshold.
-<!-- words:targeted-depth:end -->
+Test delete, update, partial-failure, and delayed-fill paths. Alert on result age
+rather than hit rate alone, count rejected stale fills, and keep rollback tied
+to the rollout's freshness-error threshold.

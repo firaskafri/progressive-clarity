@@ -1,106 +1,221 @@
 # Progressive Clarity
 
-**Progressive Clarity is an AI-first response protocol that renders three
-additive views in every ordinary in-scope response.**
+**Orient with three views, explore naturally, and re-synthesize when the
+decision or topic materially changes.**
 
-## One response contract
+Progressive Clarity v0.4 is a topic-oriented response protocol. It keeps simple
+facts and ordinary follow-ups conversational, while preserving a structured
+three-view format for consequential orientation and meaningful checkpoints.
 
-1. **At a glance** gives the direct answer, consequence, material scope, and
-   indispensable caveat in at most 40 counted English prose words.
-2. **In context** adds rationale, constraints, ownership, timing, controls, or
-   action. Non-warning prose through this section totals at most 200 words.
-3. **At depth** adds purposeful evidence, assumptions, measurements,
-   alternatives, exceptions, implementation, or sources without a hard cap.
+## The conversational cadence
 
-Each fact belongs in one view. Deeper sections add information instead of
-recapping earlier facts. Safety, legal, and accuracy requirements outrank
-brevity. Corrections explicitly retract and replace errors. Clarifications,
-complete procedures, controlling text, exact outputs, transformations, and
-narratives retain the structure required by their purpose.
+Use **Focused** format by default for:
 
-See the [normative v0.2 specification](SPEC.md).
+- simple facts and acknowledgements;
+- narrow follow-ups and later ordinary turns;
+- narrow corrections; and
+- explicit requests for brevity or no headings.
 
-## Advisory and Enforced surfaces
+Focused responses lead with the answer and use only the structure the request
+needs. A simple fact uses at most three sentences unless an indispensable
+safety or accuracy caveat requires more: answer, add one indispensable
+distinction, then stop. Focused responses have no protocol word cap and do not
+require reserved headings.
 
-- **ChatGPT is Advisory.** Its deterministic ZIP contains only the prompt-only
-  skill, license, manifest, and static assets. It has no backend or MCP server.
-- **Ordinary Cursor and Claude Code skill use is Advisory.** Prompt adherence
-  is not a deterministic gate.
-- **Project hook templates are Advisory/block-and-retry.** They inspect output
-  after generation and cannot reliably retract every displayed candidate.
-- **The non-streaming `pc-core` wrapper Enforces mechanical checks.** It
-  validates a versioned envelope, mandatory three-view order, 40/200 budgets,
-  non-empty view prose, fact IDs and declared reuse, optional authoritative
-  fact-catalog coverage, correction/quotation structure, exact lexical echoes
-  in Progressive Clarity explanation, verbatim-artifact exemptions, explicit
-  topic/branch/turn state, and cross-turn host-session resume. It emits only
-  canonical Markdown after a pass and permits at most two total candidates.
+Use **Full** format by default for:
 
-Mechanical certification applies only to output buffered and released by that
-wrapper. It does not establish accuracy, completeness, warning necessity,
-human safe stopping, semantic repetition, purposeful depth, hidden-reversal
-absence, caller-catalog correctness or completeness, or host-wide
-compatibility. Those remain advisory `UNVERIFIED`.
+- the first consequential, orientation-capable answer on a topic;
+- decision checkpoints;
+- accumulated-context summaries;
+- material re-synthesis; and
+- material corrections.
+
+Full responses render exactly:
+
+1. **At a glance** — direct answer, consequence, material scope, and
+   indispensable caveat; non-warning prose is at most 40 counted English words.
+2. **In context** — new rationale, constraints, ownership, timing, controls, or
+   action; combined non-warning prose through this view is at most 200 words.
+3. **At depth** — new evidence, assumptions, measurements, alternatives,
+   exceptions, implementation, or sources without a hard cap.
+
+Every deeper Full view is dominated by new information. A necessary short
+anchor—such as a name, date, identifier, “this decision,” or “that
+constraint”—may recur, but a complete conclusion, sentence, list, explanation,
+warning, or recommendation may not be repeated or paraphrased. At depth does
+not end with a recap.
+
+## What it feels like
+
+> **User:** Is Redis a database?
+>
+> **Assistant:** Yes. Redis is an in-memory data store with optional
+> persistence.
+>
+> **User:** Should we use it as the sole source of truth for payment state?
+>
+> **Assistant — At a glance:** No. Keep canonical payment state in
+> transactional storage with explicitly tested durability and recovery; use
+> Redis only where its persistence and consistency trade-offs are acceptable.
+>
+> **Assistant — In context:** Transactions make related state changes atomic.
+> Durability depends on the database and its configuration; auditable payment
+> history requires explicit transition records or audit logging.
+>
+> **Assistant — At depth:** If Redis is used for acceleration or coordination,
+> design cache loss as recoverable, bound lock lifetimes, and test persistence,
+> replay, failover, stale reads, and delayed webhooks.
+>
+> **User:** What TTL should the idempotency keys use?
+>
+> **Assistant:** Cover the provider’s maximum retry and webhook-delivery window,
+> plus a documented safety margin.
+
+Technical basis: [PostgreSQL transactions][postgres-transactions] describe
+atomicity and configured durability; [Redis persistence][redis-persistence]
+documents Redis durability options and their trade-offs.
+
+[postgres-transactions]: https://www.postgresql.org/docs/current/tutorial-transactions.html
+[redis-persistence]: https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
+
+The rhythm is: **orient → explore naturally → re-synthesize at decisions,
+summaries, or material change**.
+
+## Topic behavior
+
+On prompt-only hosts, the model uses visible conversation context:
+
+- continue when the objective, decision, or required context is unchanged;
+- start a new topic only when the objective changes and prior context is no
+  longer needed;
+- keep acknowledgements and formatting instructions inside the current topic;
+- return to an earlier topic when visible context supports it; and
+- prefer Focused format when uncertain.
+
+Prompt-only topic inference and return are best-effort. They are not durable
+state guarantees.
+
+## Purpose-specific output still wins
+
+Do not force either conversational format onto content that requires another
+shape:
+
+- clarification asks one focused question;
+- verbatim-only reproduction remains exact;
+- controlling text with a requested explanation remains exact and uses literal
+  `Controlling text:` and `Non-controlling plain-language summary:` labels;
+- exact values, JSON, code, and transformations preserve the requested format;
+- open-ended fiction produces the requested narrative while preserving voice
+  and pacing; and
+- complete supplied procedures preserve every step in natural order without
+  demanding unnecessary system-specific detail.
+
+Clarification is not a substitute for these requested artifacts. After a
+clarification supplies recommendation inputs, the pending answer remains a
+continuation and defaults to Focused unless another checkpoint rule requires
+Full.
+
+Safety, policy, legal requirements, accuracy, and explicit correction outrank
+brevity in every governed response.
+
+When a numeric recommendation lacks governing inputs, the response uses:
+
+```text
+Governing input: <missing dependency>.
+
+Example assumption: <number and the assumption that justifies it>.
+```
+
+`Example assumption:` is the required combined Example/Assumption label. No
+“good default,” “I’d use,” or numeric value or range is allowed outside this
+structure.
+
+See the [normative v0.4 specification](SPEC.md).
+
+## Advisory and mechanical profiles
+
+- **ChatGPT and packaged skills are Advisory.** Their ZIPs contain instructions,
+  metadata, licenses, and static assets only. They have no `pc-core`, backend,
+  MCP server, hook, or protocol-controlled durable topic state.
+- **Ordinary Cursor and Claude Code skill use is Advisory.** Activation, topic
+  inference, presentation selection, and semantic conformance remain
+  probabilistic.
+- **Project hook templates are Advisory/block-and-retry.** They can inspect
+  an exact three-heading sequence and reject an empty view. Other visible-only
+  format, budget, and duplicate judgments remain nonblocking because the hooks
+  lack trusted response-kind and exception metadata.
+- **The non-streaming `pc-core` wrapper enforces mechanical checks.** A trusted
+  caller supplies `start`, `continue`, or `resume`, the turn classification, and
+  any presentation override. The wrapper resolves presentation before
+  generation, validates a versioned structured envelope, renders canonical
+  Markdown, and commits per-topic state only after success.
+
+`pc-core` stores each known topic’s branch, facts, host sessions, and whether a
+topic-wide overview has been committed. Returning to a known topic restores
+that mechanical state. It does not prove that the caller classified the topic
+or turn correctly.
+
+Mechanical certification does not establish semantic accuracy, completeness,
+warning sufficiency, useful depth, human safe-stopping outcomes, or prompt-only
+host compatibility. Without trusted expected bytes, it also does not establish
+that an accepted non-fit payload equals the user's intended artifact. Those
+properties remain `UNVERIFIED`.
 
 See [Local deterministic enforcement](docs/local-enforcement.md).
 
-## Example
+## Installation
 
-> **User:** Should we delay the mobile release? Crash-free sessions are 98.7%,
-> the gate is 99.5%, the fix is ready, and review is tomorrow.
->
-> **At a glance:** Delay the release. Crash-free sessions remain below the
-> 99.5% gate; reassess after tomorrow's fix review instead of waiving the
-> reliability threshold.
->
-> **In context:** The release owner should compare the reviewed candidate with
-> the existing gate before scheduling rollout.
->
-> **At depth:** Test the affected startup path on older devices and preserve a
-> rollback trigger tied to the same crash-free-session metric.
+The current release-candidate package target is `0.4.3`:
+
+- Python: `progressive-clarity-core`;
+- OpenAI: `dist/progressive-clarity-openai-plugin-0.4.3.zip`;
+- Claude plugin: `dist/progressive-clarity-claude-plugin-0.4.3.zip`;
+- Claude.ai custom Skill:
+  `dist/progressive-clarity-claude-ai-skill-0.4.3.zip`.
+
+Use a fresh v0.4 `pc-core` state path. Earlier protocol state is intentionally
+rejected rather than silently reinterpreted, even though schema `3.0.0` remains
+unchanged.
+
+See [Installation](docs/installation.md) for source, package, hook, and wrapper
+instructions.
 
 ## Verification status
 
-Protocol v0.2 and package v0.2.1 remain a **non-release-ready draft**. The
-v0.2.1 ChatGPT ZIP is Advisory and has not been uploaded. Local verification
-covers deterministic mechanics, package integrity, links, lint, and structural
-skill validation.
+Protocol v0.4 and package 0.4.3 form a **locally verified release candidate**,
+not a published release or universal host-compatibility claim.
 
-One bounded live Cursor wrapper remediation rerun produced 17 responses: 10
-were mechanically certified and 7 were withheld. `E02`, `E06`, and `E07`
-passed; `E03`, `E04`, and `E05` failed. The rerun verified the targeted
-session-resume, non-empty-view, explicit-trust, catalog-coverage, and
-fail-closed mechanics, but strict semantic and behavioral acceptance remains
-unmet. It used the pre-trigger-revision skill, so it is not a prompt-only
-acceptance result for the current v0.2.1 bytes.
+Local verification covers repository contracts, the complete unit suite, compile and
+lint checks, Python build/install smoke, focused and Full CLI rendering,
+deterministic host-package builds, ZIP integrity, and the pinned official
+Agent Skills validator. Exact artifact hashes and evidence are recorded in the
+[verification record](docs/verification.md).
 
-No current prompt-only Cursor, Claude Code, or ChatGPT acceptance run exists.
-The Claude Code adapter and hook are structurally tested, but live Claude Code
-wrapper behavior remains `UNVERIFIED` because it requires paid Anthropic API
-access and no paid live run was completed.
+The optional Agno Azure harness in `tools.azure_eval_harness` automates the
+behavior suite against an explicitly named deployment. It is a regression
+proxy, not evidence of ChatGPT package installation or automatic activation;
+see the [evaluation guide](evals/README.md).
 
-The preceding bounded Cursor cycle belongs to older dual-behavior inputs. It
-ended at its required hard stop: round one passed 6 of 11 cases; its one
-targeted remediation round failed all 5 rerun cases. Across both rounds, all 59
-budget checks passed and no safety-warning or procedural-safety branch failed.
-These results do not verify v0.2.
+### Historical/superseded v0.3.x ChatGPT evidence
 
-On 2026-08-17, the user reported publication of an older ChatGPT plugin as
-[`plugins_6a82efdddbb48191b2785354515e1be2`](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
-An anonymous fetch confirmed only a login-gated ChatGPT Plugins route. This URL
-is retained as historical publication evidence; it is not evidence that the
-v0.2.1 ZIP was uploaded.
+User-provided v0.3.0–v0.3.2 testing generally passed Focused → Full → Focused →
+Full cadence, explicit presentation overrides, 40/200 budgets, topic return,
+safety containment, and narrative/procedure exclusions. Recurring failures
+were repeated complete conclusions and warning/recovery sequences in deeper
+views, overlong simple facts, unlabeled numeric assumptions, weak correction
+openings, recommendations before clarification, and `Summary:` instead of the
+literal non-controlling label.
 
-The user also supplied a live transcript from the older published build. It is
-historical, user-provided evidence: heading order, staged transitions, and
-caveats passed; 40/200 budgets and no-fact-repetition failed; post-switch-back
-behavior remained `UNVERIFIED`. A later user-provided pre-v0.2.1 transcript
-missed the initial three-view response and then described removed modes. Both
-records are non-conformant historical evidence, not current v0.2.1 conformance
-or activation evidence.
+The latest case record treated T02, T08, and T09 as passes; T10 topic return
+passed but its initial Full answer repeated its conclusion. T01, T03, T04, T05,
+T06, and T07 retained bounded failures or oracle/isolation concerns. T03 and
+T06 are corrected in the v0.4 suite. All of this evidence is user-provided:
+portal-byte identity and visible Skill activation were not independently
+verified.
 
-See the exact [verification record](docs/verification.md) and
-[OpenAI publication record](docs/openai-plugin.md).
+All v0.2 package hashes, uploads, transcripts, and bounded host results are
+retained as historical evidence. Neither v0.2 nor v0.3.x results establish v0.4
+behavior.
 
 ## Repository guide
 
@@ -109,7 +224,8 @@ See the exact [verification record](docs/verification.md) and
 - [Local enforcement architecture](docs/local-enforcement.md)
 - [Installation](docs/installation.md) and [limitations](docs/limitations.md)
 - [Verification record](docs/verification.md)
-- [OpenAI package record](docs/openai-plugin.md)
+- [OpenAI](docs/openai-plugin.md) and
+  [Claude](docs/claude-plugin.md) package records
 - [Advisory host evaluation suite](evals/README.md)
 - [Chat](templates/chat.md) and [document](templates/document.md) templates
 - [Examples](examples/README.md)

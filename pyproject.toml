@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "progressive-clarity-core"
-version = "0.2.1"
-description = "Deterministic local mechanics for Progressive Clarity"
+version = "0.4.3"
+description = "Deterministic mechanics for topic-oriented Progressive Clarity"
 requires-python = ">=3.11"
 dependencies = []
 license = "Apache-2.0"
@@ -13,6 +13,10 @@ license-files = ["LICENSES/Apache-2.0.txt"]
 authors = [
   { name = "Firas Kafri" },
 ]
+
+[project.urls]
+Homepage = "https://firaskafri.com/progressive-clarity/"
+Repository = "https://github.com/firaskafri/progressive-clarity"
 
 [project.scripts]
 pc-core = "pc_core.cli:main"

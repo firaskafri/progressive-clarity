@@ -1,4 +1,4 @@
-"""Deterministic verbose-only validation with explicit semantic boundaries."""
+"""Deterministic topic-oriented validation with explicit semantic boundaries."""
 
 from __future__ import annotations
 
@@ -6,35 +6,64 @@ import hashlib
 import re
 from collections import Counter
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Mapping
 
 from pc_core.model import (
+    AT_A_GLANCE_MAX_NON_WARNING_WORDS,
+    CORRECTION_FACT_FIELDS,
+    CORRECTION_TURN_KINDS,
     ENVELOPE_SCHEMA_VERSION,
     PROTOCOL_VERSION,
     STATE_SCHEMA_VERSION,
+    THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS,
     VIEW_HEADINGS,
     VIEWS,
     WRAPPER_REQUEST_SCHEMA_VERSION,
     ConversationState,
     Envelope,
+    SchemaError,
     StoredFact,
+    TopicState,
     WrapperRequest,
 )
+from pc_core.policy import ResolvedTurn, resolve_turn
 from pc_core.word_count import (
     count_english_words,
     lexical_similarity,
     lexical_units,
     normalize_lexical_text,
+    without_fenced_lines,
 )
 
 
 _FACT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
 _PROTOCOL_HEADING = re.compile(
-    r"(?im)^#{1,6}[ \t]+("
+    r"(?im)^ {0,3}#{1,6}[ \t]+("
     + "|".join(re.escape(heading) for heading in VIEW_HEADINGS)
     + r")[ \t]*#*[ \t]*$"
 )
-_CORRECTION_WORD = re.compile(r"\b(?:wrong|incomplete)\b", re.IGNORECASE)
+_ATX_HEADING = re.compile(r"^ {0,3}#{1,6}[ \t]+\S")
+_SETEXT_UNDERLINE = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
+_PROTOCOL_HEADING_NAMES = frozenset(
+    heading.casefold() for heading in VIEW_HEADINGS
+)
+_CORRECTION_OPENING = re.compile(
+    r"\AEarlier I said (?=\S).+?\. That was wrong or incomplete\.\s+"
+    r"(?=\S).+?\. This changes (?=\S).+?(?:\.|\Z)",
+    re.DOTALL,
+)
+_QUESTION_OPENING = re.compile(
+    r"^(?:who|whom|whose|what|when|where|why|how|which|"
+    r"is|are|am|was|were|do|does|did|can|could|will|would|"
+    r"should|has|have|had|may|might|must)\b",
+    re.IGNORECASE,
+)
+_CONTROL_CLAUSE_SEPARATOR = re.compile(r"[;:!]|--|[–—]")
+_CONTROL_COORDINATED_CLAUSE = re.compile(
+    r",\s+(?:and|or)\s+",
+    re.IGNORECASE,
+)
 _COMPOUND_FACT_HINT = re.compile(r"(?:[.;]\s+|\b(?:and|but|while|whereas)\b)")
 _MAX_NEAR_DUPLICATE_UNITS = 250
 _NEAR_DUPLICATE_THRESHOLD = 0.86
@@ -45,13 +74,103 @@ _ADVISORY_CHECKS = {
     "semantic_completeness": "UNVERIFIED",
     "safe_stopping_outcome": "UNVERIFIED",
     "hidden_reversal": "UNVERIFIED",
-    "paraphrased_fact_repetition": "UNVERIFIED",
+    "deeper_view_new_information_dominance": "UNVERIFIED",
+    "complete_proposition_restatement": "UNVERIFIED",
+    "short_anchor_necessity": "UNVERIFIED",
+    "at_depth_concluding_recap": "UNVERIFIED",
     "fact_atomicity_and_allocation": "UNVERIFIED",
+    "simple_fact_brevity": "UNVERIFIED",
+    "numeric_assumption_labeling": "UNVERIFIED",
+    "clarification_gate_semantics": "UNVERIFIED",
+    "non_fit_intended_artifact_equality": "UNVERIFIED",
     "warning_indispensability": "UNVERIFIED",
     "correction_exception_scope": "UNVERIFIED",
     "topic_and_branch_intent": "UNVERIFIED",
+    "presentation_policy_classification": "UNVERIFIED",
     "at_depth_relevance_and_purpose": "UNVERIFIED",
 }
+_CORRECTION_FIELD_SPECS = (
+    ("withdrawn_fact_ids", "PC-M-CORRECTION-003", "withdrawn fact"),
+    ("replacement_fact_ids", "PC-M-CORRECTION-004", "replacement fact"),
+    ("changed_action_fact_ids", "PC-M-CORRECTION-005", "changed action"),
+)
+
+
+def _contains_protocol_heading(content: str) -> bool:
+    """Detect reserved Markdown headings while ignoring fenced code."""
+    lines = without_fenced_lines(content.splitlines())
+    for index, line in enumerate(lines):
+        if line is None:
+            continue
+        if _PROTOCOL_HEADING.fullmatch(line):
+            return True
+        if (
+            line.strip().casefold() in _PROTOCOL_HEADING_NAMES
+            and index + 1 < len(lines)
+            and lines[index + 1] is not None
+            and _SETEXT_UNDERLINE.fullmatch(lines[index + 1])
+        ):
+            return True
+    return False
+
+
+def _contains_markdown_heading(content: str) -> bool:
+    """Detect any ATX or Setext heading while ignoring fenced code."""
+    lines = without_fenced_lines(content.splitlines())
+    for index, line in enumerate(lines):
+        if line is None:
+            continue
+        if _ATX_HEADING.match(line):
+            return True
+        if (
+            line.strip()
+            and index + 1 < len(lines)
+            and lines[index + 1] is not None
+            and _SETEXT_UNDERLINE.fullmatch(lines[index + 1])
+        ):
+            return True
+    return False
+
+
+def _mask_fenced_markdown(markdown: str) -> str:
+    """Replace fenced lines with spaces while preserving source offsets."""
+    raw_lines = markdown.splitlines(keepends=True)
+    visible_lines = without_fenced_lines(
+        [line.rstrip("\r\n") for line in raw_lines]
+    )
+    return "".join(
+        raw_line
+        if visible_line is not None
+        else "".join(
+            character if character in "\r\n" else " "
+            for character in raw_line
+        )
+        for raw_line, visible_line in zip(
+            raw_lines,
+            visible_lines,
+            strict=True,
+        )
+    )
+
+
+def _is_single_clarification_question(content: str) -> bool:
+    """Check the conservative mechanical subset of one clarification question."""
+    question_units = lexical_units(" ".join(content.split()))
+    coordinated_clauses = tuple(
+        content[match.end() :]
+        for match in _CONTROL_COORDINATED_CLAUSE.finditer(content)
+    )
+    return (
+        content.count("?") == 1
+        and content.endswith("?")
+        and len(question_units) == 1
+        and _QUESTION_OPENING.match(content) is not None
+        and _CONTROL_CLAUSE_SEPARATOR.search(content) is None
+        and all(
+            _QUESTION_OPENING.match(clause) is not None
+            for clause in coordinated_clauses
+        )
+    )
 
 
 @dataclass(frozen=True)
@@ -86,6 +205,20 @@ class ValidationReport:
     mechanical_checks: Mapping[str, str]
     advisory_checks: Mapping[str, str]
     next_state: ConversationState | None
+
+    def __post_init__(self) -> None:
+        """Snapshot result mappings so audit data cannot change after validation."""
+        object.__setattr__(self, "counts", MappingProxyType(dict(self.counts)))
+        object.__setattr__(
+            self,
+            "mechanical_checks",
+            MappingProxyType(dict(self.mechanical_checks)),
+        )
+        object.__setattr__(
+            self,
+            "advisory_checks",
+            MappingProxyType(dict(self.advisory_checks)),
+        )
 
     def to_dict(self, *, include_next_state: bool = True) -> dict[str, object]:
         """Serialize a report without implying semantic conformance."""
@@ -124,16 +257,6 @@ class _Collector:
         return not any(item.domain == "mechanical" for item in self.items)
 
 
-def _expected_kind(request: WrapperRequest) -> str:
-    if request.intent == "clarification":
-        return "control"
-    if request.intent == "quotation":
-        return "quotation"
-    if request.intent == "non_fit":
-        return "non_fit"
-    return "views"
-
-
 def _content_records(
     envelope: Envelope,
 ) -> list[tuple[str, str, str | None]]:
@@ -161,6 +284,16 @@ def _content_records(
                     None,
                 )
             )
+    elif envelope.response_kind == "focused":
+        warning = envelope.payload["warning"]
+        if warning is not None:
+            records.append(("payload.warning.content", warning["content"], None))
+        correction = envelope.payload["correction"]
+        if correction is not None:
+            records.append(
+                ("payload.correction.content", correction["content"], "correction")
+            )
+        records.append(("payload.content", envelope.payload["content"], None))
     elif envelope.response_kind == "quotation":
         records.extend(
             [
@@ -182,11 +315,7 @@ def _fact_references(envelope: Envelope) -> list[tuple[str, str, str | None, str
     if envelope.response_kind == "views":
         correction = envelope.payload["correction"]
         if correction is not None:
-            for field in (
-                "withdrawn_fact_ids",
-                "replacement_fact_ids",
-                "changed_action_fact_ids",
-            ):
+            for field in CORRECTION_FACT_FIELDS:
                 references.extend(
                     (
                         fact_id,
@@ -219,6 +348,39 @@ def _fact_references(envelope: Envelope) -> list[tuple[str, str, str | None, str
                         section["view"],
                     )
                     for index, fact_id in enumerate(warning["fact_ids"])
+                )
+    elif envelope.response_kind == "focused":
+        references.extend(
+            (
+                fact_id,
+                f"payload.fact_ids[{index}]",
+                None,
+                "focused",
+            )
+            for index, fact_id in enumerate(envelope.payload["fact_ids"])
+        )
+        warning = envelope.payload["warning"]
+        if warning is not None:
+            references.extend(
+                (
+                    fact_id,
+                    f"payload.warning.fact_ids[{index}]",
+                    None,
+                    "focused",
+                )
+                for index, fact_id in enumerate(warning["fact_ids"])
+            )
+        correction = envelope.payload["correction"]
+        if correction is not None:
+            for field in CORRECTION_FACT_FIELDS:
+                references.extend(
+                    (
+                        fact_id,
+                        f"payload.correction.{field}[{index}]",
+                        "correction",
+                        "correction",
+                    )
+                    for index, fact_id in enumerate(correction[field])
                 )
     elif envelope.response_kind == "quotation":
         for field in ("quotation_fact_ids", "summary_fact_ids"):
@@ -255,17 +417,22 @@ def _fact_content_bindings(envelope: Envelope) -> dict[str, list[str]]:
     if envelope.response_kind == "views":
         correction = envelope.payload["correction"]
         if correction is not None:
-            for field in (
-                "withdrawn_fact_ids",
-                "replacement_fact_ids",
-                "changed_action_fact_ids",
-            ):
+            for field in CORRECTION_FACT_FIELDS:
                 bind(correction[field], correction["content"])
         for section in envelope.payload["sections"]:
             bind(section["fact_ids"], section["content"])
             warning = section["warning"]
             if warning is not None:
                 bind(warning["fact_ids"], warning["content"])
+    elif envelope.response_kind == "focused":
+        bind(envelope.payload["fact_ids"], envelope.payload["content"])
+        warning = envelope.payload["warning"]
+        if warning is not None:
+            bind(warning["fact_ids"], warning["content"])
+        correction = envelope.payload["correction"]
+        if correction is not None:
+            for field in CORRECTION_FACT_FIELDS:
+                bind(correction[field], correction["content"])
     elif envelope.response_kind == "quotation":
         bind(
             envelope.payload["quotation_fact_ids"],
@@ -315,58 +482,83 @@ def _validate_versions(
         )
 
 
-def _base_state(
-    state: ConversationState,
-    envelope: Envelope,
-) -> tuple[str | None, str | None, dict[str, StoredFact]]:
-    if envelope.new_topic:
-        return envelope.topic_id, None, {}
-    return state.active_topic_id, state.branch, dict(state.facts)
-
-
 def _validate_request_and_state(
     envelope: Envelope,
     state: ConversationState,
     request: WrapperRequest | None,
+    resolved: ResolvedTurn | None,
     collector: _Collector,
-) -> tuple[str | None, str | None, dict[str, StoredFact]]:
-    topic_id, branch, facts = _base_state(state, envelope)
-    if envelope.new_topic and envelope.topic_id is None:
-        collector.mechanical(
-            "PC-M-TOPIC-001", "topic_id", "a new topic requires a topic_id"
-        )
-    if not envelope.new_topic and envelope.topic_id != state.active_topic_id:
-        collector.mechanical(
-            "PC-M-TOPIC-002",
-            "topic_id",
-            "continuing output must retain the active topic_id",
-        )
-    if request is not None:
-        if envelope.new_topic != request.new_topic:
+) -> tuple[TopicState, dict[str, StoredFact]]:
+    known = envelope.topic_id in state.topics
+    if envelope.topic_action == "start":
+        topic = TopicState()
+        if known:
+            collector.mechanical(
+                "PC-M-TOPIC-001",
+                "topic_action",
+                "start requires an unknown topic_id",
+            )
+    elif envelope.topic_action == "continue":
+        topic = state.topics[envelope.topic_id] if known else TopicState()
+        if not known or state.active_topic_id != envelope.topic_id:
+            collector.mechanical(
+                "PC-M-TOPIC-002",
+                "topic_action",
+                "continue requires the active topic_id",
+            )
+    else:
+        topic = state.topics[envelope.topic_id] if known else TopicState()
+        if not known or state.active_topic_id == envelope.topic_id:
             collector.mechanical(
                 "PC-M-TOPIC-003",
-                "new_topic",
-                "envelope new_topic does not match wrapper request",
+                "topic_action",
+                "resume requires a known inactive topic_id",
+            )
+
+    if request is not None:
+        if envelope.topic_action != request.topic_action:
+            collector.mechanical(
+                "PC-M-TOPIC-004",
+                "topic_action",
+                "envelope topic_action does not match wrapper request",
             )
         if envelope.topic_id != request.topic_id:
             collector.mechanical(
-                "PC-M-TOPIC-004",
+                "PC-M-TOPIC-005",
                 "topic_id",
                 "envelope topic_id does not match wrapper request",
             )
-        expected_kind = _expected_kind(request)
-        if envelope.response_kind != expected_kind:
+        if resolved is None:
             collector.mechanical(
                 "PC-M-KIND-001",
                 "response_kind",
-                f"intent {request.intent} requires {expected_kind}",
+                "trusted request requires a resolved presentation policy",
+            )
+        elif envelope.response_kind != resolved.expected_response_kind:
+            collector.mechanical(
+                "PC-M-KIND-002",
+                "response_kind",
+                (
+                    f"resolved turn requires {resolved.expected_response_kind}; "
+                    f"candidate declared {envelope.response_kind}"
+                ),
+            )
+        if (
+            request.turn_kind == "non_fit"
+            and envelope.response_kind == "non_fit"
+            and envelope.payload["non_fit_kind"] != request.non_fit_kind
+        ):
+            collector.mechanical(
+                "PC-M-KIND-004",
+                "payload.non_fit_kind",
+                "candidate non_fit_kind does not match the trusted request",
             )
         if (
             envelope.response_kind == "control"
             and envelope.payload["control_kind"] != "clarification"
         ):
             collector.mechanical(
-                "PC-M-KIND-002",
+                "PC-M-KIND-003",
                 "payload.control_kind",
                 "the only control response is clarification",
             )
@@ -382,22 +574,49 @@ def _validate_request_and_state(
             "state.turn_after",
             f"declared {envelope.state.turn_after}; computed {state.turn + 1}",
         )
-    if envelope.state.branch_before != branch:
+    if envelope.state.branch_before != topic.branch:
         collector.mechanical(
             "PC-M-STATE-004",
             "state.branch_before",
             "declared branch does not match committed branch state",
         )
-    if envelope.state.prior_fact_count != len(facts):
+    if envelope.state.prior_fact_count != len(topic.facts):
         collector.mechanical(
             "PC-M-STATE-005",
             "state.prior_fact_count",
-            f"declared {envelope.state.prior_fact_count}; computed {len(facts)}",
+            (
+                f"declared {envelope.state.prior_fact_count}; "
+                f"computed {len(topic.facts)}"
+            ),
         )
-    return topic_id, branch, facts
+    return topic, dict(topic.facts)
 
 
 def _validate_presentation(envelope: Envelope, collector: _Collector) -> None:
+    if envelope.response_kind == "control":
+        content = envelope.payload["content"].strip()
+        if not _is_single_clarification_question(content):
+            collector.mechanical(
+                "PC-M-CONTROL-001",
+                "payload.content",
+                "clarification control must contain exactly one question sentence",
+            )
+        if _contains_markdown_heading(content):
+            collector.mechanical(
+                "PC-M-CONTROL-002",
+                "payload.content",
+                "clarification control must not contain a heading",
+            )
+        return
+    if envelope.response_kind == "focused":
+        for location, content, _exception in _content_records(envelope):
+            if _contains_protocol_heading(content):
+                collector.mechanical(
+                    "PC-M-HEADING-002",
+                    location,
+                    "focused content must not embed a reserved protocol heading",
+                )
+        return
     if envelope.response_kind != "views":
         return
     sequence = tuple(section["view"] for section in envelope.payload["sections"])
@@ -414,8 +633,14 @@ def _validate_presentation(envelope: Envelope, collector: _Collector) -> None:
                 f"payload.sections[{index}].content",
                 "each required view must contain counted English prose",
             )
+        if section["view"] != "at_a_glance" and section["warning"] is not None:
+            collector.mechanical(
+                "PC-M-WARNING-001",
+                f"payload.sections[{index}].warning",
+                "a structured Full warning must appear only in At a glance",
+            )
     for location, content, _exception in _content_records(envelope):
-        if _PROTOCOL_HEADING.search(content):
+        if _contains_protocol_heading(content):
             collector.mechanical(
                 "PC-M-HEADING-002",
                 location,
@@ -429,10 +654,10 @@ def _validate_correction(
     prior_facts: Mapping[str, StoredFact],
     collector: _Collector,
 ) -> None:
-    if envelope.response_kind != "views":
+    if envelope.response_kind not in {"views", "focused"}:
         return
     correction = envelope.payload["correction"]
-    expects = request is not None and request.intent == "correction"
+    expects = request is not None and request.turn_kind in CORRECTION_TURN_KINDS
     if expects and correction is None:
         collector.mechanical(
             "PC-M-CORRECTION-001",
@@ -442,23 +667,21 @@ def _validate_correction(
         return
     if correction is None:
         return
-    if request is not None and request.intent != "correction":
+    if request is not None and request.turn_kind not in CORRECTION_TURN_KINDS:
         collector.mechanical(
             "PC-M-CORRECTION-002",
             "payload.correction",
             "structured correction is only valid for correction intent",
         )
-    required_lists = (
-        ("withdrawn_fact_ids", "withdrawn fact"),
-        ("replacement_fact_ids", "replacement fact"),
-        ("changed_action_fact_ids", "changed action"),
-    )
-    for index, (field, label) in enumerate(required_lists, start=3):
+    for field, code, label in _CORRECTION_FIELD_SPECS:
         if not correction[field]:
             collector.mechanical(
-                f"PC-M-CORRECTION-00{index}",
+                code,
                 f"payload.correction.{field}",
-                f"a correction requires at least one {label}",
+                (
+                    "a correction requires at least one "
+                    f"{label}"
+                ),
             )
     for index, fact_id in enumerate(correction["withdrawn_fact_ids"]):
         if fact_id not in prior_facts:
@@ -467,11 +690,16 @@ def _validate_correction(
                 f"payload.correction.withdrawn_fact_ids[{index}]",
                 "a withdrawn fact must exist in the committed topic ledger",
             )
-    if _CORRECTION_WORD.search(correction["content"]) is None:
+    correction_content = correction["content"]
+    if _CORRECTION_OPENING.match(correction_content) is None:
         collector.mechanical(
             "PC-M-CORRECTION-006",
             "payload.correction.content",
-            "repair text must say the withdrawn statement was wrong or incomplete",
+            (
+                "repair text must open exactly with withdrawal, the literal "
+                "'That was wrong or incomplete.', replacement, and a literal "
+                "'This changes' consequence or action"
+            ),
         )
 
 
@@ -504,7 +732,7 @@ def _validate_quotation(
         )
     expected_cap = None if request is None else request.summary_max_words
     declared_cap = envelope.payload["summary_max_words"]
-    if expected_cap is not None and declared_cap != expected_cap:
+    if request is not None and declared_cap != expected_cap:
         collector.mechanical(
             "PC-M-QUOTE-003",
             "payload.summary_max_words",
@@ -523,6 +751,7 @@ def _validate_facts(
     envelope: Envelope,
     prior_facts: dict[str, StoredFact],
     next_turn: int,
+    resolved: ResolvedTurn | None,
     collector: _Collector,
 ) -> dict[str, StoredFact]:
     ids = [fact.id for fact in envelope.facts]
@@ -597,11 +826,11 @@ def _validate_facts(
                 "declared fact is not referenced by rendered content",
             )
         if prior is not None:
-            if fact.text != prior.text or fact.allocation != prior.allocation:
+            if fact.text != prior.text:
                 collector.mechanical(
                     "PC-M-FACT-008",
                     location,
-                    "a reused id must preserve committed text and allocation",
+                    "a reused id must preserve committed text",
                 )
             if fact.reuse_reason is None:
                 collector.mechanical(
@@ -609,11 +838,11 @@ def _validate_facts(
                     f"{location}.reuse_reason",
                     "a prior fact requires an explicit reuse reason",
                 )
-        elif fact.reuse_reason == "prior_context":
+        elif fact.reuse_reason in {"prior_context", "synthesis"}:
             collector.mechanical(
                 "PC-M-FACT-010",
                 f"{location}.reuse_reason",
-                "prior_context is valid only for a committed fact",
+                "cross-turn reuse reasons are valid only for a committed fact",
             )
         elif fact.reuse_reason in {"correction", "quotation"} and count < 2:
             collector.mechanical(
@@ -634,6 +863,16 @@ def _validate_facts(
                     f"{location}.reuse_reason",
                     "reuse reason lacks matching structured exception content",
                 )
+        if fact.reuse_reason == "synthesis" and (
+            envelope.response_kind != "views"
+            or resolved is None
+            or not resolved.marks_overview
+        ):
+            collector.mechanical(
+                "PC-M-FACT-015",
+                f"{location}.reuse_reason",
+                "synthesis reuse is valid only in a topic-wide Full overview",
+            )
         normalized = normalize_lexical_text(fact.text)
         owner = normalized_owner.get(normalized)
         if owner is not None and owner != fact.id:
@@ -650,7 +889,6 @@ def _validate_facts(
         if fact.id not in next_facts:
             next_facts[fact.id] = StoredFact(
                 text=fact.text,
-                allocation=fact.allocation,
                 first_turn=next_turn,
             )
     return next_facts
@@ -666,6 +904,13 @@ def _validate_required_facts(
         return
     declared = {fact.id: fact for fact in envelope.facts}
     bindings = _fact_content_bindings(envelope)
+    normalized_bindings = {
+        fact_id: tuple(
+            f" {normalize_lexical_text(content)} "
+            for content in contents
+        )
+        for fact_id, contents in bindings.items()
+    }
     for index, required in enumerate(request.required_facts):
         location = f"wrapper_request.required_facts[{index}]"
         fact = declared.get(required.id)
@@ -685,8 +930,8 @@ def _validate_required_facts(
             continue
         normalized_required = normalize_lexical_text(required.text)
         covered = any(
-            normalized_required in normalize_lexical_text(content)
-            for content in bindings.get(required.id, ())
+            f" {normalized_required} " in content
+            for content in normalized_bindings.get(required.id, ())
         )
         if not normalized_required or not covered:
             collector.mechanical(
@@ -707,8 +952,8 @@ def _validate_duplicates(envelope: Envelope, collector: _Collector) -> None:
             if previous is not None:
                 previous_location, previous_exception = previous
                 allowed = (
-                    exception in {"correction", "quotation"}
-                    and previous_exception == exception
+                    exception == "quotation"
+                    and previous_exception == "quotation"
                 )
                 if not allowed:
                     collector.mechanical(
@@ -728,7 +973,7 @@ def _validate_duplicates(envelope: Envelope, collector: _Collector) -> None:
         )
         return
     for index, (unit, exception, location) in enumerate(current):
-        if exception in {"correction", "quotation"}:
+        if exception == "quotation":
             continue
         if len(unit.split()) < _NEAR_DUPLICATE_MIN_TOKENS:
             continue
@@ -742,7 +987,10 @@ def _validate_duplicates(envelope: Envelope, collector: _Collector) -> None:
                 collector.advisory(
                     "PC-A-DUPLICATE-001",
                     location,
-                    "high lexical overlap may be a paraphrased repeat",
+                    (
+                        "high lexical overlap may restate a complete earlier "
+                        "proposition; necessary short anchors remain allowed"
+                    ),
                 )
                 break
 
@@ -785,21 +1033,25 @@ def _validate_budgets(
         if view in {"at_a_glance", "in_context"}:
             shallow_total += total
             shallow_normal += normal
-        if view == "at_a_glance" and normal > 40:
+        if view == "at_a_glance" and normal > AT_A_GLANCE_MAX_NON_WARNING_WORDS:
             collector.mechanical(
                 "PC-M-BUDGET-001",
                 f"payload.sections[{index}].content",
-                f"non-warning At a glance prose has {normal} words; cap is 40",
+                (
+                    f"non-warning At a glance prose has {normal} words; cap is "
+                    f"{AT_A_GLANCE_MAX_NON_WARNING_WORDS}"
+                ),
             )
     counts["through_in_context"] = shallow_total
     counts["through_in_context_non_warning"] = shallow_normal
-    if shallow_normal > 200:
+    if shallow_normal > THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS:
         collector.mechanical(
             "PC-M-BUDGET-003",
             "payload.sections",
             (
                 "non-warning prose through In context has "
-                f"{shallow_normal} words; cap is 200"
+                f"{shallow_normal} words; cap is "
+                f"{THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS}"
             ),
         )
     return counts
@@ -814,17 +1066,20 @@ def _validate_branch_and_counts(
 ) -> None:
     branch_after = envelope.state.branch_after
     if request is not None:
-        if request.intent == "targeted" and branch_after is None:
+        if request.turn_kind == "narrow_followup" and branch_after is None:
             collector.mechanical(
                 "PC-M-BRANCH-001",
                 "state.branch_after",
-                "targeted intent requires a selected branch",
+                "narrow_followup requires a selected branch",
             )
-        elif request.intent != "targeted" and branch_after != branch_before:
+        elif (
+            request.turn_kind != "narrow_followup"
+            and branch_after != branch_before
+        ):
             collector.mechanical(
                 "PC-M-BRANCH-002",
                 "state.branch_after",
-                f"{request.intent} must preserve the selected branch",
+                f"{request.turn_kind} must preserve the selected branch",
             )
     if envelope.state.next_fact_count != next_fact_count:
         collector.mechanical(
@@ -839,35 +1094,66 @@ def validate_envelope(
     *,
     state: ConversationState | None = None,
     request: WrapperRequest | None = None,
+    resolved: ResolvedTurn | None = None,
 ) -> ValidationReport:
-    """Validate every mechanically decidable v0.2 rule."""
+    """Validate every mechanically decidable v0.4 rule."""
     committed = state or ConversationState.initial()
     collector = _Collector()
+    request_is_valid = True
+    if request is not None:
+        try:
+            expected_resolution = resolve_turn(request, committed)
+        except SchemaError as exc:
+            collector.mechanical(
+                "PC-M-POLICY-001",
+                "wrapper_request",
+                str(exc),
+            )
+            request_is_valid = False
+            request = None
+            resolved = None
+        else:
+            if resolved is not None and resolved != expected_resolution:
+                collector.mechanical(
+                    "PC-M-POLICY-002",
+                    "resolved_turn",
+                    "supplied policy resolution does not match request and state",
+                )
+            resolved = expected_resolution
     _validate_versions(envelope, committed, request, collector)
-    topic_id, branch_before, prior_facts = _validate_request_and_state(
-        envelope, committed, request, collector
+    topic, prior_facts = _validate_request_and_state(
+        envelope, committed, request, resolved, collector
     )
     _validate_presentation(envelope, collector)
     _validate_correction(envelope, request, prior_facts, collector)
     _validate_quotation(envelope, request, collector)
     next_facts = _validate_facts(
-        envelope, prior_facts, committed.turn + 1, collector
+        envelope, prior_facts, committed.turn + 1, resolved, collector
     )
     _validate_required_facts(envelope, request, collector)
     _validate_duplicates(envelope, collector)
     counts = _validate_budgets(envelope, collector)
     _validate_branch_and_counts(
-        envelope, request, branch_before, len(next_facts), collector
+        envelope, request, topic.branch, len(next_facts), collector
     )
-    next_state = ConversationState(
-        active_topic_id=topic_id,
+    next_topic = TopicState(
         branch=envelope.state.branch_after,
-        turn=committed.turn + 1,
         facts=next_facts,
-        host_sessions=committed.host_sessions,
+        host_sessions=topic.host_sessions,
+        has_committed_overview=(
+            topic.has_committed_overview
+            or (resolved is not None and resolved.marks_overview)
+        ),
+    )
+    next_topics = dict(committed.topics)
+    next_topics[envelope.topic_id] = next_topic
+    next_state = ConversationState(
+        active_topic_id=envelope.topic_id,
+        turn=committed.turn + 1,
+        topics=next_topics,
     )
     has_correction = (
-        envelope.response_kind == "views"
+        envelope.response_kind in {"views", "focused"}
         and envelope.payload["correction"] is not None
     )
     has_word_budget = envelope.response_kind == "views" or (
@@ -883,6 +1169,12 @@ def validate_envelope(
         "non_empty_view_content": (
             "PASS" if envelope.response_kind == "views" else "NOT_APPLICABLE"
         ),
+        "clarification_question_shape": (
+            "PASS" if envelope.response_kind == "control" else "NOT_APPLICABLE"
+        ),
+        "full_warning_placement": (
+            "PASS" if envelope.response_kind == "views" else "NOT_APPLICABLE"
+        ),
         "english_word_budgets": "PASS" if has_word_budget else "NOT_APPLICABLE",
         "fact_id_integrity_and_declared_reuse": "PASS",
         "authoritative_fact_coverage": (
@@ -892,7 +1184,7 @@ def validate_envelope(
         ),
         "exact_lexical_duplicate_detection": (
             "PASS"
-            if envelope.response_kind in {"views", "quotation"}
+            if envelope.response_kind in {"views", "focused", "quotation"}
             else "NOT_APPLICABLE"
         ),
         "correction_structure": "PASS" if has_correction else "NOT_APPLICABLE",
@@ -908,14 +1200,18 @@ def validate_envelope(
         if diagnostic.domain != "mechanical":
             continue
         code = diagnostic.code
-        if code.startswith(("PC-M-SCHEMA", "PC-M-REQUEST")) or code == (
-            "PC-M-STATE-001"
+        if code.startswith(("PC-M-SCHEMA", "PC-M-REQUEST", "PC-M-POLICY")) or (
+            code == "PC-M-STATE-001"
         ):
             mechanical_checks["schema_and_versions"] = "FAIL"
         elif code.startswith(("PC-M-TOPIC", "PC-M-BRANCH", "PC-M-STATE")):
             mechanical_checks["topic_branch_and_state"] = "FAIL"
         elif code.startswith(("PC-M-HEADING", "PC-M-KIND")):
             mechanical_checks["three_view_heading_order"] = "FAIL"
+        elif code.startswith("PC-M-CONTROL"):
+            mechanical_checks["clarification_question_shape"] = "FAIL"
+        elif code.startswith("PC-M-WARNING"):
+            mechanical_checks["full_warning_placement"] = "FAIL"
         elif code.startswith("PC-M-CONTENT"):
             mechanical_checks["non_empty_view_content"] = "FAIL"
         elif code.startswith("PC-M-BUDGET"):
@@ -931,21 +1227,28 @@ def validate_envelope(
         elif code.startswith("PC-M-QUOTE"):
             mechanical_checks["quotation_hash_and_expected_source"] = "FAIL"
     conformant = collector.mechanically_conformant
+    certifiable = (
+        conformant
+        and request_is_valid
+        and request is not None
+        and resolved is not None
+    )
     return ValidationReport(
         mechanically_conformant=conformant,
-        certifiable=conformant and request is not None,
+        certifiable=certifiable,
         diagnostics=tuple(collector.items),
         counts=counts,
         mechanical_checks=mechanical_checks,
         advisory_checks=dict(_ADVISORY_CHECKS),
-        next_state=next_state if conformant else None,
+        next_state=next_state if certifiable else None,
     )
 
 
 def validate_rendered_markdown(markdown: str) -> ValidationReport:
     """Validate visible checks available to advisory host hooks."""
     collector = _Collector()
-    matches = list(_PROTOCOL_HEADING.finditer(markdown))
+    visible_markdown = _mask_fenced_markdown(markdown)
+    matches = list(_PROTOCOL_HEADING.finditer(visible_markdown))
     headings = [match.group(1) for match in matches]
     counts: dict[str, int] = {}
     checks = {
@@ -961,17 +1264,14 @@ def validate_rendered_markdown(markdown: str) -> ValidationReport:
             "markdown",
             "no protocol headings; hook cannot distinguish an exception from omission",
         )
+    elif headings != list(VIEW_HEADINGS):
+        collector.advisory(
+            "PC-A-HOOK-003",
+            "markdown",
+            "reserved headings do not prove that Full presentation was intended",
+        )
     else:
-        expected = ["At a glance", "In context", "At depth"]
-        if headings != expected:
-            collector.mechanical(
-                "PC-M-HEADING-003",
-                "markdown",
-                f"visible heading sequence {headings} must be {expected}",
-            )
-            checks["three_view_heading_order"] = "FAIL"
-        else:
-            checks["three_view_heading_order"] = "PASS"
+        checks["three_view_heading_order"] = "PASS"
         sections: dict[str, str] = {}
         for index, match in enumerate(matches):
             end = (
@@ -993,44 +1293,30 @@ def validate_rendered_markdown(markdown: str) -> ValidationReport:
             if any(item.code.startswith("PC-M-CONTENT") for item in collector.items)
             else "PASS"
         )
-        glance = counts.get("At a glance", 0)
-        context = counts.get("In context", 0)
-        if glance > 40:
-            collector.mechanical(
-                "PC-M-BUDGET-005",
-                "At a glance",
-                f"visible prose has {glance} counted words; cap is 40",
+        glance_heading, context_heading = VIEW_HEADINGS[:2]
+        glance = counts.get(glance_heading, 0)
+        context = counts.get(context_heading, 0)
+        if (
+            glance > AT_A_GLANCE_MAX_NON_WARNING_WORDS
+            or glance + context > THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS
+        ):
+            collector.advisory(
+                "PC-A-HOOK-004",
+                "markdown",
+                "visible text cannot separate budget-exempt warning or "
+                "correction prose",
             )
-        if glance + context > 200:
-            collector.mechanical(
-                "PC-M-BUDGET-006",
-                "In context",
-                (
-                    "visible prose through In context has "
-                    f"{glance + context} words; cap is 200"
-                ),
-            )
-        checks["english_word_budgets"] = (
-            "FAIL"
-            if any(item.code.startswith("PC-M-BUDGET") for item in collector.items)
-            else "PASS"
-        )
-        seen: dict[str, str] = {}
+        seen: set[str] = set()
         for heading in headings:
             for unit in lexical_units(sections.get(heading, "")):
                 if unit in seen:
-                    collector.mechanical(
-                        "PC-M-DUPLICATE-002",
+                    collector.advisory(
+                        "PC-A-HOOK-005",
                         heading,
-                        f"exact lexical unit repeats {seen[unit]}: {unit!r}",
+                        "visible text cannot identify structured duplicate exceptions",
                     )
                 else:
-                    seen[unit] = heading
-        checks["exact_lexical_duplicate_detection"] = (
-            "FAIL"
-            if any(item.code.startswith("PC-M-DUPLICATE") for item in collector.items)
-            else "PASS"
-        )
+                    seen.add(unit)
     collector.advisory(
         "PC-A-HOOK-002",
         "markdown",

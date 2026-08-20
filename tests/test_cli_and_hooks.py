@@ -2,7 +2,8 @@
 
 Description: Exercises validate/render process behavior, stdout withholding,
 diagnostic redaction, Cursor response-to-stop handoff, Claude one-retry
-decisions, and checked-in project template schemas.
+decisions, protocol-v0.4 envelopes, audit/request/state path isolation, and
+checked-in project template schemas.
 Assumptions: Hook APIs cannot establish the trusted structured state available
 to the non-streaming wrapper.
 Expectations: CLI render is fail closed; hooks label themselves non-certifying
@@ -11,18 +12,19 @@ and request no more than one retry.
 
 from __future__ import annotations
 
-import copy
 import io
 import json
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 from pc_core.cli import main
 from pc_core.hooks import claude_stop, cursor_after_response, cursor_stop
 from pc_core.validation import validate_rendered_markdown
-from tests.helpers import request_dict, valid_verbose_dict
+from tests.helpers import request_dict, valid_focused_dict, valid_full_dict
 
 
 class ValidateRenderCliTests(unittest.TestCase):
@@ -30,7 +32,8 @@ class ValidateRenderCliTests(unittest.TestCase):
 
     Description: Runs CLI handlers with temporary trusted request and candidate
     files for passing and failing scenarios, including invalid candidate prose
-    that must not escape through diagnostics.
+    that must not escape through diagnostics and report paths that must not
+    replace committed state.
     Assumptions: Initial state is used when no state file is supplied.
     Expectations: Reports are machine-readable and invalid output is withheld.
     """
@@ -38,7 +41,7 @@ class ValidateRenderCliTests(unittest.TestCase):
     def test_validate_prints_separated_mechanical_and_advisory_status(self) -> None:
         """Name: Validate report boundary.
 
-        Description: Validates a complete ordinary v0.2 candidate.
+        Description: Validates a complete substantial v0.4 candidate.
         Assumptions: Request and envelope identify the same new topic.
         Expectations: Exit zero reports mechanical certification and semantic
         UNVERIFIED status separately.
@@ -48,7 +51,7 @@ class ValidateRenderCliTests(unittest.TestCase):
             envelope_path = root / "envelope.json"
             request_path = root / "request.json"
             envelope_path.write_text(
-                json.dumps(valid_verbose_dict()),
+                json.dumps(valid_full_dict()),
                 encoding="utf-8",
             )
             request_path.write_text(
@@ -82,7 +85,7 @@ class ValidateRenderCliTests(unittest.TestCase):
             envelope_path = root / "envelope.json"
             request_path = root / "request.json"
             envelope_path.write_text(
-                json.dumps(valid_verbose_dict()),
+                json.dumps(valid_full_dict()),
                 encoding="utf-8",
             )
             request_path.write_text(
@@ -109,7 +112,7 @@ class ValidateRenderCliTests(unittest.TestCase):
         Assumptions: Stderr may expose diagnostics but never candidate prose.
         Expectations: Exit one leaves stdout empty and emits a failure report.
         """
-        data = copy.deepcopy(valid_verbose_dict())
+        data = valid_full_dict()
         data["payload"]["sections"].reverse()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -145,7 +148,7 @@ class ValidateRenderCliTests(unittest.TestCase):
         Expectations: Stdout is empty and stderr omits the repeated phrase.
         """
         secret = "private candidate phrase."
-        data = copy.deepcopy(valid_verbose_dict())
+        data = valid_full_dict()
         data["payload"]["sections"][0]["content"] = secret
         data["payload"]["sections"][1]["content"] = secret
         with tempfile.TemporaryDirectory() as directory:
@@ -172,12 +175,146 @@ class ValidateRenderCliTests(unittest.TestCase):
         self.assertEqual(output.getvalue(), "")
         self.assertNotIn(secret.rstrip("."), errors.getvalue())
 
+    def test_requestless_render_refuses_structural_only_candidate(self) -> None:
+        """Name: Requestless render refusal.
+
+        Description: Invokes render without trusted topic or policy metadata.
+        Assumptions: Structural validity cannot certify focused/full selection.
+        Expectations: Exit one withholds stdout and reports certifiable false.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            envelope_path = Path(directory) / "envelope.json"
+            envelope_path.write_text(
+                json.dumps(valid_full_dict()),
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+            errors = io.StringIO()
+            with redirect_stdout(output), redirect_stderr(errors):
+                status = main(["render", str(envelope_path)])
+
+        self.assertEqual(status, 1)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn('"certifiable": false', errors.getvalue())
+
+    def test_optional_report_failure_preserves_committed_output(self) -> None:
+        """Name: Optional report delivery failure.
+
+        Description: Fails audit-report persistence after wrapper certification.
+        Assumptions: The wrapper has already committed state before returning.
+        Expectations: Canonical output still succeeds and stderr reports the loss.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path = root / "request.json"
+            request_path.write_text(
+                json.dumps(request_dict()),
+                encoding="utf-8",
+            )
+            report = mock.Mock()
+            report.to_dict.return_value = {}
+            result = SimpleNamespace(
+                markdown="certified output\n",
+                host="cursor",
+                attempts=1,
+                host_metadata={},
+                report=report,
+            )
+            wrapper = mock.Mock()
+            wrapper.run.return_value = result
+            output = io.StringIO()
+            errors = io.StringIO()
+            with (
+                mock.patch("pc_core.cli.CertifiedWrapper", return_value=wrapper),
+                mock.patch(
+                    "pc_core.cli.write_json_atomic",
+                    side_effect=OSError("report unavailable"),
+                ),
+                redirect_stdout(output),
+                redirect_stderr(errors),
+            ):
+                status = main(
+                    [
+                        "wrap",
+                        "--host",
+                        "cursor",
+                        "--request",
+                        str(request_path),
+                        "--state",
+                        str(root / "state.json"),
+                        "--cwd",
+                        str(root),
+                        "--report",
+                        str(root / "report.json"),
+                    ]
+                )
+
+        self.assertEqual(status, 0)
+        self.assertEqual(output.getvalue(), "certified output\n")
+        self.assertIn("report write failed", errors.getvalue())
+
+    def test_wrap_rejects_report_aliases_for_inputs_and_state(self) -> None:
+        """Name: Audit input and state path isolation.
+
+        Description: Supplies state, case-variant state, and request aliases for
+        audit output.
+        Assumptions: Reports must not replace trusted inputs or committed state,
+        and case-insensitive volumes may alias differently cased names.
+        Expectations: The CLI rejects every alias before host or wrapper
+        invocation and preserves the request bytes.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path = root / "request.json"
+            request_path.write_text(
+                json.dumps(request_dict()),
+                encoding="utf-8",
+            )
+            request_bytes = request_path.read_bytes()
+            shared_path = root / "state-and-report.json"
+            report_paths = (
+                shared_path,
+                root / "STATE-AND-REPORT.JSON",
+                request_path,
+            )
+            for report_path in report_paths:
+                with self.subTest(report_path=report_path):
+                    errors = io.StringIO()
+                    with (
+                        mock.patch("pc_core.cli.CertifiedWrapper") as wrapper,
+                        redirect_stderr(errors),
+                    ):
+                        status = main(
+                            [
+                                "wrap",
+                                "--host",
+                                "cursor",
+                                "--request",
+                                str(request_path),
+                                "--state",
+                                str(shared_path),
+                                "--cwd",
+                                str(root),
+                                "--report",
+                                str(report_path),
+                            ]
+                        )
+
+                    self.assertEqual(status, 2)
+                    wrapper.assert_not_called()
+                    self.assertFalse(shared_path.exists())
+                    if report_path != request_path:
+                        self.assertFalse(report_path.exists())
+                    self.assertEqual(request_path.read_bytes(), request_bytes)
+                    self.assertIn("different path", errors.getvalue())
+
 
 class AdvisoryHookTests(unittest.TestCase):
     """Name: Cursor and Claude advisory hook behavior.
 
     Description: Verifies stateless visible-Markdown checks and each host's
-    documented one-retry response shape plus the project-local runtime command.
+    metadata-limited nonblocking boundaries, collision-safe Cursor handoff, one
+    retry for visible empty views, and local runtime command.
     Assumptions: Invalid assistant output may already be displayed by the host,
     and hook commands run from the configured project root.
     Expectations: Hooks never claim certification and never exceed two total
@@ -204,13 +341,55 @@ The pilot covered twelve million events.
         self.assertTrue(report.mechanically_conformant)
         self.assertFalse(report.certifiable)
 
-    def test_cursor_hook_requests_only_one_retry(self) -> None:
-        """Name: Cursor advisory retry bound.
+    def test_focused_output_is_nonblocking_but_unverified(self) -> None:
+        """Name: Focused advisory hook boundary.
 
-        Description: Records an over-budget response, then evaluates stop input
+        Description: Sends a heading-free focused response through visible checks.
+        Assumptions: Hooks cannot know whether focused presentation was selected.
+        Expectations: Output is nonblocking and remains mechanically uncertified.
+        """
+        text = valid_focused_dict()["payload"]["content"]
+        report = validate_rendered_markdown(text)
+
+        self.assertTrue(report.mechanically_conformant)
+        self.assertFalse(report.certifiable)
+        self.assertEqual(
+            report.mechanical_checks["three_view_heading_order"],
+            "UNVERIFIED",
+        )
+        self.assertEqual(
+            claude_stop(
+                {
+                    "last_assistant_message": text,
+                    "stop_hook_active": False,
+                }
+            ),
+            {},
+        )
+
+    def test_fenced_protocol_heading_is_nonblocking(self) -> None:
+        """Name: Fenced protocol-heading boundary.
+
+        Description: Places a reserved heading inside a fenced code example.
+        Assumptions: Fenced source text is not visible response structure.
+        Expectations: Hook validation remains nonblocking and uncertified.
+        """
+        text = "Example:\n\n```\n## At a glance\n```\n"
+        report = validate_rendered_markdown(text)
+
+        self.assertTrue(report.mechanically_conformant)
+        self.assertEqual(
+            report.mechanical_checks["three_view_heading_order"],
+            "UNVERIFIED",
+        )
+
+    def test_cursor_hook_does_not_retry_unverifiable_budget(self) -> None:
+        """Name: Cursor advisory budget boundary.
+
+        Description: Records a visibly over-budget response, then evaluates stop
         at loop counts zero and one.
-        Assumptions: afterAgentResponse runs before stop with matching IDs.
-        Expectations: The first stop auto-follows up and the second does not.
+        Assumptions: Visible Markdown cannot separate exempt warning or repair text.
+        Expectations: Neither stop call requests a potentially destructive retry.
         """
         markdown = "## At a glance\n\n" + " ".join(
             f"word{index}" for index in range(41)
@@ -231,19 +410,69 @@ The pilot covered twelve million events.
                 {**base, "status": "completed", "loop_count": 1},
                 state_dir,
             )
-        self.assertIn("followup_message", first)
-        self.assertIn("PC-M-BUDGET-005", first["followup_message"])
+        self.assertEqual(first, {})
         self.assertEqual(second, {})
 
-    def test_claude_hook_blocks_once_then_labels_failure(self) -> None:
-        """Name: Claude Stop retry bound.
+    def test_cursor_hook_ids_with_same_sanitized_text_do_not_collide(self) -> None:
+        """Name: Collision-safe Cursor hook handoff.
 
-        Description: Applies the same over-budget output to initial and active
+        Description: Records valid and invalid reports under IDs that sanitize
+        to the same readable text.
+        Assumptions: Host identifiers may contain different punctuation.
+        Expectations: Each stop event reads and removes only its matching report.
+        """
+        invalid_markdown = """## At a glance
+One.
+
+## In context
+
+## At depth
+Three.
+"""
+        valid_markdown = """## At a glance
+One.
+
+## In context
+Two.
+
+## At depth
+Three.
+"""
+        invalid = {
+            "conversation_id": "conversation/a",
+            "generation_id": "generation-1",
+            "text": invalid_markdown,
+        }
+        valid = {
+            "conversation_id": "conversation?a",
+            "generation_id": "generation-1",
+            "text": valid_markdown,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            state_dir = Path(directory)
+            cursor_after_response(invalid, state_dir)
+            cursor_after_response(valid, state_dir)
+            invalid_stop = cursor_stop(
+                {**invalid, "loop_count": 0},
+                state_dir,
+            )
+            valid_stop = cursor_stop(
+                {**valid, "loop_count": 0},
+                state_dir,
+            )
+            report_count = len(list(state_dir.iterdir()))
+        self.assertIn("followup_message", invalid_stop)
+        self.assertEqual(valid_stop, {})
+        self.assertEqual(report_count, 0)
+
+    def test_claude_hook_does_not_block_unverifiable_budget(self) -> None:
+        """Name: Claude advisory budget boundary.
+
+        Description: Applies the same visibly over-budget output to initial and
+        active
         Stop-hook calls.
-        Assumptions: stop_hook_active marks continuation caused by the first
-        block.
-        Expectations: Initial output gets decision=block; second gets a visible
-        non-certification message without another retry.
+        Assumptions: Stop hooks lack structured warning and correction metadata.
+        Expectations: Neither call blocks or mutates potentially valid output.
         """
         markdown = "## At a glance\n\n" + " ".join(
             f"word{index}" for index in range(41)
@@ -260,10 +489,8 @@ The pilot covered twelve million events.
                 "stop_hook_active": True,
             }
         )
-        self.assertEqual(first["decision"], "block")
-        self.assertIn("PC-M-BUDGET-005", first["reason"])
-        self.assertIn("systemMessage", second)
-        self.assertNotIn("decision", second)
+        self.assertEqual(first, {})
+        self.assertEqual(second, {})
 
     def test_checked_in_templates_use_project_scoped_official_shapes(self) -> None:
         """Name: Host hook template schemas.

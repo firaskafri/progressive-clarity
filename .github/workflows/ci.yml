@@ -27,16 +27,16 @@ jobs:
       - name: Verify frozen protocol inputs
         run: |
           sha256sum --check --strict <<'EOF'
-          74d2df5d443e9bb8a9dd3612f96397e8050ce8c1b71ac0eea34cd209d19adfe8  SPEC.md
-          ab8d3ba8e9aa02530f97d21af15ff371ec0df02055b6e2f0cff665c36c59a749  skills/progressive-clarity/SKILL.md
-          8788528b11667b99a8ba398efe1dd17da3b302c687e584e5c07ca94f84f17eb4  evals/cases.json
+          a4ddc96690bd7b4a39b79a9b1f7f8d12b6aa9c1af9d377bd5d8a1e33137771a5  SPEC.md
+          bfc520d496b459bdafda1d9864e5016a979a80987c4f5ce61f8de57bcb1adb56  skills/progressive-clarity/SKILL.md
+          b67b2c8ac618c839c9515a11816d965603df98fa6b0b29728a47d089ad0e0b68  evals/cases.json
           EOF
           python3 - <<'PY'
           import json
           from pathlib import Path
 
           suite = json.loads(Path("evals/cases.json").read_text(encoding="utf-8"))
-          assert suite["schema_version"] == "4.0.0"
+          assert suite["schema_version"] == "5.0.0"
           PY
 
       - name: Validate repository
@@ -61,10 +61,17 @@ jobs:
           uv pip install \
             --python "$RUNNER_TEMP/pc-project/.pc-core/venv/bin/python" \
             "$RUNNER_TEMP"/pc-dist/*.whl
+          uv venv --python 3.11 \
+            "$RUNNER_TEMP/pc-sdist-venv"
+          uv pip install \
+            --python "$RUNNER_TEMP/pc-sdist-venv/bin/python" \
+            "$RUNNER_TEMP"/pc-dist/*.tar.gz
+          "$RUNNER_TEMP/pc-sdist-venv/bin/python" -I -c \
+            'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.4"'
           (
             cd "$RUNNER_TEMP/pc-project"
             ".pc-core/venv/bin/python" -I -c \
-              'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.2"'
+              'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.4"; assert pc_core.WRAPPER_REQUEST_SCHEMA_VERSION == "3.0.0"; assert pc_core.ENVELOPE_SCHEMA_VERSION == "3.0.0"; assert pc_core.STATE_SCHEMA_VERSION == "3.0.0"'
             ".pc-core/venv/bin/pc-core" --help >/dev/null
             hook_output="$(
               printf '%s\n' \
@@ -72,17 +79,48 @@ jobs:
                 | ".pc-core/venv/bin/pc-core" hook claude-stop
             )"
             test "$hook_output" = '{}'
+            focused_hook_output="$(
+              printf '%s\n' \
+                '{"last_assistant_message":"A concise focused answer.","stop_hook_active":false}' \
+                | ".pc-core/venv/bin/pc-core" hook claude-stop
+            )"
+            test "$focused_hook_output" = '{}'
           )
 
       - name: Build deterministic OpenAI plugin
         run: |
           python3 -m json.tool .codex-plugin/plugin.json >/dev/null
           python3 -m tools.package_openai_plugin
-          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.2.1.zip)"
+          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.4.3.zip)"
           python3 -m tools.package_openai_plugin
-          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.2.1.zip)"
+          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.4.3.zip)"
           test "$first_hash" = "$second_hash"
-          unzip -t dist/progressive-clarity-openai-plugin-0.2.1.zip
+          unzip -t dist/progressive-clarity-openai-plugin-0.4.3.zip
+
+      - name: Build deterministic Claude packages
+        run: |
+          python3 -m json.tool .claude-plugin/plugin.json >/dev/null
+          python3 -m tools.package_claude_plugin
+          plugin_first="$(
+            sha256sum dist/progressive-clarity-claude-plugin-0.4.3.zip
+          )"
+          python3 -m tools.package_claude_plugin
+          plugin_second="$(
+            sha256sum dist/progressive-clarity-claude-plugin-0.4.3.zip
+          )"
+          test "$plugin_first" = "$plugin_second"
+          unzip -t dist/progressive-clarity-claude-plugin-0.4.3.zip
+
+          python3 -m tools.package_claude_skill
+          skill_first="$(
+            sha256sum dist/progressive-clarity-claude-ai-skill-0.4.3.zip
+          )"
+          python3 -m tools.package_claude_skill
+          skill_second="$(
+            sha256sum dist/progressive-clarity-claude-ai-skill-0.4.3.zip
+          )"
+          test "$skill_first" = "$skill_second"
+          unzip -t dist/progressive-clarity-claude-ai-skill-0.4.3.zip
 
       - name: Check out pinned skills-ref
         env:
