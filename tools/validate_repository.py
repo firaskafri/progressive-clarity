@@ -33,13 +33,13 @@ SKILL_DIR = ROOT / "skills" / "progressive-clarity"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 FROZEN_FILES = {
     Path("SPEC.md"): (
-        "27a75963599cbb156e910d9ee6fc1b6b741c23cde2ddd094bc733edc67443aa7"
+        "260c3facd8c5c95a1d4429863e24226621defe8274dd08afd4d4d044452e5122"
     ),
     Path("skills/progressive-clarity/SKILL.md"): (
-        "2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21"
+        "ac64b0d1e055c820275455626ebb054b7b41111aa7a53a2f03364dd33023f04d"
     ),
     Path("evals/cases.json"): (
-        "9e10cc2191b33ca7f5a99e4f22659039de1f8c9f563440155175851616fd16d2"
+        "068ad1b881e674959d07b59e4f811f4e4e89beefa3f96f8b6a24d07ea7546844"
     ),
 }
 EXPECTED_SCHEMA_VERSION = "5.0.0"

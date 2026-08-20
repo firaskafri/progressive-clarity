@@ -5,7 +5,7 @@
 The current `pc-core` source implements the Mechanical wrapper profile for
 Progressive Clarity protocol `0.4`. The wrapper request, model envelope, and
 persisted conversation-state schemas are all `3.0.0`. The locally built Python
-distribution is `progressive-clarity-core` version `0.4.2`; artifact hashes are
+distribution is `progressive-clarity-core` version `0.4.3`; artifact hashes are
 recorded in [Verification](verification.md). This is a local release candidate,
 not a published release or host-compatibility result.
 
@@ -229,7 +229,7 @@ wrapper's fail-closed guarantee.
 
 ### Current evidence boundary
 
-No `0.4.2` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+No `0.4.3` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
 v0.3.0–v0.3.2 ChatGPT observations do not inherit local wrapper certification
 and are recorded as historical evidence in [Verification](verification.md).
 Current Advisory activation, topic inference, topic resumption, presentation

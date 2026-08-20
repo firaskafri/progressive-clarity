@@ -214,6 +214,9 @@ belongs in At a glance. In context explains new rationale, scope, constraints,
 ownership, timing, or action. At depth adds new evidence, exceptions,
 alternatives, implementation, or sources. At depth MUST NOT end with a recap,
 summary, “key rule,” or restated operative recommendation.
+At a glance SHOULD contain the decision and indispensable consequence without
+preemptively stating a remediation, validation, recovery, or implementation
+method that a deeper view will explain.
 
 An anchoring reference MUST NOT reassert the earlier operative proposition
 before adding detail. It SHOULD use the shortest cue that makes the new content
@@ -234,6 +237,8 @@ The composer MUST use this private workflow:
 7. Delete any concluding recap from At depth.
 8. Inspect the final At-depth sentence or list item. Retain it only when it adds
    new evidence, exception, implementation, or source; otherwise delete it.
+9. When At depth ends with a list, stop at its last new item. Do not append a
+   concluding paragraph that restates the decision, warning, or condition.
 
 Compact positive example: At a glance says “Delay Atlas until security
 approval.” In context may say “For Atlas, Security owns the approval gate and
@@ -337,6 +342,9 @@ warning cannot safely wait.
 This clarification gate applies when missing input blocks a recommendation. It
 MUST NOT replace a requested narrative or a complete high-level procedure whose
 content and order the user has already supplied.
+It also MUST NOT replace a bounded answer already determined by visible facts
+or a requested summary of decisions established in the conversation. Remaining
+implementation unknowns MAY be identified without blocking that answer.
 
 For example, `Should I enable the new index now?` lacks the environment,
 validation result, and rollback readiness. A conforming response asks one

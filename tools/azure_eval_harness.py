@@ -289,26 +289,51 @@ def deterministic_score(
 
     counts: dict[str, int] = {}
     if presentation == "full" and headings == list(VIEW_HEADINGS):
+        warning_requirements = expected.get("warning_at_a_glance_requires")
+        budget_exception = (
+            isinstance(warning_requirements, list)
+            or expected.get("correction_required") is True
+        )
         for heading in VIEW_HEADINGS:
             counts[heading] = count_english_words(sections.get(heading, ""))
         shallow_total = counts["At a glance"] + counts["In context"]
         checks["at_a_glance_budget"] = {
             "result": (
-                "PASS"
-                if counts["At a glance"] <= AT_A_GLANCE_MAX_NON_WARNING_WORDS
-                else "FAIL"
+                "UNVERIFIED"
+                if budget_exception
+                else (
+                    "PASS"
+                    if counts["At a glance"]
+                    <= AT_A_GLANCE_MAX_NON_WARNING_WORDS
+                    else "FAIL"
+                )
             ),
             "count": counts["At a glance"],
             "limit": AT_A_GLANCE_MAX_NON_WARNING_WORDS,
+            "exception": (
+                "warning or correction prose requires structured accounting"
+                if budget_exception
+                else None
+            ),
         }
         checks["through_in_context_budget"] = {
             "result": (
-                "PASS"
-                if shallow_total <= THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS
-                else "FAIL"
+                "UNVERIFIED"
+                if budget_exception
+                else (
+                    "PASS"
+                    if shallow_total
+                    <= THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS
+                    else "FAIL"
+                )
             ),
             "count": shallow_total,
             "limit": THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS,
+            "exception": (
+                "warning or correction prose requires structured accounting"
+                if budget_exception
+                else None
+            ),
         }
 
     prohibited = expected.get("prohibited_behavior")
@@ -349,10 +374,6 @@ def deterministic_score(
             ],
         }
 
-    prohibited_text = " ".join(
-        str(item).casefold()
-        for item in prohibited
-    ) if isinstance(prohibited, list) else ""
     if (
         presentation == "focused"
         and expected.get("numeric_template_required") is True

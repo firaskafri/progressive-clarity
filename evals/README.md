@@ -51,9 +51,11 @@ These controls prevent facts from another case or prior chat from entering the
 oracle. In particular, T06 must not inherit staging, validation, or rollback
 facts before the user supplies them.
 
-Every prescribed run must pass. Permit one reviewed remediation cycle: complete
-the initial round, inspect failures, revise once, rerun only failed cases with
-all repetitions, then stop regardless of outcome.
+Every prescribed run must pass. The maintainer explicitly authorized controlled
+continuation on 2026-08-20 after the first bounded remediation remained below
+100%. Complete and review each round before revising, rerun only failed cases
+with every prescribed repetition, never average outcomes, and stop when every
+run passes or the maintainer pauses the cycle.
 
 ## Scoring
 
@@ -171,8 +173,9 @@ Use `--no-judge` to capture generations and deterministic checks without the
 second model call. The harness creates the report with status `RUNNING`, writes
 an atomic checkpoint after every completed case run, marks a caught keyboard
 interrupt as `INTERRUPTED`, and marks successful suite execution as `COMPLETE`.
-Each checkpoint records suite/protocol identity, deployment, API version, judge
-mode, selected cases, completed case/run keys, and current aggregate state.
+Each checkpoint records suite/protocol identity, the exact Skill-body hash,
+deployment, API version, judge mode, selected cases, completed case/run keys,
+and current aggregate state.
 
 Resume an interrupted or otherwise incomplete checkpoint in place:
 
@@ -181,12 +184,13 @@ python3 -m tools.azure_eval_harness \
   --resume evals/runs/complete.json
 ```
 
-Resume validates suite ID, protocol hash, deployment, API version, judge mode,
-selected cases, and planned runs before making a model call. Completed runs are
-skipped; an interrupted run without a completed record is replayed in a fresh
-Agno session. Reports are written under ignored `evals/runs/` by default and
-never contain the API key or full endpoint. The same-deployment judge remains
-non-independent even when its criteria are correctly scoped.
+Resume validates suite ID, suite hash, protocol hash, Skill-body hash,
+deployment, API version, judge mode, selected cases, and planned runs before
+making a model call. Completed runs are skipped; an interrupted run without a
+completed record is replayed in a fresh Agno session. Reports are written under
+ignored `evals/runs/` by default and never contain the API key or full endpoint.
+The same-deployment judge remains non-independent even when its criteria are
+correctly scoped.
 
 ## Validation
 

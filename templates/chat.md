@@ -104,6 +104,8 @@ explanation, warning, or recommendation.
 An anchor uses the shortest cue needed for materially new implementation,
 evidence, exception, or action. Repeating the earlier operative rule before
 adding detail is still repetition.
+Keep At a glance to the decision and indispensable consequence; reserve
+remediation, validation, recovery, and implementation methods for deeper views.
 
 Privately compose Full format in this order:
 
@@ -116,6 +118,8 @@ Privately compose Full format in this order:
 6. Delete any sentence that restates a ledger proposition.
 7. Delete any concluding recap from At depth.
 8. Keep the final At-depth sentence or item only if it adds new depth.
+9. If At depth ends with a list, stop at its last new item without a concluding
+   restatement.
 
 Positive: after “Delay Atlas until security approval,” In context may say “For
 Atlas, Security owns the gate and needs the threat model by Friday.” Negative:
@@ -144,6 +148,8 @@ warning cannot safely wait.
 
 Use this gate only when missing input blocks a recommendation. Do not substitute
 a clarification for a requested narrative or a complete supplied procedure.
+Do not clarify when visible facts already determine a bounded answer or when
+the user asks to summarize decisions already established in the conversation.
 
 For `Should I enable the new index now?`, ask which environment applies and
 whether validation and rollback readiness are confirmed; do not recommend

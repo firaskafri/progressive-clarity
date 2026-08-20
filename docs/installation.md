@@ -10,16 +10,16 @@ two separate profiles:
 - the optional Python 3.11+ non-streaming wrapper enforces mechanically
   decidable checks over trusted topic metadata and buffered output.
 
-The v0.4 package target version is `0.4.2`. The intended package and artifact
+The v0.4 package target version is `0.4.3`. The intended package and artifact
 names are:
 
-- Python distribution: `progressive-clarity-core` version `0.4.2`;
+- Python distribution: `progressive-clarity-core` version `0.4.3`;
 - OpenAI package:
-  `dist/progressive-clarity-openai-plugin-0.4.2.zip`;
+  `dist/progressive-clarity-openai-plugin-0.4.3.zip`;
 - Claude plugin:
-  `dist/progressive-clarity-claude-plugin-0.4.2.zip`; and
+  `dist/progressive-clarity-claude-plugin-0.4.3.zip`; and
 - Claude.ai custom Skill:
-  `dist/progressive-clarity-claude-ai-skill-0.4.2.zip`.
+  `dist/progressive-clarity-claude-ai-skill-0.4.3.zip`.
 
 Local v0.4 artifacts were built and verified; their exact SHA-256 values are
 recorded in [Verification](verification.md). Do not substitute a v0.2 or v0.3.x
@@ -169,7 +169,7 @@ changes.
 
 ## Current evidence boundary
 
-No `0.4.2` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+No `0.4.3` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
 v0.3.0–v0.3.2 ChatGPT observations are historical and recorded in
 [Verification](verification.md). Current activation, topic inference,
 presentation selection, and rendered conformance are **UNVERIFIED**. Package

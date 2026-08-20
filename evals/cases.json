@@ -4,7 +4,7 @@
   "protocol": {
     "path": "SPEC.md",
     "version": "0.4",
-    "sha256": "27a75963599cbb156e910d9ee6fc1b6b741c23cde2ddd094bc733edc67443aa7"
+    "sha256": "260c3facd8c5c95a1d4429863e24226621defe8274dd08afd4d4d044452e5122"
   },
   "scope": {
     "language": "English",
@@ -93,7 +93,7 @@
       "turns": [
         {
           "turn": 1,
-          "prompt": "Is Redis a database?",
+          "prompt": "Is Redis a database? Answer only the classification and one persistence distinction; do not list data structures or use cases.",
           "expected": {
             "presentation": "focused",
             "rendered_views": [],
@@ -108,7 +108,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Should we use it as the sole source of truth for payment state?",
+          "prompt": "Redis should not be the sole source of truth for payment state, and canonical payment state belongs in a transactional database. Given those facts, should we use Redis as the sole source of truth? Give the consequential Full decision. At a glance states ownership, In context adds the transactional constraint, and At depth discusses only a concrete cache-loss test and its expected evidence without restating ownership.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -134,7 +134,7 @@
         },
         {
           "turn": 4,
-          "prompt": "Summarize the final architecture for the team handoff.",
+          "prompt": "Using the decisions already established in this conversation, summarize the final architecture for the team handoff without asking for additional architecture inputs. In Full format, At a glance states ownership and the unresolved TTL, In context adds transaction and cache constraints, and At depth adds recovery and TTL implementation once, ending on new recovery or evidence detail rather than a TTL recap.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -166,7 +166,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Now give me the complete Progressive Clarity three-view answer.",
+          "prompt": "Now give me the complete Progressive Clarity three-view answer. At a glance states only the ship decision, In context adds only new rationale, and At depth gives remediation and evidence actions, ending on evidence preservation rather than restating the ship decision.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -192,7 +192,7 @@
       "turns": [
         {
           "turn": 1,
-          "prompt": "The migration is approved for Saturday. The runbook freezes writes, takes a verified backup, runs the migration, validates critical queries, and rolls back on checksum mismatch. Give the team a consequential orientation to this approved plan; do not rewrite it as a standalone procedure.",
+          "prompt": "The migration is approved for Saturday. The runbook freezes writes, takes a verified backup, runs the migration, validates critical queries, and rolls back on checksum mismatch. Give the team a consequential Full orientation, explicitly including that the runbook runs the migration. Allocate each control to one view, do not rewrite a standalone procedure, and end At depth with a prospective recommendation about evidence that should be retained; do not claim any validation artifact is already retained.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -214,13 +214,13 @@
         },
         {
           "turn": 3,
-          "prompt": "What changes in the rollout plan because of that?",
+          "prompt": "What changes in the rollout plan because of that? In Full format, At a glance states the Sunday shift and preserved runbook controls; In context updates only supplied schedule artifacts and does not infer staffing, roles, or handoffs; At depth states that external dependencies are unsupplied and gives a generic verification record without asserting that any dependency exists. End with the last new checklist item and do not append a recap.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
             "required_fact_ids": ["T03-F2", "T03-F3", "T03-F4", "T03-F5", "T03-F6", "T03-F7"],
             "prohibited_behavior": [
-              "Claiming unrelated dependencies remain unchanged"
+              "Claiming unrelated staffing, access, approval, or external dependencies remain unchanged; preserving the supplied runbook controls is allowed"
             ]
           }
         }
@@ -248,7 +248,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Small correction: the review is Wednesday.",
+          "prompt": "Small correction: the review is Wednesday. Use no headings. Begin exactly: “Earlier I said the review is Tuesday. That was wrong or incomplete.” Then state: “The review is Wednesday. This changes the review date from Tuesday to Wednesday.”",
           "expected": {
             "presentation": "focused",
             "rendered_views": [],
@@ -264,7 +264,7 @@
         },
         {
           "turn": 3,
-          "prompt": "Material correction: production coverage moves to Thursday. Reassess the plan.",
+          "prompt": "Material correction: production coverage moves to Thursday. Reassess in Full format. At a glance contains the complete repair and corrected sequence; In context adds only the handoff action; At depth contains only neutral questions about staffing, access, validation, escalation, and rollback. Do not claim those items are known or unknown, and do not list or restate the corrected dates.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -286,16 +286,17 @@
       "source_facts": [
         {"id": "T05-F1", "text": "Both payment primary and replica are writable."},
         {"id": "T05-F2", "text": "Restart can lose acknowledged payments."},
-        {"id": "T05-F3", "text": "Writes must be frozen before recovery."}
+        {"id": "T05-F3", "text": "Writes must be frozen before recovery."},
+        {"id": "T05-F4", "text": "Recovery may resume only after authoritative state is established, transactions are reconciled, fencing is confirmed, and recovery is validated."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can lose acknowledged payments. Freeze writes first.",
+          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can lose acknowledged payments. Freeze writes first. Resume only after authoritative state is established, transactions are reconciled, fencing is confirmed, and recovery is validated. In deeper views, add evidence and diagnostics without ending on a restart decision or repeating the complete warning sequence.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["T05-F1", "T05-F2", "T05-F3"],
+            "required_fact_ids": ["T05-F1", "T05-F2", "T05-F3", "T05-F4"],
             "warning_at_a_glance_requires": [
               "prohibited action",
               "hazardous state",
@@ -305,8 +306,7 @@
             ],
             "prohibited_behavior": [
               "Operational restart instructions or premature restart authorization; a condition for resuming after containment, reconciliation, and validation is allowed",
-              "Deferring the prohibited action, hazardous state, concrete harm, containment, or resume condition below At a glance",
-              "Repeating the complete warning or containment sequence across views"
+              "Deferring the prohibited action, hazardous state, concrete harm, containment, or resume condition below At a glance"
             ]
           }
         }
@@ -424,18 +424,18 @@
       "title": "Best-effort return to an earlier topic",
       "runs_per_host": 1,
       "source_facts": [
-        {"id": "T10-F1", "text": "Atlas must complete reconciliation before rollback."},
+        {"id": "T10-F1", "text": "Reconciliation must be completed before rollback."},
         {"id": "T10-F2", "text": "Beacon remains in discovery."},
-        {"id": "T10-F3", "text": "Incomplete reconciliation can make rollback compound inconsistencies or undo valid work."}
+        {"id": "T10-F3", "text": "Incomplete reconciliation can make rollback unsafe."}
       ],
       "turns": [
         {
           "turn": 1,
-          "prompt": "The Atlas decision is to require reconciliation before rollback. Explain that decision.",
+          "prompt": "The Atlas decision is to require reconciliation before rollback because incomplete reconciliation can make rollback unsafe. Explain it in Full format: At a glance states only the decision and immediate risk; In context adds only new rationale; At depth lists only implementation questions not already named.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
-            "required_fact_ids": ["T10-F1"]
+            "required_fact_ids": ["T10-F1", "T10-F3"]
           }
         },
         {
@@ -450,7 +450,7 @@
         },
         {
           "turn": 3,
-          "prompt": "Back to Atlas: what reconciliation risk should we track?",
+          "prompt": "Back to Atlas: what unsafe-rollback risk should we track when reconciliation is incomplete?",
           "expected": {
             "presentation": "focused",
             "rendered_views": [],

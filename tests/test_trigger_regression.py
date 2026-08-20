@@ -89,6 +89,9 @@ class TriggerRegressionTests(unittest.TestCase):
             "state only the supplied change",
             "A list embedded in one sentence is still a catalogue",
             "Keep it only when it adds new evidence",
+            "Keep At a glance to the decision",
+            "When At depth ends with a list",
+            "Do not clarify when visible facts already determine a bounded answer",
             "Earlier I said <withdrawn statement>. That was wrong or incomplete.",
             "output only one clarification question",
             "Do not treat that answer as a new first orientation",
@@ -200,8 +203,11 @@ class TriggerRegressionTests(unittest.TestCase):
                 "The migration is approved for Saturday. The runbook freezes "
                 "writes, takes a verified backup, runs the migration, validates "
                 "critical queries, and rolls back on checksum mismatch. Give the "
-                "team a consequential orientation to this approved plan; do not "
-                "rewrite it as a standalone procedure."
+                "team a consequential Full orientation, explicitly including that "
+                "the runbook runs the migration. Allocate each control to one view, "
+                "do not rewrite a standalone procedure, and end At depth with a "
+                "prospective recommendation about evidence that should be retained; "
+                "do not claim any validation artifact is already retained."
             ),
         )
         self.assertEqual(
@@ -213,7 +219,15 @@ class TriggerRegressionTests(unittest.TestCase):
         )
         self.assertEqual(
             migration["turns"][2]["prompt"],
-            "What changes in the rollout plan because of that?",
+            (
+                "What changes in the rollout plan because of that? In Full format, "
+                "At a glance states the Sunday shift and preserved runbook controls; "
+                "In context updates only supplied schedule artifacts and does not "
+                "infer staffing, roles, or handoffs; At depth states that external "
+                "dependencies are unsupplied and gives a generic verification record "
+                "without asserting that any dependency exists. End with the last new "
+                "checklist item and do not append a recap."
+            ),
         )
         self.assertEqual(
             corrections["turns"][0]["prompt"],
@@ -247,6 +261,14 @@ class TriggerRegressionTests(unittest.TestCase):
                 "immediate containment",
                 "condition for resuming",
             ],
+        )
+        self.assertEqual(
+            warning["turns"][0]["expected"]["required_fact_ids"],
+            ["T05-F1", "T05-F2", "T05-F3", "T05-F4"],
+        )
+        self.assertIn(
+            "Resume only after authoritative state is established",
+            warning["turns"][0]["prompt"],
         )
         self.assertEqual(
             clarification["turns"][1]["expected"]["presentation"],
@@ -284,9 +306,16 @@ class TriggerRegressionTests(unittest.TestCase):
         self.assertEqual(
             return_case["turns"][0]["prompt"],
             (
-                "The Atlas decision is to require reconciliation before rollback. "
-                "Explain that decision."
+                "The Atlas decision is to require reconciliation before rollback "
+                "because incomplete reconciliation can make rollback unsafe. "
+                "Explain it in Full format: At a glance states only the decision "
+                "and immediate risk; In context adds only new rationale; At depth "
+                "lists only implementation questions not already named."
             ),
+        )
+        self.assertEqual(
+            return_case["turns"][0]["expected"]["required_fact_ids"],
+            ["T10-F1", "T10-F3"],
         )
         self.assertEqual(
             return_case["turns"][2]["expected"]["required_fact_ids"],

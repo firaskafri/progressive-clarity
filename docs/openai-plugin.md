@@ -7,7 +7,7 @@ The repository root remains the copy-free OpenAI plugin source.
 contains the canonical `skills/progressive-clarity/` package; packaging does
 not maintain a second skill body.
 
-Package version `0.4.2` carries the Advisory topic-oriented profile:
+Package version `0.4.3` carries the Advisory topic-oriented profile:
 
 - the model infers topic continuity from visible conversation;
 - simple facts and ordinary or narrow exploration use Focused output;
@@ -26,7 +26,7 @@ dependency. It does not inherit local-wrapper mechanical certification.
 The target archive name is:
 
 ```text
-dist/progressive-clarity-openai-plugin-0.4.2.zip
+dist/progressive-clarity-openai-plugin-0.4.3.zip
 ```
 
 Its intended inventory remains:
@@ -45,19 +45,19 @@ Build it from the repository root:
 python3.11 -m tools.package_openai_plugin
 python3.11 -m json.tool .codex-plugin/plugin.json >/dev/null
 python3.11 -m tools.validate_repository
-unzip -t dist/progressive-clarity-openai-plugin-0.4.2.zip
-unzip -Z1 dist/progressive-clarity-openai-plugin-0.4.2.zip
+unzip -t dist/progressive-clarity-openai-plugin-0.4.3.zip
+unzip -Z1 dist/progressive-clarity-openai-plugin-0.4.3.zip
 ```
 
 Two consecutive local builds from unchanged inputs produced the same
-25,277-byte archive with SHA-256
-`ba7e6c2e97ab3dc01ac81c9d2695ad5e504574de2b8bf50bbf7dc2c69d1251df`.
+27,402-byte archive with SHA-256
+`26e3ca4cb687b893ef9adcf94acd8b9625a00e70e60f8853d28cfddb7bf19a54`.
 The canonical packaged skill SHA-256 is
-`2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21`.
+`ac64b0d1e055c820275455626ebb054b7b41111aa7a53a2f03364dd33023f04d`.
 The exact current inventory is:
 
 - `.codex-plugin/plugin.json`: 857 bytes, SHA-256
-  `89ad8c61af198736be5d33ff82fcb012399631ee9fb1ae8d6e8cd3ab9dc87366`;
+  `47551ab1d7237fcbbd129c68ad2cc7b301f5784fc4f442e04a8b6e18cf4227da`;
 - `assets/progressive-clarity-composer.svg`: 513 bytes, SHA-256
   `bf37be72d058568f451efb22cace2703c684a2aaa6b8a1ae21309a4a9911add9`;
 - `assets/progressive-clarity-logo.svg`: 529 bytes, SHA-256
@@ -65,14 +65,14 @@ The exact current inventory is:
 - `skills/progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
   `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
   and
-- `skills/progressive-clarity/SKILL.md`: 11,282 bytes, SHA-256
-  `2379f0cf3e8b9ccbfd0a7553b0843097f3fddc764cbc758160b80127377b6c21`.
+- `skills/progressive-clarity/SKILL.md`: 13,407 bytes, SHA-256
+  `ac64b0d1e055c820275455626ebb054b7b41111aa7a53a2f03364dd33023f04d`.
 
 These checks establish local byte determinism and inventory integrity only.
 
 ### Current v0.4 publication and behavior status
 
-No `0.4.2` upload, publication, or live ChatGPT run was performed. Activation,
+No `0.4.3` upload, publication, or live ChatGPT run was performed. Activation,
 topic inference, topic resumption, Focused/Full selection, and rendered
 conformance remain **UNVERIFIED**. Local archive validation establishes source
 and byte integrity only.

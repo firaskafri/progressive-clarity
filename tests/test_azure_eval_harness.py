@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import io
+import json
 import os
 import tempfile
 import unittest
@@ -27,6 +28,7 @@ from tools.azure_eval_harness import (
     AzureEvalConfig,
     HarnessError,
     _available_source_facts,
+    _judge_prompt,
     deterministic_score,
     dry_run_summary,
     judge_criteria,
@@ -231,6 +233,7 @@ class AzureEvalHarnessTests(unittest.TestCase):
         self.assertEqual(startup["selected_case_ids"], ["T01"])
         self.assertRegex(str(startup["suite_sha256"]), r"^[a-f0-9]{64}$")
         self.assertEqual(startup["protocol_sha256"], suite["protocol"]["sha256"])
+        self.assertRegex(str(startup["skill_body_sha256"]), r"^[a-f0-9]{64}$")
         self.assertEqual(startup["model"]["deployment"], config.deployment)
         self.assertEqual(startup["model"]["api_version"], config.api_version)
         self.assertEqual(startup["aggregate"]["completed_runs"], 0)
@@ -335,8 +338,8 @@ class AzureEvalHarnessTests(unittest.TestCase):
         """Name: Compatible checkpoint resume.
 
         Description: Resumes a T01 report interrupted before its only case run.
-        Assumptions: Suite, protocol, deployment, API version, judge mode, and
-        selected cases are unchanged between invocations.
+        Assumptions: Suite, protocol, Skill body, deployment, API version, judge
+        mode, and selected cases are unchanged between invocations.
         Expectations: The report transitions through INTERRUPTED and RUNNING to
         COMPLETE, increments resume_count, and records the replayed run once.
         """
@@ -440,6 +443,9 @@ class AzureEvalHarnessTests(unittest.TestCase):
             variant = copy.deepcopy(base)
             variant["protocol_sha256"] = "0" * 64
             variants.append(("protocol hash", variant))
+            variant = copy.deepcopy(base)
+            variant["skill_body_sha256"] = "2" * 64
+            variants.append(("Skill body hash", variant))
             variant = copy.deepcopy(base)
             variant["model"]["deployment"] = (  # type: ignore[index]
                 "different-deployment"
@@ -759,6 +765,48 @@ Inspect the failed metric and rollback readiness.
             "FAIL",
         )
 
+    def test_warning_budgets_remain_unverified_without_structured_accounting(
+        self,
+    ) -> None:
+        """Name: Warning-budget exception boundary.
+
+        Description: Scores a T05 Full warning whose At-a-glance prose exceeds
+        the ordinary forty-word cap.
+        Assumptions: The protocol exempts only necessary warning prose, while the
+        raw Markdown scorer cannot separate warning and ordinary words.
+        Expectations: Structure still passes, both affected budgets remain
+        UNVERIFIED rather than FAIL, and semantic warning scoring decides the turn.
+        """
+        suite = load_suite()
+        case = next(case for case in suite["cases"] if case["id"] == "T05")
+        turn = case["turns"][0]
+        warning = " ".join(f"warning{index}" for index in range(42))
+        response = f"""## At a glance
+{warning}
+
+## In context
+Preserve evidence.
+
+## At depth
+Inspect divergent transactions.
+"""
+
+        score = deterministic_score(
+            case=case,
+            turn=turn,
+            response=response,
+        )
+
+        self.assertEqual(score["result"], "PASS")
+        self.assertEqual(
+            score["checks"]["at_a_glance_budget"]["result"],
+            "UNVERIFIED",
+        )
+        self.assertEqual(
+            score["checks"]["through_in_context_budget"]["result"],
+            "UNVERIFIED",
+        )
+
     def test_full_correction_contract_is_scored_inside_at_a_glance(self) -> None:
         """Name: Full correction contract placement.
 
@@ -826,9 +874,11 @@ Confirm Thursday staffing.
     def test_judge_contract_rejects_unstructured_results(self) -> None:
         """Name: Semantic judge result contract.
 
-        Description: Parses one valid judge object and one incomplete result.
+        Description: Parses one valid judge object, one incomplete result, and
+        one result whose overall value contradicts its finding.
         Assumptions: Semantic judgment must remain machine-readable and auditable.
-        Expectations: Exact shape passes while missing findings fail closed.
+        Expectations: Exact consistent shape passes while missing or conflicting
+        findings fail closed.
         """
         valid = {
             "overall": "PASS",
@@ -845,6 +895,10 @@ Confirm Thursday staffing.
         self.assertEqual(parse_judge_result(valid), valid)
         with self.assertRaisesRegex(HarnessError, "overall, findings, and notes"):
             parse_judge_result({"overall": "PASS", "notes": ""})
+        contradictory = copy.deepcopy(valid)
+        contradictory["findings"][0]["result"] = "FAIL"
+        with self.assertRaisesRegex(HarnessError, "conflicts with its findings"):
+            parse_judge_result(contradictory)
 
     def test_judge_criteria_omit_warning_rules_from_corrections(self) -> None:
         """Name: Correction-only judge applicability.
@@ -870,6 +924,49 @@ Confirm Thursday staffing.
             "The correct information is",
             correction["requirement"],
         )
+        self.assertNotIn("required_prefix", correction)
+
+    def test_judge_prompt_includes_prior_conversation_for_corrections(self) -> None:
+        """Name: Correction conversation evidence.
+
+        Description: Builds the T04 narrow-correction judge prompt with the
+        actual prior prompt and assistant response.
+        Assumptions: A correction can withdraw a proposition from a combined
+        earlier sentence, so static canonical prefixes are insufficient.
+        Expectations: The judge receives the exact prior response separately
+        from the current response and no static required prefix.
+        """
+        suite = load_suite()
+        case = next(case for case in suite["cases"] if case["id"] == "T04")
+        history = [
+            {
+                "turn": 1,
+                "prompt": case["turns"][0]["prompt"],
+                "assistant_response": (
+                    "Both the review and production coverage are scheduled "
+                    "for Tuesday."
+                ),
+            }
+        ]
+        prompt = _judge_prompt(
+            suite=suite,
+            case=case,
+            turn=case["turns"][1],
+            response=(
+                "Earlier I said the review is Tuesday. That was wrong or "
+                "incomplete. The review is Wednesday. This changes the review day."
+            ),
+            conversation_history=history,
+        )
+        payload = json.loads(prompt.split("\n\n", 1)[1])
+        correction = next(
+            criterion
+            for criterion in payload["criteria"]
+            if criterion["id"] == "correction_repair_contract"
+        )
+
+        self.assertEqual(payload["conversation_history"], history)
+        self.assertNotIn("required_prefix", correction)
 
     def test_judge_criteria_omit_correction_rules_from_warnings(self) -> None:
         """Name: Warning-only judge applicability.

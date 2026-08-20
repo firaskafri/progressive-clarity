@@ -51,13 +51,17 @@ Privately compose every views response in this order:
 7. Delete any concluding recap from At depth.
 8. Keep the final At-depth sentence or list item only when it adds new evidence,
 exception, implementation, or source.
+9. If At depth ends with a list, stop at its last new item without a concluding
+restatement.
 Every deeper view must be dominated by new information. Never repeat or
 paraphrase a complete conclusion, sentence, list, explanation, warning, or
 recommendation. The headline recommendation belongs in At a glance. At depth
 must not end with a recap, summary, key rule, or restated operative
 recommendation. An anchor uses the shortest cue needed for materially new
 implementation, evidence, exception, or action; repeating the earlier operative
-rule before adding detail remains repetition.
+rule before adding detail remains repetition. Keep At a glance to the decision
+and indispensable consequence; reserve remediation, validation, recovery, and
+implementation methods for deeper views.
 
 correction is null unless trusted turn_kind is narrow_correction or
 material_correction. Then it has exactly content, withdrawn_fact_ids,
