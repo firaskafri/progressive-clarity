@@ -85,6 +85,10 @@ class TriggerRegressionTests(unittest.TestCase):
             "Delete any concluding recap from At depth",
             "Governing input: <missing dependency>.",
             "Example assumption: <number and the assumption that justifies it>.",
+            "do not replace it with a clarification question",
+            "state only the supplied change",
+            "A list embedded in one sentence is still a catalogue",
+            "Keep it only when it adds new evidence",
             "Earlier I said <withdrawn statement>. That was wrong or incomplete.",
             "output only one clarification question",
             "Do not treat that answer as a new first orientation",
@@ -164,19 +168,24 @@ class TriggerRegressionTests(unittest.TestCase):
         self.assertTrue(any("use-case catalogue" in item for item in prohibited))
         self.assertIn("complete earlier conclusion", suite["rubric"]["full"])
         self.assertTrue(any("numeric value or range" in item for item in prohibited))
+        self.assertIs(
+            lifecycle["turns"][2]["expected"]["numeric_template_required"],
+            True,
+        )
 
     def test_revised_oracles_supply_decision_inputs(self) -> None:
         """Name: Revised clarification and re-synthesis oracles.
 
-        Description: Checks grounded T03 planning, self-grounding T04 repairs,
-        the T05 warning contract, complete T06 clarification, purpose-specific
-        T08/T09 prompts, and a grounded T10 decision.
+        Description: Checks grounded T03 planning, dynamic T04 repairs, the T05
+        warning contract, complete T06 clarification, purpose-specific T08/T09
+        prompts, a grounded T10 decision, and authorized continuation policy.
         Assumptions: Missing recommendation inputs should trigger clarification,
         while supplied narratives, procedures, and decisions should be answered.
         Expectations: Every oracle supplies or requests the facts and artifact
         shape it later scores without leaking a future correction.
         """
         cases = _evaluation_cases()
+        suite = json.loads(EVAL_PATH.read_text(encoding="utf-8"))
         migration = cases["T03"]
         corrections = cases["T04"]
         warning = cases["T05"]
@@ -257,6 +266,10 @@ class TriggerRegressionTests(unittest.TestCase):
             "Claiming risk is low",
             clarification["turns"][1]["expected"]["prohibited_behavior"],
         )
+        self.assertIn(
+            "Given those inputs, answer my original question.",
+            clarification["turns"][1]["prompt"],
+        )
         self.assertEqual(
             narrative["turns"][0]["prompt"],
             (
@@ -274,6 +287,17 @@ class TriggerRegressionTests(unittest.TestCase):
                 "The Atlas decision is to require reconciliation before rollback. "
                 "Explain that decision."
             ),
+        )
+        self.assertEqual(
+            return_case["turns"][2]["expected"]["required_fact_ids"],
+            ["T10-F3"],
+        )
+        self.assertIsNone(
+            suite["run_policy"]["remediation"]["maximum_cycles"],
+        )
+        self.assertIn(
+            "authorized controlled remediation cycles",
+            suite["run_policy"]["remediation"]["continuation_authorization"],
         )
 
     def test_practical_repetition_and_literal_label_oracles(self) -> None:
