@@ -165,13 +165,13 @@ See [Local deterministic enforcement](docs/local-enforcement.md).
 
 ## Installation
 
-The current release-candidate package target is `0.4.3`:
+The current release-candidate package target is `0.4.4`:
 
 - Python: `progressive-clarity-core`;
-- OpenAI: `dist/progressive-clarity-openai-plugin-0.4.3.zip`;
-- Claude plugin: `dist/progressive-clarity-claude-plugin-0.4.3.zip`;
+- OpenAI: `dist/progressive-clarity-openai-plugin-0.4.4.zip`;
+- Claude plugin: `dist/progressive-clarity-claude-plugin-0.4.4.zip`;
 - Claude.ai custom Skill:
-  `dist/progressive-clarity-claude-ai-skill-0.4.3.zip`.
+  `dist/progressive-clarity-claude-ai-skill-0.4.4.zip`.
 
 Use a fresh v0.4 `pc-core` state path. Earlier protocol state is intentionally
 rejected rather than silently reinterpreted, even though schema `3.0.0` remains
@@ -182,7 +182,7 @@ instructions.
 
 ## Verification status
 
-Protocol v0.4 and package 0.4.3 form a **locally verified release candidate**,
+Protocol v0.4 and package 0.4.4 form a **locally verified release candidate**,
 not a published release or universal host-compatibility claim.
 
 Local verification covers repository contracts, the complete unit suite, compile and

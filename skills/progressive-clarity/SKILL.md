@@ -15,10 +15,10 @@ license: Apache-2.0
 
 # Progressive Clarity
 
-This is the Advisory conversational profile. On ChatGPT and other prompt-only
-hosts, infer topics and presentation from visible conversation, and treat
-return to an earlier topic as best-effort. Do not announce this skill, expose
-private planning, or add filler.
+This is the Advisory conversational profile. On prompt-only hosts, infer topics
+and presentation from the visible conversation, and treat return to an earlier
+topic as best-effort. Do not announce this skill, expose private planning, or
+add filler.
 
 ## Universal rules
 

@@ -20,11 +20,11 @@ backend, an MCP server, executable code, network access, or analytics.
 
 ### Target package names
 
-Both v0.4 Claude artifacts target version `0.4.3`:
+Both v0.4 Claude artifacts target version `0.4.4`:
 
 ```text
-dist/progressive-clarity-claude-plugin-0.4.3.zip
-dist/progressive-clarity-claude-ai-skill-0.4.3.zip
+dist/progressive-clarity-claude-plugin-0.4.4.zip
+dist/progressive-clarity-claude-ai-skill-0.4.4.zip
 ```
 
 The plugin inventory is:
@@ -56,10 +56,10 @@ Run from the repository root with Python 3.11 or newer:
 python3.11 -m tools.package_claude_plugin
 python3.11 -m tools.package_claude_skill
 python3.11 -m json.tool .claude-plugin/plugin.json >/dev/null
-unzip -t dist/progressive-clarity-claude-plugin-0.4.3.zip
-unzip -t dist/progressive-clarity-claude-ai-skill-0.4.3.zip
-unzip -Z1 dist/progressive-clarity-claude-plugin-0.4.3.zip
-unzip -Z1 dist/progressive-clarity-claude-ai-skill-0.4.3.zip
+unzip -t dist/progressive-clarity-claude-plugin-0.4.4.zip
+unzip -t dist/progressive-clarity-claude-ai-skill-0.4.4.zip
+unzip -Z1 dist/progressive-clarity-claude-plugin-0.4.4.zip
+unzip -Z1 dist/progressive-clarity-claude-ai-skill-0.4.4.zip
 ```
 
 Run `claude plugin validate . --strict` only when the installed Claude Code
@@ -72,32 +72,32 @@ installed-CLI validation remains unavailable with that version.
 
 Two consecutive local builds from unchanged inputs produced matching bytes:
 
-- Claude plugin: 25,789 bytes, SHA-256
-  `dd71d71f8277188161429a61f5412d3a0e87b4f6b3a29847bb0bb7ce520bfed9`;
-- Claude.ai custom Skill: 24,564 bytes, SHA-256
-  `8f8f697778387a4845ee6d66726aa1cc5c90ce4e0dd63573f5a4923f6368b874`.
+- Claude plugin: 25,775 bytes, SHA-256
+  `23377548a7f8ac89e711c3751b5045d734af1a4f9241444a018d21f6a0bf6ae6`;
+- Claude.ai custom Skill: 24,550 bytes, SHA-256
+  `c5b0b719aadcff059bb26638144c3e760ecaa4c632bf97211dddb41aace8174a`.
 
 The generated custom-Skill description is 182 characters. Its packaged body
 and canonical body both have SHA-256
-`6cb3cd1621951eb13a8e0fcaec4945694c8e59db52507dd938c63767edcd5924`.
+`d32bee20d715eb8e9b8525ee919202279e312e5f702998ddca1bc2252725b888`.
 
 The exact Claude plugin inventory is:
 
 - `.claude-plugin/plugin.json`: 584 bytes, SHA-256
-  `44f3264f78708d0311495ee65f8f1df2f3fddb48641afb60730cb631fb8e0225`;
+  `20c42efc877431949347f9e753a91130a5b9cec226665f786942674f8ebd1177`;
 - `skills/progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
   `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
   and
-- `skills/progressive-clarity/SKILL.md`: 13,407 bytes, SHA-256
-  `ac64b0d1e055c820275455626ebb054b7b41111aa7a53a2f03364dd33023f04d`.
+- `skills/progressive-clarity/SKILL.md`: 13,393 bytes, SHA-256
+  `3fd240f7e70efb92b75b3a8fa064034af8a42b049b50d9e10cd98ebd972508e2`.
 
 The exact Claude.ai Skill inventory is:
 
 - `progressive-clarity/LICENSE`: 11,358 bytes, SHA-256
   `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`;
   and
-- `progressive-clarity/SKILL.md`: 12,922 bytes, SHA-256
-  `8f588b73e5683a83f81f368f774bb90a085e9a070a2f9a89df5bd3c8da1b058e`.
+- `progressive-clarity/SKILL.md`: 12,908 bytes, SHA-256
+  `6eb6bd7564849a14f1df4017cf966d94e6e2879f3594590cdcd8b1dfb9fc58c7`.
 
 Historical v0.2 hashes below identify only their old artifacts.
 
@@ -107,13 +107,13 @@ Claude Code can load the source root or rebuilt plugin ZIP:
 
 ```sh
 claude --plugin-dir /path/to/progressive-clarity
-claude --plugin-dir /path/to/progressive-clarity/dist/progressive-clarity-claude-plugin-0.4.3.zip
+claude --plugin-dir /path/to/progressive-clarity/dist/progressive-clarity-claude-plugin-0.4.4.zip
 ```
 
 The custom-Skill upload target is:
 
 ```text
-dist/progressive-clarity-claude-ai-skill-0.4.3.zip
+dist/progressive-clarity-claude-ai-skill-0.4.4.zip
 ```
 
 An archive that passes local validation is not automatically accepted by
@@ -130,11 +130,11 @@ non-streaming wrapper for fail-closed local output.
 
 ### Current evidence boundary
 
-No `0.4.3` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+No `0.4.4` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
 v0.3.0–v0.3.2 ChatGPT observations are recorded separately in
 [Verification](verification.md); they do not establish Claude behavior. Claude
 skill selection, topic inference, topic resumption, presentation choice, and
-rendered behavior are **UNVERIFIED**. No `0.4.3` Claude.ai upload,
+rendered behavior are **UNVERIFIED**. No `0.4.4` Claude.ai upload,
 custom-plugin upload, community-directory submission, approval, publication,
 or installability is claimed.
 

@@ -2,16 +2,18 @@
 
 ## Current v0.4 status
 
-Progressive Clarity protocol `0.4` and coordinated package target `0.4.3` form
+Progressive Clarity protocol `0.4` and coordinated package target `0.4.4` form
 a **locally verified release candidate**.
 
 **No v0.4 live ChatGPT, Cursor, or Claude acceptance run exists. Its host
 behavior is UNVERIFIED.**
 
-No current `0.4.3` result establishes prompt-only activation, topic inference,
+No current `0.4.4` result establishes prompt-only activation, topic inference,
 return to an earlier topic, Focused/Full selection, rendered conformance, host
-compatibility, or support. No `0.4.3` external upload, submission, review,
-approval, publication, or catalog installation is claimed.
+compatibility, or support. No `0.4.4` host upload, marketplace submission,
+review, approval, or catalog installation is claimed. The public website
+candidate download is documented below and remains unpublished in its source
+provenance ledger.
 
 Package `0.4.0` is superseded and must not be distributed. Late source
 hardening produced different local bytes after an earlier `0.4.0` download set
@@ -23,6 +25,8 @@ evidence remain immutable.
 After the bounded 0.4.2 round remained below strict acceptance, the maintainer
 explicitly authorized controlled continuation to a 0.4.3 candidate until every
 prescribed Azure run passes.
+A platform-neutral host wording correction then changed the canonical Skill
+bytes; package `0.4.4` preserves the immutable `0.4.3` artifacts.
 
 ### Result labels for v0.4
 
@@ -97,37 +101,37 @@ displayed output.
 
 ## Local v0.4 artifact record
 
-The target version for every current package is `0.4.3`:
+The target version for every current package is `0.4.4`:
 
-- `progressive-clarity-core` version `0.4.3`;
-- `dist/progressive-clarity-openai-plugin-0.4.3.zip`;
-- `dist/progressive-clarity-claude-plugin-0.4.3.zip`; and
-- `dist/progressive-clarity-claude-ai-skill-0.4.3.zip`.
+- `progressive-clarity-core` version `0.4.4`;
+- `dist/progressive-clarity-openai-plugin-0.4.4.zip`;
+- `dist/progressive-clarity-claude-plugin-0.4.4.zip`; and
+- `dist/progressive-clarity-claude-ai-skill-0.4.4.zip`.
 
 The frozen v0.4 source-input hashes are:
 
 - `SPEC.md`:
   `260c3facd8c5c95a1d4429863e24226621defe8274dd08afd4d4d044452e5122`;
 - `skills/progressive-clarity/SKILL.md`:
-  `ac64b0d1e055c820275455626ebb054b7b41111aa7a53a2f03364dd33023f04d`;
+  `3fd240f7e70efb92b75b3a8fa064034af8a42b049b50d9e10cd98ebd972508e2`;
 - `evals/cases.json`:
   `068ad1b881e674959d07b59e4f811f4e4e89beefa3f96f8b6a24d07ea7546844`.
 
 Local Python artifacts are:
 
-- sdist: 37,024 bytes, SHA-256
-  `8068f09e2fe41e30a330397ad23fdcf304259949a8b868edd4eaacb7793f9fe2`;
-- wheel: 44,036 bytes, SHA-256
-  `b28696d5d54ca07ac8417e0b983b975175067e658e9c418000683b5089d5acfe`.
+- sdist: 37,022 bytes, SHA-256
+  `30764d5174a6709c4101f2fd0c73bd8abfa86b0f2df58a1548a65aeaae44aaea`;
+- wheel: 44,034 bytes, SHA-256
+  `262214190257e7b50622861c4aa5d71dd292e8c11ed35bad111fdd41ffc53c1d`.
 
 Two consecutive builds of each host ZIP produced matching bytes:
 
-- OpenAI plugin: 27,402 bytes, SHA-256
-  `26e3ca4cb687b893ef9adcf94acd8b9625a00e70e60f8853d28cfddb7bf19a54`;
-- Claude plugin: 25,789 bytes, SHA-256
-  `dd71d71f8277188161429a61f5412d3a0e87b4f6b3a29847bb0bb7ce520bfed9`;
-- Claude.ai Skill: 24,564 bytes, SHA-256
-  `8f8f697778387a4845ee6d66726aa1cc5c90ce4e0dd63573f5a4923f6368b874`.
+- OpenAI plugin: 27,388 bytes, SHA-256
+  `a78cef3f5804e4aa9b26c09e2ccabdfb3ed48d43203d44827b85d587a8fe62d9`;
+- Claude plugin: 25,775 bytes, SHA-256
+  `23377548a7f8ac89e711c3751b5045d734af1a4f9241444a018d21f6a0bf6ae6`;
+- Claude.ai Skill: 24,550 bytes, SHA-256
+  `c5b0b719aadcff059bb26638144c3e760ecaa4c632bf97211dddb41aace8174a`.
 
 The exact entry inventories, byte counts, and SHA-256 values are recorded in
 the current [OpenAI](openai-plugin.md) and [Claude](claude-plugin.md) package
@@ -135,6 +139,22 @@ records from the packagers' verified output.
 
 These are local build and integrity results, not a release, upload, review,
 approval, publication, host-compatibility, or behavior result.
+
+### Preserved package 0.4.3 identities
+
+Package `0.4.3` remains immutable evidence for the final Azure proxy round:
+
+- sdist: 37,024 bytes, SHA-256
+  `8068f09e2fe41e30a330397ad23fdcf304259949a8b868edd4eaacb7793f9fe2`;
+- wheel: 44,036 bytes, SHA-256
+  `b28696d5d54ca07ac8417e0b983b975175067e658e9c418000683b5089d5acfe`;
+- OpenAI plugin: 27,402 bytes, SHA-256
+  `26e3ca4cb687b893ef9adcf94acd8b9625a00e70e60f8853d28cfddb7bf19a54`;
+- Claude plugin: 25,789 bytes, SHA-256
+  `dd71d71f8277188161429a61f5412d3a0e87b4f6b3a29847bb0bb7ce520bfed9`;
+  and
+- Claude.ai Skill: 24,564 bytes, SHA-256
+  `8f8f697778387a4845ee6d66726aa1cc5c90ce4e0dd63573f5a4923f6368b874`.
 
 ### Preserved package 0.4.2 identities
 
@@ -193,10 +213,17 @@ On 2026-08-20, the current dirty worktree passed:
   and a final complete 14-session/29-response passing round.
 
 These checks cover local structure and mechanics. The source remains
-uncommitted and remote CI was not run. No commit, push, upload, publication, or
-public deployment was performed for v0.4.3. The Azure proxy ran only against
-the explicitly configured local deployment; its reports contain no API key or
-full endpoint and do not establish host activation or package behavior.
+uncommitted and remote CI was not run. No commit, push, host upload, marketplace
+publication, or catalog installation was performed for v0.4.4. The website
+candidate was publicly deployed as component release
+`20260820T123514Z-82595-16d6dda9`; live route checks passed, and the downloaded
+Claude.ai archive matched its recorded SHA-256 and platform-neutral wording.
+That website exposure does not make the source package `published` in its
+provenance ledger or establish host activation or package behavior.
+
+The preserved v0.4.3 Azure proxy ran only against the explicitly configured
+local deployment; its reports contain no API key or full endpoint and do not
+establish v0.4.4 behavior.
 
 ## Azure behavior-proxy evidence
 
@@ -471,7 +498,7 @@ Before any release-readiness claim, the responsible maintainer must:
 3. keep package integrity, host activation, rendered conformance, and semantic
    correctness as separate evidence dimensions.
 
-Package `0.4.3` does not inherit any v0.3.x ChatGPT result or any result from
+Package `0.4.4` does not inherit any v0.3.x ChatGPT result or any result from
 the historical v0.2 cycles below.
 
 ## Historical v0.2 verification record

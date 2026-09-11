@@ -54,7 +54,7 @@ class CrossDistributionMetadataTests(unittest.TestCase):
     identity and controlling-text discovery while preserving each packager's
     distinct archive shape.
     Assumptions: Protocol v0.4 changes every coordinated prompt distribution.
-    Expectations: All channels use version 0.4.3 and canonical skill content.
+    Expectations: All channels use version 0.4.4 and canonical skill content.
     """
 
     def test_all_distribution_versions_and_skill_bodies_match(self) -> None:

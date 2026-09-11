@@ -111,18 +111,19 @@ time, or token use.
 
 ### Current evidence and release boundary
 
-No `0.4.3` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
+No `0.4.4` live ChatGPT, Cursor, or Claude acceptance run exists. User-provided
 v0.3.0–v0.3.2 ChatGPT evidence is historical and recorded in
 [Verification](verification.md). Portal-byte identity and visible Skill
 activation were not independently verified. Current v0.4 host activation,
 topic inference, topic resumption, presentation selection, and rendered
 conformance are **UNVERIFIED**.
 
-Local package version `0.4.3` artifacts, byte counts, and hashes are recorded in
+Local package version `0.4.4` artifacts, byte counts, and hashes are recorded in
 [Verification](verification.md). They establish only local build integrity and
-determinism. Do not reuse v0.2 or v0.3.x hashes as v0.4 identifiers. No upload,
-review, approval, external publication, universal compatibility, or support
-claim is made.
+determinism. Do not reuse v0.2 or v0.3.x hashes as v0.4 identifiers. No host
+upload, host review, marketplace approval, universal compatibility, or support
+claim is made. Public website availability does not establish host installation
+or behavior.
 
 ## Historical/superseded v0.3.x boundary
 
