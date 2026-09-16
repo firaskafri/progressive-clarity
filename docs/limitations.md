@@ -1,6 +1,39 @@
 # Scope and limitations
 
-## Current v0.4 scope and limitations
+## Current v0.5 scope and limitations
+
+Protocol v0.5 is a draft targeting package 0.5.0. Its shorter skill and
+usefulness-based rules are design changes, not measured improvements.
+
+- Prompt-only activation, topic continuity, depth selection, assumption support,
+  clarification quality, and correction faithfulness remain probabilistic.
+- The wrapper trusts caller classifications, including `depth_useful`. It checks
+  structural consistency rather than whether distinct layers actually help.
+- Lexical repetition is observed without automatic rejection. Neither a scan nor
+  fact references prove that repeated content aids comprehension.
+- Natural repair and clarification meaning cannot be certified from phrases,
+  question marks, or metadata alone.
+- Advisory 40/200 targets are provisional English guidance. Mechanical caps are
+  deterministic constraints, not validated reading-cost thresholds. Whole-output
+  Markdown counts also include syntax and do not predict human reading time.
+- No current live-host acceptance, independent unseen-holdout result, or participant
+  study establishes improved comprehension, decision quality, retrieval time,
+  accessibility, safety, preference, productivity, or token use.
+- The comparison workflow controls reported model settings and instruction arms;
+  it does not verify a product's hidden system prompt. Blinded labels do not hide
+  characteristic output styles. Same-model judges are non-independent.
+- Request schema 4.0.0 requires `depth_useful`. Envelope/state schemas stay 3.0.0
+  but require protocol 0.5, so earlier state must not be reused.
+
+The wrapper still requires a single owner per state path; it cannot roll back
+remote host effects or atomically combine local state commits with downstream
+display. Exact-artifact intent is unverified without trusted expected bytes.
+See the [current specification](../SPEC.md) and [verification record](verification.md).
+
+## Historical v0.4 scope and limitations
+
+Everything below describes earlier revisions as recorded. References to current
+packages, protocol rules, hashes, and outcomes below are historical.
 
 Progressive Clarity protocol `0.4` is a locally verified release candidate. It
 is topic-oriented: ordinary exploration uses Focused answers, while Full

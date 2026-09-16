@@ -1,8 +1,10 @@
 # Material warning
 
-- **Expected views:** All views render; the prohibition and data-loss warning appear first in At a glance.
+- **Expected views:** Full is useful here for the decision, migration constraints,
+  and verification detail. The warning itself does not force Full.
 - **Required facts:** Early deletion can make data unreadable; the old key remains restricted through migration; recovery is verified before destruction.
-- **Budget:** At a glance is at most 40 counted words unless safety requires more; At a glance plus In context is at most 200.
+- **Budget:** Provisional Advisory targets are 40 words at a glance and 200
+  cumulatively through context; indispensable warnings take precedence.
 
 ## Prompt
 

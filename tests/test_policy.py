@@ -1,7 +1,7 @@
 """Name: Topic-oriented presentation policy tests.
 
 Description: Verifies deterministic response-shape selection and target-topic
-resolution for new, continued, and resumed protocol-v0.4 conversations,
+resolution for new, continued, and resumed protocol-v0.5 conversations,
 including shared invariants for parsed and directly constructed requests and
 rejection of old-protocol state with the unchanged schema shape.
 Assumptions: Trusted callers classify turn purpose; pc-core verifies the
@@ -145,7 +145,7 @@ class PresentationPolicyTests(unittest.TestCase):
         )
 
         self.assertEqual(focused.expected_response_kind, "focused")
-        self.assertFalse(focused.marks_overview)
+        self.assertTrue(focused.marks_overview)
         self.assertEqual(full.expected_response_kind, "views")
         self.assertFalse(full.marks_overview)
         self.assertEqual(
@@ -255,6 +255,7 @@ class PresentationPolicyTests(unittest.TestCase):
                     )
 
         invalid_requests = (
+            (replace(valid_request(), depth_useful="yes"), "depth_useful"),
             (
                 replace(
                     valid_request(),
@@ -316,6 +317,51 @@ class PresentationPolicyTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(SchemaError, "conflicts with committed"):
             resolve_turn(conflicting, state)
+
+    def test_compact_consequential_turns_mark_orientation_without_full(self) -> None:
+        """Name: Useful-depth selection.
+
+        Description: Resolves every consequential class without distinct depth.
+        Assumptions: The caller has enough information for a compact answer.
+        Expectations: Focused answers orient the topic; explicit Full still wins.
+        """
+        for kind in (
+            "substantial", "decision_checkpoint", "summary_checkpoint",
+            "material_resynthesis", "material_correction",
+        ):
+            with self.subTest(kind=kind):
+                request = valid_request(turn_kind=kind, depth_useful=False)
+                compact = resolve_turn(request, ConversationState.initial())
+                self.assertEqual(compact.expected_response_kind, "focused")
+                self.assertTrue(compact.marks_overview)
+                full = resolve_turn(
+                    replace(request, presentation_request="full"),
+                    ConversationState.initial(),
+                )
+                self.assertEqual(full.expected_response_kind, "views")
+
+    def test_request_requires_explicit_boolean_depth_judgment(self) -> None:
+        """Name: Trusted depth metadata.
+
+        Description: Parses absent, non-Boolean, and old-schema depth metadata.
+        Assumptions: No silent default can establish the caller's judgment.
+        Expectations: Invalid requests fail; true and false round-trip exactly.
+        """
+        from pc_core.model import WrapperRequest
+
+        for value in (True, False):
+            request = valid_request(depth_useful=value)
+            self.assertIs(WrapperRequest.from_dict(request.to_dict()).depth_useful, value)
+        for change in ("missing", "non_boolean", "old_schema"):
+            data = valid_request().to_dict()
+            if change == "missing":
+                del data["depth_useful"]
+            elif change == "non_boolean":
+                data["depth_useful"] = 1
+            else:
+                data["schema_version"] = "3.0.0"
+            with self.subTest(change=change), self.assertRaises(SchemaError):
+                WrapperRequest.from_dict(data)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Name: Repository tooling and Python package contract suite.
 
 Description: Exercises importable repository validation, ordered test
-docstrings, malformed container reporting, coordinated v0.4.4 metadata, frozen
+docstrings, malformed container reporting, coordinated v0.5.0 metadata, frozen
 protocol/evaluation identities, and exact host-template schemas.
 Assumptions: Validation helpers are invoked as the tools package from the
 repository root; wheel installation is covered by the CI integration smoke.
@@ -73,12 +73,12 @@ Expectations: Result.
         validate_python_package(errors)
         self.assertEqual(errors, [])
 
-    def test_distribution_versions_match_v04_release_candidate(self) -> None:
-        """Name: Cross-surface v0.4.4 release-candidate versions.
+    def test_distribution_versions_match_current_draft(self) -> None:
+        """Name: Cross-surface v0.5.0 draft versions.
 
         Description: Validates OpenAI, Claude plugin, and Claude.ai Skill versions.
-        Assumptions: Protocol 0.4 changes every coordinated prompt package.
-        Expectations: All package channels report coordinated version 0.4.4.
+        Assumptions: Protocol 0.5 changes every coordinated prompt package.
+        Expectations: All package channels report coordinated version 0.5.0.
         """
         errors: list[str] = []
         validate_distributions(errors)

@@ -10,8 +10,8 @@ from typing import Any, Mapping
 
 ENVELOPE_SCHEMA_VERSION = "3.0.0"
 STATE_SCHEMA_VERSION = "3.0.0"
-WRAPPER_REQUEST_SCHEMA_VERSION = "3.0.0"
-PROTOCOL_VERSION = "0.4"
+WRAPPER_REQUEST_SCHEMA_VERSION = "4.0.0"
+PROTOCOL_VERSION = "0.5"
 AT_A_GLANCE_MAX_NON_WARNING_WORDS = 40
 THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS = 200
 FACT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
@@ -769,6 +769,7 @@ class WrapperRequest:
     topic_action: str
     turn_kind: str
     presentation_request: str
+    depth_useful: bool
     controlling_text: str | None
     summary_max_words: int | None
     non_fit_kind: str | None
@@ -776,6 +777,7 @@ class WrapperRequest:
 
     def validate_invariants(self) -> None:
         """Validate invariants for parsed and directly constructed requests."""
+        _boolean(self.depth_useful, "wrapper_request.depth_useful")
         if self.schema_version != WRAPPER_REQUEST_SCHEMA_VERSION:
             raise SchemaError(
                 "wrapper_request.schema_version: unsupported version "
@@ -909,6 +911,7 @@ class WrapperRequest:
                 "topic_action",
                 "turn_kind",
                 "presentation_request",
+                "depth_useful",
                 "controlling_text",
                 "summary_max_words",
                 "non_fit_kind",
@@ -968,6 +971,7 @@ class WrapperRequest:
                 PRESENTATION_REQUESTS,
                 "wrapper_request.presentation_request",
             ),
+            depth_useful=_boolean(data["depth_useful"], "wrapper_request.depth_useful"),
             controlling_text=controlling_text,
             summary_max_words=summary_max_words,
             non_fit_kind=non_fit_kind,
@@ -985,6 +989,7 @@ class WrapperRequest:
             "topic_action": self.topic_action,
             "turn_kind": self.turn_kind,
             "presentation_request": self.presentation_request,
+            "depth_useful": self.depth_useful,
             "controlling_text": self.controlling_text,
             "summary_max_words": self.summary_max_words,
             "non_fit_kind": self.non_fit_kind,

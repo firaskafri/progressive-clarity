@@ -18,7 +18,7 @@ from typing import Mapping
 ARCHIVE_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 REGULAR_FILE_MODE = 0o100644
 ZIP_CREATE_SYSTEM = 3
-RELEASE_VERSION = "0.4.4"
+RELEASE_VERSION = "0.5.0"
 CANONICAL_LICENSE = "Apache-2.0"
 CANONICAL_SKILL_FILES = ("LICENSE", "SKILL.md")
 CANONICAL_SKILL_FIELDS = frozenset({"name", "description", "license"})

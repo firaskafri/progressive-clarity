@@ -64,7 +64,7 @@ class EnvelopeSchemaAndPresentationTests(unittest.TestCase):
     """
 
     def test_valid_envelope_is_mechanically_certifiable(self) -> None:
-        """Name: Valid v0.4 full baseline.
+        """Name: Valid v0.5 full baseline.
 
         Description: Validates all three sections, facts, counts, and state.
         Assumptions: Request metadata identifies a new substantial topic.
@@ -672,16 +672,15 @@ class StateFactAndExceptionTests(unittest.TestCase):
     repair and false-withdrawal refusal, clarification control, and exact
     controlling text with literal labels and separately validated summary prose.
     Assumptions: The baseline response supplies trusted committed prior state.
-    Expectations: New-information composition passes while complete lexical
-    restatements fail and semantic-only judgments stay explicitly UNVERIFIED.
+    Expectations: Structure remains enforced while repetition usefulness and
+    other semantic-only judgments stay explicitly UNVERIFIED.
     """
 
     def test_prior_context_reuse_preserves_fact_identity(self) -> None:
         """Name: Necessary cross-turn fact reuse.
 
         Description: Reuses one committed fact once and adds two new facts.
-        Assumptions: Cross-turn context may be necessary but cross-view recap is
-        still prohibited.
+        Assumptions: Cross-turn context may be necessary; its usefulness is semantic.
         Expectations: Matching ID, text, current placement, and prior_context pass.
         """
         state = _first_state()
@@ -796,12 +795,11 @@ class StateFactAndExceptionTests(unittest.TestCase):
     def test_narrow_correction_uses_focused_repair(self) -> None:
         """Name: Focused narrow correction.
 
-        Description: Withdraws one prior claim ahead of a warning, accepts a
-        correction-only body, then rejects loose, outdated, replacement-omitting,
-        and duplicate repair prose.
+        Description: Withdraws a prior claim ahead of a warning and accepts
+        natural wording with optional changed-action references.
         Assumptions: The correction changes a bounded fact but not topic action.
-        Expectations: Only the exact withdrawal, retraction, replacement, and
-        consequence opening validates first without exact sentence repetition.
+        Expectations: Structure and placement are checked; repair meaning and
+        usefulness of any repetition remain semantic.
         """
         state = _first_state()
         data = valid_focused_dict()
@@ -885,8 +883,8 @@ class StateFactAndExceptionTests(unittest.TestCase):
             ),
         )
         self.assertTrue(correction_only.certifiable)
-        invalid_openings = (
-            "Corrected: Atlas requires reevaluation.",
+        natural_openings = (
+            "I was wrong to recommend adopting Atlas; it needs reevaluation.",
             (
                 "Earlier I said Atlas should be adopted. That was outdated. "
                 "Atlas requires reevaluation. This changes the action."
@@ -896,7 +894,8 @@ class StateFactAndExceptionTests(unittest.TestCase):
                 "incomplete. This changes the action."
             ),
         )
-        for opening in invalid_openings:
+        data["payload"]["correction"]["changed_action_fact_ids"] = []
+        for opening in natural_openings:
             with self.subTest(opening=opening):
                 data["payload"]["correction"]["content"] = opening
                 loose_report = validate_envelope(
@@ -907,9 +906,10 @@ class StateFactAndExceptionTests(unittest.TestCase):
                         turn_kind="narrow_correction",
                     ),
                 )
-                self.assertIn(
-                    "PC-M-CORRECTION-006",
-                    {item.code for item in loose_report.diagnostics},
+                self.assertTrue(loose_report.certifiable)
+                self.assertEqual(
+                    loose_report.advisory_checks["correction_meaning_and_consequence"],
+                    "UNVERIFIED",
                 )
         data["payload"]["correction"]["content"] = (
             "Earlier I said Atlas should be adopted. That was wrong or "
@@ -925,7 +925,7 @@ class StateFactAndExceptionTests(unittest.TestCase):
             ),
         )
         self.assertIn(
-            "PC-M-DUPLICATE-001",
+            "PC-A-DUPLICATE-003",
             {item.code for item in duplicate_report.diagnostics},
         )
 
@@ -1000,7 +1000,7 @@ class StateFactAndExceptionTests(unittest.TestCase):
         """Name: Synthesis reuse scope.
 
         Description: Marks a prior fact as synthesis inside ordinary focused prose.
-        Assumptions: Synthesis is reserved for topic-wide Full orientation.
+        Assumptions: Synthesis is reserved for topic-wide orientation in either format.
         Expectations: Focused reuse fails with the dedicated fact diagnostic.
         """
         first = validate_envelope(
@@ -1034,12 +1034,12 @@ class StateFactAndExceptionTests(unittest.TestCase):
             {item.code for item in report.diagnostics},
         )
 
-    def test_exact_lexical_echo_between_views_fails(self) -> None:
+    def test_exact_lexical_echo_between_views_is_advisory(self) -> None:
         """Name: Exact cross-view lexical echo.
 
         Description: Repeats one complete normalized conclusion in two views.
-        Assumptions: Exact sentence identity is mechanically decidable.
-        Expectations: PC-M-DUPLICATE-001 rejects the response.
+        Assumptions: Identity is decidable but reader usefulness is not.
+        Expectations: The echo is reported without withholding the response.
         """
         data = valid_full_dict()
         data["payload"]["sections"][1]["content"] = (
@@ -1050,9 +1050,9 @@ class StateFactAndExceptionTests(unittest.TestCase):
             state=ConversationState.initial(),
             request=valid_request(),
         )
-        self.assertFalse(report.mechanically_conformant)
+        self.assertTrue(report.mechanically_conformant)
         self.assertIn(
-            "PC-M-DUPLICATE-001", {item.code for item in report.diagnostics}
+            "PC-A-DUPLICATE-003", {item.code for item in report.diagnostics}
         )
 
     def test_short_anchor_may_recur_while_views_add_new_information(self) -> None:
@@ -1086,13 +1086,13 @@ class StateFactAndExceptionTests(unittest.TestCase):
             "PASS",
         )
 
-    def test_exact_repeated_list_unit_between_views_fails(self) -> None:
-        """Name: Exact repeated list-unit rejection.
+    def test_exact_repeated_list_unit_between_views_is_advisory(self) -> None:
+        """Name: Exact repeated list-unit observation.
 
         Description: Places one complete recovery instruction as a list item in
         both In context and At depth.
         Assumptions: Markdown list markers do not change normalized lexical units.
-        Expectations: PC-M-DUPLICATE-001 rejects the repeated complete list item.
+        Expectations: Repetition is reported for review without semantic certification.
         """
         data = valid_full_dict()
         data["payload"]["sections"][1]["content"] = (
@@ -1109,9 +1109,9 @@ class StateFactAndExceptionTests(unittest.TestCase):
             request=valid_request(),
         )
 
-        self.assertFalse(report.mechanically_conformant)
+        self.assertTrue(report.mechanically_conformant)
         self.assertIn(
-            "PC-M-DUPLICATE-001",
+            "PC-A-DUPLICATE-003",
             {item.code for item in report.diagnostics},
         )
 
@@ -1119,8 +1119,8 @@ class StateFactAndExceptionTests(unittest.TestCase):
         """Name: At-depth concluding recap boundary.
 
         Description: Inspects the report contract for the semantic no-recap rule.
-        Assumptions: Exact duplicate units are mechanical, but recognizing a
-        paraphrased concluding recap requires an independent semantic oracle.
+        Assumptions: Echo detection is mechanical, but judging a concluding recap
+        requires an independent semantic oracle.
         Expectations: The dedicated advisory check remains explicitly UNVERIFIED.
         """
         report = validate_envelope(
@@ -1318,13 +1318,13 @@ class StateFactAndExceptionTests(unittest.TestCase):
         )
 
     def test_clarification_control_preserves_state(self) -> None:
-        """Name: Material ambiguity clarification-only gate.
+        """Name: Natural clarification boundary.
 
-        Description: Emits one valid control question, then tries a recommendation
-        before one question and a headed question without a fabricated view set.
+        Description: Emits natural input requests and rationale, then attempts
+        reserved view headings inside a control payload.
         Assumptions: A material ambiguity prevents a safe substantive answer.
-        Expectations: The single question preserves topic facts and branch while
-        the turn advances; expanded controls fail the mechanical shape checks.
+        Expectations: Natural controls preserve facts while the turn advances;
+        semantic recommendation quality is not certified by punctuation.
         """
         state = _first_state()
         data = {
@@ -1364,32 +1364,15 @@ class StateFactAndExceptionTests(unittest.TestCase):
             report.next_state.topics["atlas"].facts,
             state.topics["atlas"].facts,
         )
-        invalid_controls = (
-            (
-                "Enable it in staging now. Which environment should I use?",
-                "PC-M-CONTROL-001",
-            ),
-            (
-                "Enable production now; which environment should I use?",
-                "PC-M-CONTROL-001",
-            ),
-            (
-                "Which environment should I use; enable production now?",
-                "PC-M-CONTROL-001",
-            ),
-            (
-                "Which environment should I use, and enable production now?",
-                "PC-M-CONTROL-001",
-            ),
-            (
-                "## Proposed plan\nIs rollback available?",
-                "PC-M-CONTROL-002",
-            ),
-        )
-        for content, expected_code in invalid_controls:
+        for content in (
+            "Is this staging or production? The rollout criteria differ.",
+            "Which environment? Has validation passed? Is rollback available?",
+            "Please provide the environment and validation result.",
+            "Enable production now; which environment should I use?",
+        ):
             with self.subTest(content=content):
                 data["payload"]["content"] = content
-                invalid = validate_envelope(
+                natural = validate_envelope(
                     Envelope.from_dict(data),
                     state=state,
                     request=valid_request(
@@ -1398,11 +1381,18 @@ class StateFactAndExceptionTests(unittest.TestCase):
                         turn_kind="clarification",
                     ),
                 )
-                self.assertFalse(invalid.mechanically_conformant)
-                self.assertIn(
-                    expected_code,
-                    {item.code for item in invalid.diagnostics},
+                self.assertTrue(natural.certifiable)
+                self.assertEqual(
+                    natural.advisory_checks["clarification_gate_semantics"],
+                    "UNVERIFIED",
                 )
+        data["payload"]["content"] = "## At a glance\nWhich environment?"
+        invalid = validate_envelope(
+            Envelope.from_dict(data), state=state,
+            request=valid_request(topic_action="continue", turn_kind="clarification"),
+        )
+        self.assertFalse(invalid.certifiable)
+        self.assertIn("PC-M-CONTROL-002", {item.code for item in invalid.diagnostics})
 
     def test_quotation_requires_exact_source_and_hash(self) -> None:
         """Name: Exact controlling quotation and literal labels.
@@ -1496,8 +1486,8 @@ class StateFactAndExceptionTests(unittest.TestCase):
         tests an exact source echo and a self-repeat in the separate summary.
         Assumptions: Required source bytes are exempt while non-controlling
         explanation remains subject to exact lexical duplicate checks.
-        Expectations: Repeated source bytes pass; both summary variants produce
-        PC-M-DUPLICATE-001.
+        Expectations: Repeated source bytes pass; summary echoes produce
+        nonblocking observations for semantic review.
         """
         controlling = "Supplier shall retain data. Supplier shall retain data."
         request = valid_request(
@@ -1565,11 +1555,52 @@ class StateFactAndExceptionTests(unittest.TestCase):
                     state=ConversationState.initial(),
                     request=request,
                 )
-                self.assertFalse(report.mechanically_conformant)
+                self.assertTrue(report.mechanically_conformant)
                 self.assertIn(
-                    "PC-M-DUPLICATE-001",
+                    "PC-A-DUPLICATE-003",
                     {item.code for item in report.diagnostics},
                 )
+
+
+    def test_repeated_fact_references_preserve_primary_placement_and_identity(self) -> None:
+        """Name: Useful cross-view fact reuse.
+
+        Description: Reuses one fact in depth and then removes its primary binding.
+        Assumptions: Repeated references do not represent distinct new facts.
+        Expectations: Reuse certifies without a new ID; an unbound primary fails.
+        """
+        data = valid_full_dict()
+        data["payload"]["sections"][2]["fact_ids"].append("ATLAS-F1")
+        report = validate_envelope(Envelope.from_dict(data), request=valid_request())
+        self.assertTrue(report.certifiable)
+        self.assertEqual(len(report.next_state.topics["atlas"].facts), 4)
+        data["payload"]["sections"][0]["fact_ids"] = []
+        invalid = validate_envelope(Envelope.from_dict(data), request=valid_request())
+        self.assertFalse(invalid.certifiable)
+        self.assertIn("PC-M-FACT-006", {item.code for item in invalid.diagnostics})
+
+    def test_reading_cost_includes_budget_excluded_blocks(self) -> None:
+        """Name: Whole-output reading-cost diagnostics.
+
+        Description: Adds a large table and code block without changing prose counts.
+        Assumptions: Excluded blocks consume attention despite passing hard caps.
+        Expectations: Bulk diagnostics increase while word budgets stay equal.
+        """
+        data = valid_full_dict()
+        before = validate_envelope(Envelope.from_dict(data), request=valid_request())
+        data["payload"]["sections"][0]["content"] += (
+            "\n\n| Field | Value |\n| --- | --- |\n"
+            + "| record | many details |\n" * 50
+            + "\n```python\n" + "print('details')\n" * 50 + "```\n"
+        )
+        after = validate_envelope(Envelope.from_dict(data), request=valid_request())
+        self.assertTrue(after.certifiable)
+        self.assertEqual(before.counts["at_a_glance"], after.counts["at_a_glance"])
+        self.assertGreater(after.counts["rendered_nonempty_lines"], 100)
+        self.assertGreater(
+            after.counts["rendered_markdown_characters"],
+            before.counts["rendered_markdown_characters"],
+        )
 
 
 if __name__ == "__main__":

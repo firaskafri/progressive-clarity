@@ -24,12 +24,12 @@ tests of Priya's staging fix; 4 September remains conditional on both passing.
 
 ## Update requesting implications
 
-- **Expected presentation:** Full, because the user requests material
-  re-synthesis against the launch decision.
+- **Expected presentation:** Full, because the decision, schedule, and validation
+  evidence benefit from distinct layers in this re-synthesis.
 - **Required facts:** The migration is 80% complete; two clients are blocked;
   4 September is conditional; Priya owns the staging token-refresh fix; client
   testing precedes the launch decision.
-- **Budget:** The Full-format 40/200 English budget applies.
+- **Budget:** Provisional Advisory 40/200 English targets apply.
 
 ### User
 

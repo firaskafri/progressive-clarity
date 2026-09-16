@@ -32,6 +32,7 @@ from tools.azure_eval_harness import (
     deterministic_score,
     dry_run_summary,
     judge_criteria,
+    load_condition_body,
     load_local_config,
     load_resume_report,
     load_suite,
@@ -92,16 +93,16 @@ class AzureEvalHarnessTests(unittest.TestCase):
 
         Description: Expands every case and required repetition.
         Assumptions: cases.json owns the canonical run counts.
-        Expectations: Fourteen sessions and twenty-nine responses are planned.
+        Expectations: Twenty-two sessions and forty-four responses are planned.
         """
         suite = load_suite()
         summary = dry_run_summary(suite, selected_cases(suite, None))
 
-        self.assertEqual(summary["sessions"], 14)
-        self.assertEqual(summary["responses"], 29)
+        self.assertEqual(summary["sessions"], 22)
+        self.assertEqual(summary["responses"], 44)
         self.assertEqual(
             summary["case_ids"],
-            [f"T{index:02d}" for index in range(1, 11)],
+            [f"T{index:02d}" for index in range(1, 19)],
         )
 
     def test_case_selection_preserves_order_and_rejects_unknown_ids(self) -> None:
@@ -117,6 +118,77 @@ class AzureEvalHarnessTests(unittest.TestCase):
         self.assertEqual([case["id"] for case in chosen], ["T01", "T03"])
         with self.assertRaisesRegex(HarnessError, "unknown case IDs"):
             selected_cases(suite, ["T99"])
+
+    def test_comparison_condition_is_recorded_and_bound_to_resume(self) -> None:
+        """Name: Comparison-arm resume identity.
+
+        Description: Captures a baseline report and tries to resume under revised rules.
+        Assumptions: Even identical instruction bytes do not authorize relabeling an arm.
+        Expectations: The saved condition is explicit and changing it rejects resume.
+        """
+        suite = load_suite()
+        cases = selected_cases(suite, ["T11"])
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "report.json"
+            with (
+                mock.patch("tools.azure_eval_harness._build_session_db", return_value=object()),
+                mock.patch("tools.azure_eval_harness.run_case", return_value=_completed_record("T11", 1)),
+            ):
+                report = run_suite(
+                    suite=suite, cases=cases, config=_test_config(),
+                    skill_body="same bytes", judge_enabled=False,
+                    output_path=output, condition="baseline",
+                )
+            self.assertEqual(report["condition"], "baseline")
+            self.assertEqual(report["reader_outcomes"], "UNVERIFIED")
+            with self.assertRaisesRegex(HarnessError, "condition differs"):
+                run_suite(
+                    suite=suite, cases=cases, config=_test_config(),
+                    skill_body="same bytes", judge_enabled=False,
+                    output_path=output, condition="revised", resume_report=report,
+                )
+
+    def test_external_holdout_identity_and_adaptive_presentation(self) -> None:
+        """Name: External holdout and flexible-shape contract.
+
+        Description: Loads a private-style suite and scores both legitimate shapes.
+        Assumptions: An adaptive oracle does not prescribe headings before generation.
+        Expectations: Both shapes are eligible; a mismatched protocol hash fails early.
+        """
+        suite = load_suite()
+        suite["suite_id"] = "independently-authored-round"
+        suite["split"] = "holdout"
+        case = copy.deepcopy(suite["cases"][10])
+        case["turns"][0]["expected"]["presentation"] = "adaptive"
+        suite["cases"] = [case]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "holdout.json"
+            path.write_text(json.dumps(suite), encoding="utf-8")
+            self.assertEqual(load_suite(path)["split"], "holdout")
+            suite["protocol"]["sha256"] = "mismatched"
+            path.write_text(json.dumps(suite), encoding="utf-8")
+            with self.assertRaisesRegex(HarnessError, "protocol hash"):
+                load_suite(path)
+        for response in (
+            "Hold the release until the gate is met.",
+            "## At a glance\nHold.\n## In context\nThe gate failed.\n## At depth\nVerify evidence.",
+        ):
+            score = deterministic_score(case=case, turn=case["turns"][0], response=response)
+            self.assertEqual(score["checks"]["presentation"]["result"], "PASS")
+            criteria = judge_criteria(case=case, turn=case["turns"][0], response=response)
+            self.assertIn("presentation_usefulness", [item["id"] for item in criteria])
+            self.assertIn("visible_reading_burden", [item["id"] for item in criteria])
+
+    def test_instruction_conditions_have_distinct_frozen_inputs(self) -> None:
+        """Name: Distinct comparison instructions.
+
+        Description: Loads all four conditions without network dependencies.
+        Assumptions: The legacy skill is archived and the revised skill is canonical.
+        Expectations: Conditions differ and the revised instructions are shorter.
+        """
+        bodies = {name: load_condition_body(name) for name in ("baseline", "minimal", "legacy", "revised")}
+        self.assertEqual(len(set(bodies.values())), 4)
+        self.assertLess(len(bodies["revised"]), len(bodies["legacy"]))
 
     def test_configuration_requires_explicit_latest_deployment(self) -> None:
         """Name: Explicit Azure deployment.
@@ -699,7 +771,7 @@ class AzureEvalHarnessTests(unittest.TestCase):
 
         Description: Scores one valid Full response and one over-budget variant.
         Assumptions: T02 turn two requires exactly the canonical three headings.
-        Expectations: Valid structure passes and a forty-one-word glance fails.
+        Expectations: Structure passes; exceeding a provisional target is nonbinding.
         """
         suite = load_suite()
         case = next(case for case in suite["cases"] if case["id"] == "T02")
@@ -719,21 +791,19 @@ Inspect the failed metric and rollback readiness.
         words = " ".join(f"word{index}" for index in range(41))
         invalid = valid.replace("Hold the release until reliability passes.", words)
         invalid_score = deterministic_score(case=case, turn=turn, response=invalid)
-        self.assertEqual(invalid_score["result"], "FAIL")
+        self.assertEqual(invalid_score["result"], "PASS")
+        self.assertFalse(invalid_score["checks"]["at_a_glance_budget"]["binding"])
         self.assertEqual(
             invalid_score["checks"]["at_a_glance_budget"]["result"],
             "FAIL",
         )
 
-    def test_deterministic_numeric_template_requires_both_ordered_labels(self) -> None:
-        """Name: Numeric-template deterministic scoring.
+    def test_numeric_assumption_support_is_not_inferred_from_labels(self) -> None:
+        """Name: Numeric-assumption semantic boundary.
 
-        Description: Scores one exact missing-input template and one bare
-        clarification question for T01's idempotency TTL turn.
-        Assumptions: The expected prohibition explicitly invokes both literal
-        numeric-template labels and their governing-input-first order.
-        Expectations: Ordered labeled lines pass while an unlabeled question
-        fails the deterministic numeric-template check.
+        Description: Scores a labeled example and a natural input question.
+        Assumptions: Labels cannot prove that an assumption or recommendation is sound.
+        Expectations: Neither wording is mechanically rejected or semantically certified.
         """
         suite = load_suite()
         case = next(case for case in suite["cases"] if case["id"] == "T01")
@@ -756,13 +826,13 @@ Inspect the failed metric and rollback readiness.
         )
 
         self.assertEqual(
-            valid_score["checks"]["numeric_template_labels"]["result"],
-            "PASS",
+            valid_score["checks"]["numeric_assumption_support"]["result"],
+            "UNVERIFIED",
         )
-        self.assertEqual(invalid_score["result"], "FAIL")
+        self.assertEqual(invalid_score["result"], "PASS")
         self.assertEqual(
-            invalid_score["checks"]["numeric_template_labels"]["result"],
-            "FAIL",
+            invalid_score["checks"]["numeric_assumption_support"]["result"],
+            "UNVERIFIED",
         )
 
     def test_warning_budgets_remain_unverified_without_structured_accounting(
@@ -814,7 +884,7 @@ Inspect divergent transactions.
         and compares the same contract deferred to In context.
         Assumptions: Full corrections begin with a heading, so response-byte
         prefix checks cannot represent the protocol's repair placement.
-        Expectations: An At-a-glance repair passes while a deferred repair fails.
+        Expectations: Literal text cannot certify repair meaning or placement.
         """
         suite = load_suite()
         case = next(case for case in suite["cases"] if case["id"] == "T04")
@@ -851,10 +921,10 @@ Confirm Thursday staffing.
             response=invalid,
         )
 
-        self.assertEqual(valid_score["checks"]["repair_contract"]["result"], "PASS")
+        self.assertEqual(valid_score["checks"]["repair_contract"]["result"], "UNVERIFIED")
         self.assertEqual(
             invalid_score["checks"]["repair_contract"]["result"],
-            "FAIL",
+            "UNVERIFIED",
         )
 
     def test_focused_scoring_ignores_fenced_protocol_headings(self) -> None:
@@ -1040,11 +1110,11 @@ Confirm Thursday staffing.
         self.assertEqual(focused[:3], universal)
         self.assertIn("focused_proportionality", focused)
         self.assertIn("simple_fact_scope", focused)
-        self.assertNotIn("numeric_template", focused)
-        self.assertIn("numeric_template", numeric)
+        self.assertNotIn("numeric_assumption_support", focused)
+        self.assertIn("numeric_assumption_support", numeric)
         self.assertIn("full_progressive_depth", full)
-        self.assertIn("full_no_complete_repetition", full)
-        self.assertIn("full_no_at_depth_recap", full)
+        self.assertIn("full_repetition_usefulness", full)
+        self.assertIn("full_ending_usefulness", full)
         self.assertIn("clarification_gate", clarification)
         self.assertIn("controlling_text_contract", controlling)
         self.assertNotIn("purpose_specific_structure", controlling)

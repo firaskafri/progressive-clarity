@@ -1,6 +1,75 @@
 # Verification record
 
-## Current v0.4 status
+## Current v0.5 draft
+
+Protocol `0.5`, coordinated package target `0.5.0`, revises the v0.4 behavioral
+contract. The canonical skill is shorter, depth selection is usefulness-based,
+and literal repair/numeric templates and lexical-duplicate rejection are removed.
+Request schema `4.0.0` adds `depth_useful`; envelope/state shapes remain `3.0.0`
+with protocol `0.5`. Earlier protocol state is rejected.
+
+The development suite has 18 cases, 22 sessions, and 44 responses per host.
+Comparison conditions include ordinary baseline, minimal principles, archived
+v0.4 long skill, and revised skill. Reader packets are blinded and counterbalanced;
+their creation is not a participant study.
+
+Current live-host conformance, unseen-holdout results, and reader benefit remain
+**UNVERIFIED**. No v0.5 publication or upload is claimed.
+
+### Local checks — 2026-09-16
+
+Executed on macOS with Python 3.11.16:
+
+- Repository validation, frozen hashes, relative links, suite totals, and package
+  synchronization: **PASS**.
+- Unit suite: **164 tests PASS**, including depth selection, natural repair and
+  clarification boundaries, repetition observations, state compatibility,
+  comparison/resume identity, adaptive scoring, and blinded packet construction.
+- `compileall` over `pc_core`, `tests`, and `tools`: **PASS**.
+- Ruff 0.12.9 checks over those directories: **PASS**.
+- Python sdist/wheel build and installation into separate temporary environments:
+  **PASS**; isolated imports confirm protocol 0.5 and request schema 4.0.0.
+- Installed console-script hook smoke: **PASS**.
+- Two builds of each host ZIP from unchanged inputs: **matching hashes**; ZIP
+  integrity and exact package inventories: **PASS**.
+- Official `skills-ref validate skills/progressive-clarity`: **PASS**, using
+  Agent Skills commit `69ef37e9424c0a7ea9dd2293b559e43ec8176379`.
+- Dependency-free development-suite planning: **18 cases / 22 sessions / 44
+  responses**; this is a plan, not an inference run.
+
+The canonical skill shrank from 290 to 111 lines (13,393 to 5,611 UTF-8 bytes).
+The old skill is preserved byte-for-byte as the legacy comparison condition.
+This size reduction does not establish improved instruction following.
+
+### Current source identities
+
+| Input | SHA-256 |
+| --- | --- |
+| `SPEC.md` | `a7f15f4d7ebd5c451a465923cc4ba44b8eb48e046ac34d42ef119c6ae03be236` |
+| Canonical skill | `38b1466a3036e639a98824c4b5e4ea71918fda7a5844c82d8c597a2c090cea4c` |
+| Development suite | `b1afbd91172c1786dbffc42551d87b6db069b742c3ff5f270e1ef93b2bcdc19a` |
+| Archived v0.4 skill | `3fd240f7e70efb92b75b3a8fa064034af8a42b049b50d9e10cd98ebd972508e2` |
+| Minimal principles | `cb445ca07bd99f13c4bab1a09b5437bbf2a033ec1969a9abeb01aac7ef49869c` |
+
+### Current local artifacts
+
+All paths below are under `dist/`:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `progressive_clarity_core-0.5.0.tar.gz` | `954915992b0f8e4f009f0d6607e3bd418ab3f531304efcf66fcdaead2b06b8a0` |
+| `progressive_clarity_core-0.5.0-py3-none-any.whl` | `522ab4107947ce10e59e39e81ac7a1340a323e47592ff488067e0b0cd533ac91` |
+| `progressive-clarity-openai-plugin-0.5.0.zip` | `c1acd2e17b1b6fd7d9e5c3ea480117770edf2ea921ad5c589d5d2930ee89cf44` |
+| `progressive-clarity-claude-plugin-0.5.0.zip` | `c66f85b81b2c90e71a4d32599fee50bb84064527889e7e6aa7a3e93eb112ecf9` |
+| `progressive-clarity-claude-ai-skill-0.5.0.zip` | `bc2db57bdeda2e44e193bb53bb8bda20e929205cc9ab606adbd91346b540c377` |
+
+Build/install checks establish local artifact integrity. Live Azure comparisons,
+independently authored holdouts, and participant studies have not been executed.
+
+## Historical v0.4 verification record
+
+Everything below is preserved evidence for earlier revisions. Its references to
+current source, artifacts, hashes, and status apply only to those named revisions.
 
 Progressive Clarity protocol `0.4` and coordinated package target `0.4.4` form
 a **locally verified release candidate**.

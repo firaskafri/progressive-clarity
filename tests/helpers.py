@@ -1,4 +1,4 @@
-"""Name: Deterministic v0.4 test fixture builders.
+"""Name: Deterministic v0.5 test fixture builders.
 
 Description: Builds focused and three-view topic-oriented requests and
 envelopes without hiding protocol fields under test.
@@ -28,6 +28,7 @@ def request_dict(
     topic_action: str = "start",
     turn_kind: str = "substantial",
     presentation_request: str = "auto",
+    depth_useful: bool = True,
     controlling_text: str | None = None,
     summary_max_words: int | None = None,
     non_fit_kind: str | None = None,
@@ -41,6 +42,7 @@ def request_dict(
         "topic_action": topic_action,
         "turn_kind": turn_kind,
         "presentation_request": presentation_request,
+        "depth_useful": depth_useful,
         "controlling_text": controlling_text,
         "summary_max_words": summary_max_words,
         "non_fit_kind": non_fit_kind,

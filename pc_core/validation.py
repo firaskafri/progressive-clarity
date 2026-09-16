@@ -28,11 +28,13 @@ from pc_core.model import (
     WrapperRequest,
 )
 from pc_core.policy import ResolvedTurn, resolve_turn
+from pc_core.render import render_markdown
 from pc_core.word_count import (
     count_english_words,
     lexical_similarity,
     lexical_units,
     normalize_lexical_text,
+    reading_cost_diagnostics,
     without_fenced_lines,
 )
 
@@ -43,26 +45,9 @@ _PROTOCOL_HEADING = re.compile(
     + "|".join(re.escape(heading) for heading in VIEW_HEADINGS)
     + r")[ \t]*#*[ \t]*$"
 )
-_ATX_HEADING = re.compile(r"^ {0,3}#{1,6}[ \t]+\S")
 _SETEXT_UNDERLINE = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
 _PROTOCOL_HEADING_NAMES = frozenset(
     heading.casefold() for heading in VIEW_HEADINGS
-)
-_CORRECTION_OPENING = re.compile(
-    r"\AEarlier I said (?=\S).+?\. That was wrong or incomplete\.\s+"
-    r"(?=\S).+?\. This changes (?=\S).+?(?:\.|\Z)",
-    re.DOTALL,
-)
-_QUESTION_OPENING = re.compile(
-    r"^(?:who|whom|whose|what|when|where|why|how|which|"
-    r"is|are|am|was|were|do|does|did|can|could|will|would|"
-    r"should|has|have|had|may|might|must)\b",
-    re.IGNORECASE,
-)
-_CONTROL_CLAUSE_SEPARATOR = re.compile(r"[;:!]|--|[–—]")
-_CONTROL_COORDINATED_CLAUSE = re.compile(
-    r",\s+(?:and|or)\s+",
-    re.IGNORECASE,
 )
 _COMPOUND_FACT_HINT = re.compile(r"(?:[.;]\s+|\b(?:and|but|while|whereas)\b)")
 _MAX_NEAR_DUPLICATE_UNITS = 250
@@ -75,16 +60,17 @@ _ADVISORY_CHECKS = {
     "safe_stopping_outcome": "UNVERIFIED",
     "hidden_reversal": "UNVERIFIED",
     "deeper_view_new_information_dominance": "UNVERIFIED",
-    "complete_proposition_restatement": "UNVERIFIED",
-    "short_anchor_necessity": "UNVERIFIED",
+    "repetition_usefulness": "UNVERIFIED",
     "at_depth_concluding_recap": "UNVERIFIED",
     "fact_atomicity_and_allocation": "UNVERIFIED",
     "simple_fact_brevity": "UNVERIFIED",
-    "numeric_assumption_labeling": "UNVERIFIED",
+    "numeric_assumption_support": "UNVERIFIED",
+    "visible_reading_burden": "UNVERIFIED",
     "clarification_gate_semantics": "UNVERIFIED",
     "non_fit_intended_artifact_equality": "UNVERIFIED",
     "warning_indispensability": "UNVERIFIED",
     "correction_exception_scope": "UNVERIFIED",
+    "correction_meaning_and_consequence": "UNVERIFIED",
     "topic_and_branch_intent": "UNVERIFIED",
     "presentation_policy_classification": "UNVERIFIED",
     "at_depth_relevance_and_purpose": "UNVERIFIED",
@@ -92,7 +78,6 @@ _ADVISORY_CHECKS = {
 _CORRECTION_FIELD_SPECS = (
     ("withdrawn_fact_ids", "PC-M-CORRECTION-003", "withdrawn fact"),
     ("replacement_fact_ids", "PC-M-CORRECTION-004", "replacement fact"),
-    ("changed_action_fact_ids", "PC-M-CORRECTION-005", "changed action"),
 )
 
 
@@ -106,24 +91,6 @@ def _contains_protocol_heading(content: str) -> bool:
             return True
         if (
             line.strip().casefold() in _PROTOCOL_HEADING_NAMES
-            and index + 1 < len(lines)
-            and lines[index + 1] is not None
-            and _SETEXT_UNDERLINE.fullmatch(lines[index + 1])
-        ):
-            return True
-    return False
-
-
-def _contains_markdown_heading(content: str) -> bool:
-    """Detect any ATX or Setext heading while ignoring fenced code."""
-    lines = without_fenced_lines(content.splitlines())
-    for index, line in enumerate(lines):
-        if line is None:
-            continue
-        if _ATX_HEADING.match(line):
-            return True
-        if (
-            line.strip()
             and index + 1 < len(lines)
             and lines[index + 1] is not None
             and _SETEXT_UNDERLINE.fullmatch(lines[index + 1])
@@ -149,26 +116,6 @@ def _mask_fenced_markdown(markdown: str) -> str:
             raw_lines,
             visible_lines,
             strict=True,
-        )
-    )
-
-
-def _is_single_clarification_question(content: str) -> bool:
-    """Check the conservative mechanical subset of one clarification question."""
-    question_units = lexical_units(" ".join(content.split()))
-    coordinated_clauses = tuple(
-        content[match.end() :]
-        for match in _CONTROL_COORDINATED_CLAUSE.finditer(content)
-    )
-    return (
-        content.count("?") == 1
-        and content.endswith("?")
-        and len(question_units) == 1
-        and _QUESTION_OPENING.match(content) is not None
-        and _CONTROL_CLAUSE_SEPARATOR.search(content) is None
-        and all(
-            _QUESTION_OPENING.match(clause) is not None
-            for clause in coordinated_clauses
         )
     )
 
@@ -595,17 +542,11 @@ def _validate_request_and_state(
 def _validate_presentation(envelope: Envelope, collector: _Collector) -> None:
     if envelope.response_kind == "control":
         content = envelope.payload["content"].strip()
-        if not _is_single_clarification_question(content):
-            collector.mechanical(
-                "PC-M-CONTROL-001",
-                "payload.content",
-                "clarification control must contain exactly one question sentence",
-            )
-        if _contains_markdown_heading(content):
+        if _contains_protocol_heading(content):
             collector.mechanical(
                 "PC-M-CONTROL-002",
                 "payload.content",
-                "clarification control must not contain a heading",
+                "clarification control must not contain reserved view headings",
             )
         return
     if envelope.response_kind == "focused":
@@ -690,17 +631,6 @@ def _validate_correction(
                 f"payload.correction.withdrawn_fact_ids[{index}]",
                 "a withdrawn fact must exist in the committed topic ledger",
             )
-    correction_content = correction["content"]
-    if _CORRECTION_OPENING.match(correction_content) is None:
-        collector.mechanical(
-            "PC-M-CORRECTION-006",
-            "payload.correction.content",
-            (
-                "repair text must open exactly with withdrawal, the literal "
-                "'That was wrong or incomplete.', replacement, and a literal "
-                "'This changes' consequence or action"
-            ),
-        )
 
 
 def _validate_quotation(
@@ -803,7 +733,15 @@ def _validate_facts(
                     location,
                     "referenced fact must use non_fit allocation here",
                 )
-        elif exception != "correction" and fact.allocation != placement:
+        elif exception != "correction" and fact.allocation != placement and not (
+            envelope.response_kind == "views"
+            and placement in VIEWS
+            and fact.allocation in VIEWS
+            and any(
+                ref_id == fact_id and ref_placement == fact.allocation
+                for ref_id, _location, _exception, ref_placement in references
+            )
+        ):
             collector.mechanical(
                 "PC-M-FACT-006",
                 location,
@@ -844,18 +782,6 @@ def _validate_facts(
                 f"{location}.reuse_reason",
                 "cross-turn reuse reasons are valid only for a committed fact",
             )
-        elif fact.reuse_reason in {"correction", "quotation"} and count < 2:
-            collector.mechanical(
-                "PC-M-FACT-011",
-                f"{location}.reuse_reason",
-                "a new exception fact must be referenced in both exception contexts",
-            )
-        if count > 1 and fact.reuse_reason not in {"correction", "quotation"}:
-            collector.mechanical(
-                "PC-M-FACT-012",
-                location,
-                f"fact is referenced {count} times without an allowed exception",
-            )
         if fact.reuse_reason in {"correction", "quotation"}:
             if fact.reuse_reason not in contexts.get(fact.id, set()):
                 collector.mechanical(
@@ -864,14 +790,14 @@ def _validate_facts(
                     "reuse reason lacks matching structured exception content",
                 )
         if fact.reuse_reason == "synthesis" and (
-            envelope.response_kind != "views"
+            envelope.response_kind not in {"views", "focused"}
             or resolved is None
             or not resolved.marks_overview
         ):
             collector.mechanical(
                 "PC-M-FACT-015",
                 f"{location}.reuse_reason",
-                "synthesis reuse is valid only in a topic-wide Full overview",
+                "synthesis reuse is valid only in a topic-wide overview",
             )
         normalized = normalize_lexical_text(fact.text)
         owner = normalized_owner.get(normalized)
@@ -956,10 +882,10 @@ def _validate_duplicates(envelope: Envelope, collector: _Collector) -> None:
                     and previous_exception == "quotation"
                 )
                 if not allowed:
-                    collector.mechanical(
-                        "PC-M-DUPLICATE-001",
+                    collector.advisory(
+                        "PC-A-DUPLICATE-003",
                         location,
-                        f"exact lexical unit repeats content at {previous_location}",
+                        f"lexical echo of {previous_location}; assess reader usefulness",
                     )
             else:
                 seen[unit] = (location, exception)
@@ -988,8 +914,8 @@ def _validate_duplicates(envelope: Envelope, collector: _Collector) -> None:
                     "PC-A-DUPLICATE-001",
                     location,
                     (
-                        "high lexical overlap may restate a complete earlier "
-                        "proposition; necessary short anchors remain allowed"
+                        "high lexical overlap; assess whether repetition connects "
+                        "reasoning or keeps an action qualified"
                     ),
                 )
                 break
@@ -1096,7 +1022,7 @@ def validate_envelope(
     request: WrapperRequest | None = None,
     resolved: ResolvedTurn | None = None,
 ) -> ValidationReport:
-    """Validate every mechanically decidable v0.4 rule."""
+    """Validate the mechanical v0.5 contract and report semantic boundaries."""
     committed = state or ConversationState.initial()
     collector = _Collector()
     request_is_valid = True
@@ -1133,6 +1059,7 @@ def validate_envelope(
     _validate_required_facts(envelope, request, collector)
     _validate_duplicates(envelope, collector)
     counts = _validate_budgets(envelope, collector)
+    counts.update(reading_cost_diagnostics(render_markdown(envelope)))
     _validate_branch_and_counts(
         envelope, request, topic.branch, len(next_facts), collector
     )
@@ -1169,7 +1096,7 @@ def validate_envelope(
         "non_empty_view_content": (
             "PASS" if envelope.response_kind == "views" else "NOT_APPLICABLE"
         ),
-        "clarification_question_shape": (
+        "clarification_structure": (
             "PASS" if envelope.response_kind == "control" else "NOT_APPLICABLE"
         ),
         "full_warning_placement": (
@@ -1209,7 +1136,7 @@ def validate_envelope(
         elif code.startswith(("PC-M-HEADING", "PC-M-KIND")):
             mechanical_checks["three_view_heading_order"] = "FAIL"
         elif code.startswith("PC-M-CONTROL"):
-            mechanical_checks["clarification_question_shape"] = "FAIL"
+            mechanical_checks["clarification_structure"] = "FAIL"
         elif code.startswith("PC-M-WARNING"):
             mechanical_checks["full_warning_placement"] = "FAIL"
         elif code.startswith("PC-M-CONTENT"):
@@ -1220,8 +1147,6 @@ def validate_envelope(
             mechanical_checks["fact_id_integrity_and_declared_reuse"] = "FAIL"
         elif code.startswith("PC-M-REQUIRED"):
             mechanical_checks["authoritative_fact_coverage"] = "FAIL"
-        elif code.startswith("PC-M-DUPLICATE"):
-            mechanical_checks["exact_lexical_duplicate_detection"] = "FAIL"
         elif code.startswith("PC-M-CORRECTION"):
             mechanical_checks["correction_structure"] = "FAIL"
         elif code.startswith("PC-M-QUOTE"):
@@ -1250,7 +1175,7 @@ def validate_rendered_markdown(markdown: str) -> ValidationReport:
     visible_markdown = _mask_fenced_markdown(markdown)
     matches = list(_PROTOCOL_HEADING.finditer(visible_markdown))
     headings = [match.group(1) for match in matches]
-    counts: dict[str, int] = {}
+    counts: dict[str, int] = reading_cost_diagnostics(markdown)
     checks = {
         "three_view_heading_order": "UNVERIFIED",
         "non_empty_view_content": "UNVERIFIED",
@@ -1313,7 +1238,7 @@ def validate_rendered_markdown(markdown: str) -> ValidationReport:
                     collector.advisory(
                         "PC-A-HOOK-005",
                         heading,
-                        "visible text cannot identify structured duplicate exceptions",
+                        "lexical echo observed; reader usefulness is unverified",
                     )
                 else:
                     seen.add(unit)

@@ -52,11 +52,11 @@ jobs:
             --python "$RUNNER_TEMP/pc-sdist-venv/bin/python" \
             "$RUNNER_TEMP"/pc-dist/*.tar.gz
           "$RUNNER_TEMP/pc-sdist-venv/bin/python" -I -c \
-            'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.4"'
+            'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.5"'
           (
             cd "$RUNNER_TEMP/pc-project"
             ".pc-core/venv/bin/python" -I -c \
-              'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.4"; assert pc_core.WRAPPER_REQUEST_SCHEMA_VERSION == "3.0.0"; assert pc_core.ENVELOPE_SCHEMA_VERSION == "3.0.0"; assert pc_core.STATE_SCHEMA_VERSION == "3.0.0"'
+              'import pc_core; assert pc_core.PROTOCOL_VERSION == "0.5"; assert pc_core.WRAPPER_REQUEST_SCHEMA_VERSION == "4.0.0"; assert pc_core.ENVELOPE_SCHEMA_VERSION == "3.0.0"; assert pc_core.STATE_SCHEMA_VERSION == "3.0.0"'
             ".pc-core/venv/bin/pc-core" --help >/dev/null
             hook_output="$(
               printf '%s\n' \
@@ -76,36 +76,36 @@ jobs:
         run: |
           python3 -m json.tool .codex-plugin/plugin.json >/dev/null
           python3 -m tools.package_openai_plugin
-          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.4.4.zip)"
+          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.5.0.zip)"
           python3 -m tools.package_openai_plugin
-          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.4.4.zip)"
+          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.5.0.zip)"
           test "$first_hash" = "$second_hash"
-          unzip -t dist/progressive-clarity-openai-plugin-0.4.4.zip
+          unzip -t dist/progressive-clarity-openai-plugin-0.5.0.zip
 
       - name: Build deterministic Claude packages
         run: |
           python3 -m json.tool .claude-plugin/plugin.json >/dev/null
           python3 -m tools.package_claude_plugin
           plugin_first="$(
-            sha256sum dist/progressive-clarity-claude-plugin-0.4.4.zip
+            sha256sum dist/progressive-clarity-claude-plugin-0.5.0.zip
           )"
           python3 -m tools.package_claude_plugin
           plugin_second="$(
-            sha256sum dist/progressive-clarity-claude-plugin-0.4.4.zip
+            sha256sum dist/progressive-clarity-claude-plugin-0.5.0.zip
           )"
           test "$plugin_first" = "$plugin_second"
-          unzip -t dist/progressive-clarity-claude-plugin-0.4.4.zip
+          unzip -t dist/progressive-clarity-claude-plugin-0.5.0.zip
 
           python3 -m tools.package_claude_skill
           skill_first="$(
-            sha256sum dist/progressive-clarity-claude-ai-skill-0.4.4.zip
+            sha256sum dist/progressive-clarity-claude-ai-skill-0.5.0.zip
           )"
           python3 -m tools.package_claude_skill
           skill_second="$(
-            sha256sum dist/progressive-clarity-claude-ai-skill-0.4.4.zip
+            sha256sum dist/progressive-clarity-claude-ai-skill-0.5.0.zip
           )"
           test "$skill_first" = "$skill_second"
-          unzip -t dist/progressive-clarity-claude-ai-skill-0.4.4.zip
+          unzip -t dist/progressive-clarity-claude-ai-skill-0.5.0.zip
 
       - name: Check out pinned skills-ref
         env:

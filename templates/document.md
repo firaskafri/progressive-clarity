@@ -5,30 +5,28 @@ for static artifacts. Conversational behavior in `SPEC.md` remains canonical.
 
 Use the visible sections only when they help readers choose a stopping point. For tutorials, procedures, controlling legal text, and voice-dependent writing, use the hybrid guidance at the end.
 
-Version 0.4 Full-format word-budget guidance applies to English prose only. Use
-the counting rules in `SPEC.md`; no non-English budget claim is made.
+Version 0.5 Advisory targets apply to English prose only. The 40/200 thresholds
+are provisional; inspect visible bulk including tables, code, and headings.
 
-Privately draft At a glance, place its complete propositions in a “do not
-restate” ledger, draft In context with new rationale/constraints/actions plus
-minimal anchors, add those propositions to the ledger, and draft At depth with
-new evidence/exceptions/implementation. Delete every sentence that restates
-the ledger and every concluding At-depth recap.
+Draft the answer, needed rationale, and purposeful depth. Keep deeper sections
+predominantly new. Brief repetition may aid comprehension or qualify an action;
+remove duplicated explanations and automatic concluding recaps.
 
 ```markdown
 # <Conclusion written as a specific claim>
 
 ## At a glance
 
-<!-- At a glance: no more than 40 counted non-warning prose words. -->
+<!-- At a glance: aim for 40 non-warning prose words. -->
 
 <Direct answer or central fact.> <Decision-relevant consequence.>
 <Indispensable caveat or warning, when present.>
 
 ## In context
 
-<!-- Through this section: no more than 200 counted non-warning prose words. -->
+<!-- Through this section: aim for 200 non-warning prose words. -->
 <!-- Keep only useful cues. -->
-<!-- New information must dominate; use only necessary brief anchors. -->
+<!-- New information must dominate; repetition must earn its place. -->
 
 - **Why it counts:** <Significance not already stated.>
 - **Where it fits:** <Relevant scope or relationship.>
@@ -38,7 +36,7 @@ the ledger and every concluding At-depth recap.
 
 ## At depth
 
-<!-- No hard word cap; do not restate earlier complete propositions or recap. -->
+<!-- No hard word cap; avoid duplicated explanations and automatic recaps. -->
 
 ### <Specific specialist concern>
 

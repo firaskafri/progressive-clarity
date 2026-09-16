@@ -23,9 +23,9 @@ SKILL_NAME = "progressive-clarity"
 PACKAGE_VERSION = RELEASE_VERSION
 LICENSE = CANONICAL_LICENSE
 PACKAGED_DESCRIPTION = (
-    "Topic-oriented clarity for facts and explained controlling text. Keep simple "
-    "facts focused; use three views with predominantly new deeper information for "
-    "orientation and checkpoints."
+    "Topic-oriented clarity for facts and explained controlling text. Keep compact "
+    "answers focused; use three views when distinct depth helps. Clarify assumptions "
+    "and correct errors naturally."
 )
 CLAUDE_AI_DESCRIPTION_LIMIT = 200
 

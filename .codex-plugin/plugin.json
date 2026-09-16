@@ -1,7 +1,7 @@
 {
   "name": "progressive-clarity",
-  "version": "0.4.4",
-  "description": "Prompt-only topic-oriented guidance that uses focused answers for ordinary exploration and predominantly new deeper views for orientation and checkpoints.",
+  "version": "0.5.0",
+  "description": "Prompt-only guidance for direct, qualified answers and useful depth. Keep compact decisions focused; use distinct views when they help.",
   "author": {
     "name": "FIRAS HASHEM AHMAD AL KAFRI"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Progressive Clarity",
     "shortDescription": "Orient, explore naturally",
-    "longDescription": "Prompt-only guidance that keeps simple facts and ordinary follow-ups focused, uses At a glance, In context, and At depth with predominantly new deeper information, and leaves topic inference and semantic conformance advisory.",
+    "longDescription": "Answer directly with important qualifications up front. Keep ordinary follow-ups and compact decisions focused; use At a glance, In context, and At depth when distinct layers help. Topic inference and semantic quality remain advisory.",
     "developerName": "FIRAS HASHEM AHMAD AL KAFRI",
     "composerIcon": "./assets/progressive-clarity-composer.svg",
     "logo": "./assets/progressive-clarity-logo.svg"

@@ -1,6 +1,27 @@
 # OpenAI plugin packaging and publication
 
-## Current v0.4 package target
+## Current v0.5 package target
+
+The repository root is the OpenAI plugin source. `.codex-plugin/plugin.json`
+points at the canonical `skills/` directory. Package `0.5.0` carries the compact
+Advisory skill: focused ordinary/compact consequential answers, useful distinct
+depth, natural repairs, and explicit assumptions. It contains no runtime or
+protocol-controlled durable state.
+
+```sh
+python3.11 -m tools.package_openai_plugin
+unzip -t dist/progressive-clarity-openai-plugin-0.5.0.zip
+```
+
+The archive contains the manifest, two static SVG assets, and the canonical
+Skill and license. See [Verification](verification.md) for current local evidence.
+Current portal publication, installation, activation, and live behavior remain
+`UNVERIFIED`; historical hashes below must not identify this version.
+
+## Historical v0.4 package record
+
+Everything below describes earlier revisions as recorded, including their
+package names, commands, hashes, and publication statements.
 
 The repository root remains the copy-free OpenAI plugin source.
 `.codex-plugin/plugin.json` points to the root `skills/` directory, which

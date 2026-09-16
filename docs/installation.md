@@ -1,6 +1,67 @@
 # Install Progressive Clarity
 
-## Current v0.4 status
+## Current v0.5 draft
+
+The source targets package `0.5.0`, protocol `0.5`. Copy the complete
+`skills/progressive-clarity/` directory to a supported host's project skill folder:
+
+| Host | Project skill folder | Explicit invocation |
+| --- | --- | --- |
+| Claude Code | `.claude/skills/` | `/progressive-clarity` |
+| Cursor | `.agents/skills/` or `.cursor/skills/` | Skill picker |
+
+The skill contains only instructions and a license. Activation and behavior remain
+Advisory. For example, from this checkout:
+
+```sh
+mkdir -p "/path/to/project/.claude/skills"
+cp -R skills/progressive-clarity "/path/to/project/.claude/skills/"
+```
+
+### Current package builds
+
+```sh
+python3.11 -m tools.package_openai_plugin
+python3.11 -m tools.package_claude_plugin
+python3.11 -m tools.package_claude_skill
+```
+
+These produce `dist/progressive-clarity-openai-plugin-0.5.0.zip`,
+`dist/progressive-clarity-claude-plugin-0.5.0.zip`, and
+`dist/progressive-clarity-claude-ai-skill-0.5.0.zip`. Build evidence is recorded
+in [Verification](verification.md); publication and host activation are separate.
+
+### Current wrapper setup
+
+Python 3.11+ can run the source directly with `python3.11 -m pc_core`, or install
+this checkout in a project virtual environment using `python -m pip install .`.
+The distribution is `progressive-clarity-core`, target `0.5.0`.
+
+Request schema **4.0.0** requires a Boolean **`depth_useful`**, used for automatic
+orientation/checkpoint presentation. Envelope and state schemas remain **3.0.0**
+with protocol **0.5**. Use a fresh `conversation-state-v05.json`; older protocol
+state is rejected. See the [current request example](local-enforcement.md).
+
+```sh
+python3.11 -m pc_core validate candidate.json --request request.json
+python3.11 -m pc_core render candidate.json --request request.json
+python3.11 -m pc_core wrap --host cursor --request request.json \
+  --state conversation-state-v05.json --cwd /path/to/project
+```
+
+For later turns, pass the committed state to validate/render too. Use
+`--host claude-code` for Claude Code. Cursor workspace trust must be established
+interactively or explicitly authorized with `--trust-workspace`. The wrapper
+permits one complete repair and commits only after a mechanical pass.
+
+Project hooks still use the templates in `adapters/`. Install this checkout in
+the project's `.pc-core/venv` before merging a template into existing host
+configuration. Hooks inspect displayed Markdown and remain Advisory/block-and-retry.
+
+## Historical v0.4 installation record
+
+Everything below describes earlier revisions as recorded. Its package names,
+commands, hashes, and status statements are historical, not current instructions.
 
 Progressive Clarity protocol `0.4` is a locally verified release candidate with
 two separate profiles:

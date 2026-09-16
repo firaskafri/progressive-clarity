@@ -18,12 +18,14 @@ from urllib.parse import urlsplit
 from pc_core.json_io import parse_json, write_json_atomic
 from pc_core.model import (
     AT_A_GLANCE_MAX_NON_WARNING_WORDS,
+    PROTOCOL_VERSION,
     THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS,
     VIEW_HEADINGS,
 )
 from pc_core.word_count import (
     count_english_words,
     normalize_lexical_text,
+    reading_cost_diagnostics,
     without_fenced_lines,
 )
 from tools.package_common import split_skill
@@ -34,7 +36,8 @@ DEFAULT_SUITE_PATH = ROOT / "evals" / "cases.json"
 DEFAULT_SKILL_PATH = ROOT / "skills" / "progressive-clarity" / "SKILL.md"
 DEFAULT_RUNS_DIR = ROOT / "evals" / "runs"
 DEFAULT_LOCAL_CONFIG_PATH = ROOT / "evals" / "azure.local.json"
-RESULT_SCHEMA_VERSION = "1.3.0"
+RESULT_SCHEMA_VERSION = "2.0.0"
+CONDITIONS = ("baseline", "minimal", "legacy", "revised")
 HOST_NAME = "azure-openai-agno"
 INVOCATION_METHOD = "agno-system-skill-injection"
 DEFAULT_API_VERSION = "2024-10-21"
@@ -48,11 +51,6 @@ _HEADING_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])[\"'’”]*\s+")
-_GOVERNING_INPUT_LINE = re.compile(r"^Governing input:\s+\S", re.MULTILINE)
-_EXAMPLE_ASSUMPTION_LINE = re.compile(
-    r"^Example assumption:\s+\S",
-    re.MULTILINE,
-)
 
 
 class HarnessError(RuntimeError):
@@ -142,7 +140,7 @@ class AzureEvalConfig:
 
 
 def load_suite(path: Path = DEFAULT_SUITE_PATH) -> dict[str, object]:
-    """Load the frozen evaluation suite as one strict JSON object."""
+    """Load a current development or external holdout suite before generation."""
     try:
         value = parse_json(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError) as exc:
@@ -153,6 +151,41 @@ def load_suite(path: Path = DEFAULT_SUITE_PATH) -> dict[str, object]:
         raise HarnessError("evaluation suite cases must be an array")
     if not isinstance(value.get("run_policy"), dict):
         raise HarnessError("evaluation suite run_policy must be an object")
+    if value.get("schema_version") != "6.0.0":
+        raise HarnessError("evaluation suite schema must be 6.0.0")
+    if not isinstance(value.get("split"), str) or value["split"] not in {
+        "development", "holdout", "reader_study",
+    }:
+        raise HarnessError("evaluation suite must declare its evidence split")
+    protocol = value.get("protocol")
+    if not isinstance(protocol, dict) or protocol.get("version") != PROTOCOL_VERSION:
+        raise HarnessError("evaluation suite protocol version does not match runtime")
+    if protocol.get("sha256") != hashlib.sha256((ROOT / "SPEC.md").read_bytes()).hexdigest():
+        raise HarnessError("evaluation suite protocol hash does not match SPEC.md")
+    if not value["cases"]:
+        raise HarnessError("evaluation suite must contain at least one case")
+    ids: set[str] = set()
+    for case in value["cases"]:
+        if not isinstance(case, dict) or not isinstance(case.get("id"), str):
+            raise HarnessError("each case must have a string ID")
+        if not case["id"] or case["id"] in ids:
+            raise HarnessError("case IDs must be non-empty and unique")
+        ids.add(case["id"])
+        turns = case.get("turns")
+        if not isinstance(turns, list) or not turns:
+            raise HarnessError("each case must have at least one turn")
+        for number, turn in enumerate(turns, 1):
+            if (
+                not isinstance(turn, dict) or turn.get("turn") != number
+                or not isinstance(turn.get("prompt"), str) or not turn["prompt"].strip()
+                or not isinstance(turn.get("expected"), dict)
+                or not isinstance(turn["expected"].get("presentation"), str)
+                or turn["expected"].get("presentation") not in {
+                    "focused", "full", "control", "non_fit", "adaptive",
+                }
+            ):
+                raise HarnessError("turns need sequential numbers, prompts, and expectations")
+    planned_case_runs(value, value["cases"])
     return value
 
 
@@ -163,6 +196,19 @@ def load_skill_body(path: Path = DEFAULT_SKILL_PATH) -> str:
         return body.decode("utf-8")
     except (OSError, UnicodeError, ValueError) as exc:
         raise HarnessError(f"cannot load canonical Skill {path}: {exc}") from exc
+
+
+def load_condition_body(condition: str) -> str:
+    """Load a named comparison arm without changing the underlying model settings."""
+    if condition == "baseline":
+        return "You are a helpful assistant."
+    if condition == "minimal":
+        return (ROOT / "evals" / "baselines" / "minimal.md").read_text(encoding="utf-8")
+    if condition == "legacy":
+        return load_skill_body(ROOT / "evals" / "baselines" / "v0.4-skill.md")
+    if condition == "revised":
+        return load_skill_body()
+    raise HarnessError(f"unknown comparison condition: {condition}")
 
 
 def load_local_config(path: Path) -> dict[str, object]:
@@ -282,13 +328,17 @@ def deterministic_score(
 
     expected_headings = list(VIEW_HEADINGS) if presentation == "full" else []
     checks["presentation"] = {
-        "result": "PASS" if headings == expected_headings else "FAIL",
+        "result": (
+            "PASS" if headings == expected_headings
+            or (presentation == "adaptive" and headings == list(VIEW_HEADINGS))
+            else "FAIL"
+        ),
         "expected_headings": expected_headings,
         "actual_headings": headings,
     }
 
     counts: dict[str, int] = {}
-    if presentation == "full" and headings == list(VIEW_HEADINGS):
+    if presentation in {"full", "adaptive"} and headings == list(VIEW_HEADINGS):
         warning_requirements = expected.get("warning_at_a_glance_requires")
         budget_exception = (
             isinstance(warning_requirements, list)
@@ -298,6 +348,7 @@ def deterministic_score(
             counts[heading] = count_english_words(sections.get(heading, ""))
         shallow_total = counts["At a glance"] + counts["In context"]
         checks["at_a_glance_budget"] = {
+            "binding": False,
             "result": (
                 "UNVERIFIED"
                 if budget_exception
@@ -317,6 +368,7 @@ def deterministic_score(
             ),
         }
         checks["through_in_context_budget"] = {
+            "binding": False,
             "result": (
                 "UNVERIFIED"
                 if budget_exception
@@ -350,48 +402,15 @@ def deterministic_score(
         }
 
     if expected.get("correction_required") is True:
-        repair_scope = (
-            sections.get("At a glance", "")
-            if presentation == "full"
-            else response
-        )
-        repair_text = repair_scope.lstrip()
-        wrong_marker = ". That was wrong or incomplete."
-        wrong_index = repair_text.find(wrong_marker)
-        changes_index = repair_text.find("This changes ")
         checks["repair_contract"] = {
-            "result": (
-                "PASS"
-                if repair_text.startswith("Earlier I said ")
-                and wrong_index > len("Earlier I said ")
-                and changes_index > wrong_index + len(wrong_marker)
-                else "FAIL"
-            ),
-            "required_literals": [
-                "Earlier I said ",
-                ". That was wrong or incomplete.",
-                "This changes ",
-            ],
+            "result": "UNVERIFIED",
+            "reason": "Natural repair meaning and placement require semantic review.",
         }
 
-    if (
-        presentation == "focused"
-        and expected.get("numeric_template_required") is True
-    ):
-        governing_match = _GOVERNING_INPUT_LINE.search(response)
-        example_match = _EXAMPLE_ASSUMPTION_LINE.search(response)
-        checks["numeric_template_labels"] = {
-            "result": (
-                "PASS"
-                if governing_match is not None
-                and example_match is not None
-                and governing_match.start() < example_match.start()
-                else "FAIL"
-            ),
-            "expected": [
-                "Governing input:",
-                "Example assumption:",
-            ],
+    if expected.get("numeric_assumptions_required") is True:
+        checks["numeric_assumption_support"] = {
+            "result": "UNVERIFIED",
+            "reason": "Assumption support cannot be established from literal labels.",
         }
 
     summary_label = expected.get("summary_label_must_contain")
@@ -416,11 +435,15 @@ def deterministic_score(
                 else "UNVERIFIED"
             )
 
-    failed = any(check.get("result") == "FAIL" for check in checks.values())
+    failed = any(
+        check.get("result") == "FAIL" and check.get("binding", True)
+        for check in checks.values()
+    )
     return {
         "result": "FAIL" if failed else "PASS",
         "checks": checks,
         "word_counts": counts,
+        "reading_cost": reading_cost_diagnostics(response),
         "required_fact_lexical_coverage": lexical_coverage,
     }
 
@@ -429,12 +452,17 @@ def judge_criteria(
     *,
     case: Mapping[str, object],
     turn: Mapping[str, object],
+    response: str | None = None,
 ) -> list[dict[str, object]]:
     """Build only the semantic criteria applicable to the current turn."""
     expected = turn.get("expected")
     if not isinstance(expected, dict):
         raise HarnessError(f"case {case.get('id')} turn lacks expected object")
     presentation = expected.get("presentation")
+    adaptive = presentation == "adaptive"
+    if adaptive and response is not None:
+        headings, _sections = parse_view_sections(response)
+        presentation = "full" if headings == list(VIEW_HEADINGS) else "focused"
     required_ids = expected.get("required_fact_ids")
     if not isinstance(required_ids, list):
         required_ids = []
@@ -478,6 +506,14 @@ def judge_criteria(
         },
     ]
     prohibited_text = " ".join(str(item).casefold() for item in prohibited)
+    if adaptive:
+        criteria.append({
+            "id": "presentation_usefulness",
+            "requirement": (
+                "Choose proportionate structure: distinct views only when useful. "
+                "Honor explicit preferences, and do not invent specialist content."
+            ),
+        })
     if presentation == "focused":
         criteria.append(
             {
@@ -507,17 +543,6 @@ def judge_criteria(
                     ),
                 }
             )
-        if expected.get("numeric_template_required") is True:
-            criteria.append(
-                {
-                    "id": "numeric_template",
-                    "requirement": (
-                        "When a governing numeric input is missing, use the exact "
-                        "'Governing input:' and 'Example assumption:' structure; "
-                        "do not give a number or range outside it."
-                    ),
-                }
-            )
     elif presentation == "full":
         criteria.extend(
             [
@@ -529,22 +554,21 @@ def judge_criteria(
                     ),
                 },
                 {
-                    "id": "full_no_complete_repetition",
+                    "id": "full_repetition_usefulness",
                     "requirement": (
-                        "Necessary short anchors may recur, but no complete earlier "
-                        "conclusion, sentence, list, explanation, warning, or "
-                        "recommendation may be repeated or paraphrased. Do not fail "
-                        "a later passage merely because it relies on the same role "
-                        "or boundary while adding materially new implementation, "
-                        "evidence, exception, or action; quote both complete "
-                        "propositions when finding a failure."
+                        "Brief repetition may connect reasoning, aid comprehension, "
+                        "or keep an action qualified. Reject duplicated explanations "
+                        "and lists that add no reader benefit. Quote both passages "
+                        "and explain why repetition is unhelpful; lexical identity "
+                        "alone is insufficient."
                     ),
                 },
                 {
-                    "id": "full_no_at_depth_recap",
+                    "id": "full_ending_usefulness",
                     "requirement": (
-                        "At depth must not end with a recap, summary, key rule, or "
-                        "restated operative recommendation."
+                        "Avoid automatic concluding recaps. A brief requested or "
+                        "reader-justified recap is allowed; explain the lack of "
+                        "reader benefit before failing a repeated ending."
                     ),
                 },
             ]
@@ -554,25 +578,35 @@ def judge_criteria(
             {
                 "id": "correction_repair_contract",
                 "requirement": (
-                    "Use the literal explicit repair contract. Begin 'Earlier I "
-                    "said <withdrawn statement>. That was wrong or incomplete.', "
-                    "supply the replacement, and include a literal 'This changes "
-                    "...' consequence or action. The withdrawn statement must be "
-                    "an operative claim actually present in the conversation "
-                    "history; it may faithfully isolate the affected proposition "
-                    "from a combined sentence. Do not treat explicitly withdrawn "
-                    "historical text as a current factual claim."
+                    "Identify an actual earlier error faithfully and give its "
+                    "replacement in natural wording. Explain any changed action or "
+                    "consequence; do not invent one. Put repair first, under At a "
+                    "glance for Full, or identify the affected step in a corrected "
+                    "procedure. Preserve procedure order. Do not treat withdrawn "
+                    "historical text as a current claim."
                 ),
             }
         )
-    warning_requirements = expected.get("warning_at_a_glance_requires")
+    if expected.get("numeric_assumptions_required") is True:
+        criteria.append({
+            "id": "numeric_assumption_support",
+            "requirement": (
+                "Expose governing assumptions and avoid unsupported precision. "
+                "A decisive question, supported formula, or clearly conditional "
+                "example may be appropriate. No mandatory labels or invented number."
+            ),
+        })
+    warning_requirements = expected.get(
+        "warning_at_a_glance_requires", expected.get("warning_requires")
+    )
     if isinstance(warning_requirements, list):
         criteria.append(
             {
                 "id": "warning_completeness_and_placement",
                 "requirement": (
-                    "Place every required warning element in At a glance before "
-                    "related action or implementation detail."
+                    "Place required warnings before related action: at a glance "
+                    "in Full, or in the earliest actionable prose in Focused. "
+                    "Warnings do not force headings or wait for clarification."
                 ),
                 "required_elements": warning_requirements,
             }
@@ -582,8 +616,9 @@ def judge_criteria(
             {
                 "id": "clarification_gate",
                 "requirement": (
-                    "Ask exactly one focused question and provide no recommendation, "
-                    "rationale, implementation detail, or assumed missing input."
+                    "Ask for the smallest decisive missing input set. Brief rationale "
+                    "and supported bounded advice are allowed. Do not assume missing "
+                    "inputs or authorize an action that depends on them."
                 ),
             }
         )
@@ -610,6 +645,26 @@ def judge_criteria(
                 ),
             }
         )
+    if presentation in {"focused", "full"}:
+        criteria.extend([
+            {
+                "id": "directness_and_qualification",
+                "requirement": (
+                    "Answer the immediate request directly. Keep material scope, "
+                    "uncertainty, and indispensable caveats beside the claim or "
+                    "action so early stopping does not imply unsupported permission."
+                ),
+            },
+            {
+                "id": "visible_reading_burden",
+                "requirement": (
+                    "Assess the whole visible answer, including tables, code, headings, "
+                    "and warnings. Reject unhelpful bulk, manufactured depth, or prose "
+                    "hidden in excluded formatting to evade targets. A 40/200 target "
+                    "overrun alone is not a conformance failure."
+                ),
+            },
+        ])
     return criteria
 
 
@@ -660,7 +715,7 @@ def _judge_prompt(
     response: str,
     conversation_history: Sequence[Mapping[str, object]] = (),
 ) -> str:
-    criteria = judge_criteria(case=case, turn=turn)
+    criteria = judge_criteria(case=case, turn=turn, response=response)
     payload = {
         "evaluation_boundary": (
             suite.get("rubric", {}).get("surface_boundary")
@@ -885,7 +940,7 @@ def run_case(
             }
         else:
             try:
-                criteria = judge_criteria(case=case, turn=turn)
+                criteria = judge_criteria(case=case, turn=turn, response=response)
                 conversation_history = [
                     {
                         "turn": record.get("turn"),
@@ -1081,6 +1136,7 @@ def _new_report(
     skill_body: str,
     judge_enabled: bool,
     planned_keys: Sequence[str],
+    condition: str = "revised",
 ) -> dict[str, object]:
     """Create the credential-free identity and empty aggregate for a run."""
     now = datetime.now(timezone.utc).isoformat()
@@ -1093,6 +1149,9 @@ def _new_report(
         "protocol": suite.get("protocol"),
         "protocol_sha256": _protocol_sha256(suite),
         "skill_body_sha256": _skill_body_sha256(skill_body),
+        "condition": condition,
+        "split": suite.get("split", "development"),
+        "reader_outcomes": "UNVERIFIED",
         "host": HOST_NAME,
         "invocation_method": INVOCATION_METHOD,
         "activation_result": "NOT_APPLICABLE",
@@ -1153,6 +1212,7 @@ def _validated_resume_records(
     skill_body: str,
     judge_enabled: bool,
     planned_keys: Sequence[str],
+    condition: str = "revised",
 ) -> list[dict[str, object]]:
     """Validate resume compatibility and return completed records in order."""
     if report.get("schema_version") != RESULT_SCHEMA_VERSION:
@@ -1161,6 +1221,8 @@ def _validated_resume_records(
         raise HarnessError("resume report status is invalid")
     expected_case_ids = [str(case.get("id")) for case in cases]
     comparisons = (
+        ("condition", report.get("condition"), condition),
+        ("model settings", report.get("model"), config.public_metadata()),
         ("suite ID", report.get("suite_id"), suite.get("suite_id")),
         ("suite hash", report.get("suite_sha256"), _suite_sha256(suite)),
         (
@@ -1246,8 +1308,11 @@ def run_suite(
     judge_enabled: bool,
     output_path: Path,
     resume_report: Mapping[str, object] | None = None,
+    condition: str = "revised",
 ) -> dict[str, object]:
     """Execute isolated runs with atomic startup, per-run, and final checkpoints."""
+    if condition not in CONDITIONS:
+        raise HarnessError("invalid comparison condition")
     planned = planned_case_runs(suite, cases)
     planned_keys = [
         _case_run_key(case.get("id"), run_number)
@@ -1260,6 +1325,7 @@ def run_suite(
         skill_body=skill_body,
         judge_enabled=judge_enabled,
         planned_keys=planned_keys,
+        condition=condition,
     )
     if resume_report is None:
         records: list[dict[str, object]] = []
@@ -1272,6 +1338,7 @@ def run_suite(
             skill_body=skill_body,
             judge_enabled=judge_enabled,
             planned_keys=planned_keys,
+            condition=condition,
         )
         report["runs"] = records
         generated_at = resume_report.get("generated_at_utc")
@@ -1374,6 +1441,8 @@ def _parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument("--case", action="append", dest="case_ids")
+    parser.add_argument("--suite", type=Path, default=DEFAULT_SUITE_PATH)
+    parser.add_argument("--condition", choices=CONDITIONS)
     parser.add_argument("--deployment")
     parser.add_argument("--endpoint")
     parser.add_argument("--api-version")
@@ -1397,18 +1466,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     output_path: Path | None = None
     try:
-        suite = load_suite()
+        suite = load_suite(args.suite)
         if args.resume is not None and args.dry_run:
             raise HarnessError("--resume cannot be combined with --dry-run")
         resume_report = (
             load_resume_report(args.resume) if args.resume is not None else None
+        )
+        condition = args.condition or (
+            str(resume_report.get("condition", "revised"))
+            if resume_report is not None else "revised"
         )
         requested_case_ids = args.case_ids
         if resume_report is not None and requested_case_ids is None:
             requested_case_ids = _resume_case_ids(resume_report)
         cases = selected_cases(suite, requested_case_ids)
         if args.dry_run:
-            print(json.dumps(dry_run_summary(suite, cases), indent=2, sort_keys=True))
+            summary = dry_run_summary(suite, cases)
+            summary["condition"] = condition
+            summary["split"] = suite.get("split", "development")
+            print(json.dumps(summary, indent=2, sort_keys=True))
             return 0
         config_path = args.config
         if config_path is None and DEFAULT_LOCAL_CONFIG_PATH.is_file():
@@ -1435,10 +1511,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             suite=suite,
             cases=cases,
             config=config,
-            skill_body=load_skill_body(),
+            skill_body=load_condition_body(condition),
             judge_enabled=not args.no_judge,
             output_path=output_path,
             resume_report=resume_report,
+            condition=condition,
         )
     except KeyboardInterrupt:
         if output_path is None:

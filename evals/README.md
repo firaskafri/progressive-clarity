@@ -1,206 +1,125 @@
-# Progressive Clarity v0.4 Advisory host acceptance
+# Progressive Clarity v0.5 evaluation
 
-`cases.json` scores visible topic-oriented behavior in ChatGPT, Cursor, and
-Claude Code. This surface is **Advisory**: no current v0.4 host run exists, so
-its status is `UNVERIFIED`. Historical v0.2 and v0.3.x results remain separate
-in `docs/verification.md`.
+Three evidence tracks answer different questions:
 
-## Active cases
+1. **Development conformance:** does output follow the revised protocol?
+2. **Unseen holdouts:** does behavior generalize beyond cases used for tuning?
+3. **Reader outcomes:** do people interpret actions and constraints correctly,
+   retrieve information efficiently, and prefer the answers?
 
-- `T01`: focused fact, full orientation, focused exploration, full handoff.
-- `T02`: explicit focused and full presentation.
-- `T03`: information update followed by material re-synthesis.
-- `T04`: narrow and material corrections.
-- `T05`: indispensable safety warning.
-- `T06`: clarification before orientation.
-- `T07`: exact controlling text.
-- `T08`: narrative non-fit.
-- `T09`: sequential procedure non-fit.
-- `T10`: best-effort return to an earlier topic.
+Current v0.5 live-host, holdout, and reader-outcome results are **UNVERIFIED**.
+Local `tests/` cover mechanical contracts and harness behavior without inference.
+Historical host observations remain in [Verification](../docs/verification.md).
 
-## Evidence boundary
+## Development suite
 
-The suite scores only observable output: focused/full cadence, directness,
-caveats, continuity, repetition, filler, and purpose-specific shapes. It does
-not infer trusted topic IDs, policy reasons, committed state, or host activation
-without an exposed trace.
+`cases.json` contains 18 cases, 22 sessions, and 44 scored responses per host.
+T04 corrections and T05 warnings each have three prescribed runs. Preserve one
+session for all turns of a case and start a fresh session for every case run.
 
-`tests/` separately exercises protocol `0.4`, schemas `3.0.0`, caller-driven
-policy, per-topic state, focused/full rendering, deterministic English counts,
-fact reuse, corrections, quotations, atomic state, and the two-attempt wrapper.
-A local mechanical pass does not pass this advisory suite.
+| Cases | Coverage |
+| --- | --- |
+| T01–T03 | Orientation, exploration, explicit presentation, updates and synthesis |
+| T04–T06 | Natural repairs, warning placement, useful clarification |
+| T07–T10 | Controlling text, fiction, procedures, topic return |
+| T11–T13 | Compact decisions, no-heading warnings, missing numeric inputs |
+| T14–T15 | Corrected procedures and Full requests blocked by missing information |
+| T16–T17 | Longer ambiguous topic conversation and useful repeated qualification |
+| T18 | Natural cross-domain orientation with usefulness-based presentation |
 
-## Run policy
-
-Run each case in a fresh session and preserve one session for all turns in that
-case. Run `T04` and `T05` three times per host. The initial round contains 14
-sessions and 29 scored responses per host.
-
-### ChatGPT isolation
-
-- Use Temporary Chat.
-- Disable ChatGPT memory.
-- Use one fresh chat for each case run.
-- Preserve one chat only for the turns within that case run.
-- Record model, settings, and date.
-- Record the visible Skill activation indicator exactly as shown.
-- Preserve raw transcripts unchanged. Put counts, annotations, and scores in a
-  separate record.
-
-These controls prevent facts from another case or prior chat from entering the
-oracle. In particular, T06 must not inherit staging, validation, or rollback
-facts before the user supplies them.
-
-Every prescribed run must pass. The maintainer explicitly authorized controlled
-continuation on 2026-08-20 after the first bounded remediation remained below
-100%. Complete and review each round before revising, rerun only failed cases
-with every prescribed repetition, never average outcomes, and stop when every
-run passes or the maintainer pauses the cycle.
+Prompts avoid prescribing a sentence-by-sentence answer. Explicit Full requests
+test requested presentation; compact and ambiguous cases test natural behavior.
+The suite is public development material, not an unseen holdout.
 
 ## Scoring
 
-Use `PASS`, `FAIL`, or `UNVERIFIED`.
+Use `PASS`, `FAIL`, or `UNVERIFIED` for observable conformance. Evaluate accuracy,
+required facts, caveat placement, appropriate shape, useful depth, assumptions,
+clarification, and faithful correction. Natural correction wording and brief
+helpful repetition are valid. A repetition failure must identify both passages
+and explain the missing reader benefit. An input request may include rationale
+or supported bounded advice, but may not authorize an unsupported action.
 
-A focused response must answer directly without a forced three-view sequence,
-general recap, or manufactured depth. A simple fact uses at most three
-sentences unless an indispensable safety or accuracy caveat requires more;
-sentence one answers, an optional indispensable distinction may follow, and
-then it stops without a use-case catalogue or anticipated next question.
+The 40/200 English limits are provisional Advisory targets. Harness budget
+observations include `binding: false`: an exceeded target is recorded separately
+and does not alone fail conformance. The Mechanical wrapper retains hard caps.
+Whole-output character and non-empty-line diagnostics include code, tables,
+headings, warnings, and Markdown syntax. They do not estimate reading time.
 
-A full response must render At a glance, In context, and At depth exactly once
-and in order and keep non-warning English prose within the 40/200 limits. Every
-deeper view must be dominated by new information. Names, dates, identifiers,
-and necessary short anchors may recur, but a complete conclusion, sentence,
-list, explanation, warning, or recommendation may not be repeated or
-paraphrased. At depth must not end with a recap, summary, “key rule,” or
-restated operative recommendation.
+Repair meaning and numeric-assumption support require semantic review. Literal
+labels do not establish them. Model judging is a regression proxy, not human
+reader research. Record activation only when a host exposes a relevant trace;
+similar formatting does not prove Skill activation.
 
-Score Full composition against this private workflow:
+## Frozen rounds and holdouts
 
-1. Draft At a glance.
-2. Extract its complete propositions into a “do not restate” ledger.
-3. Draft In context using only new rationale, constraints, or actions plus
-   minimal anchors.
-4. Add its complete propositions to the ledger.
-5. Draft At depth using only new evidence, exceptions, or implementation.
-6. Delete any sentence that restates a ledger proposition.
-7. Delete any concluding recap from At depth.
+Freeze instructions, suite, rubric, settings, and planned repetitions before a
+round. Complete the round and retain every outcome and denominator. Failed-case
+reruns are debugging evidence; after revision, a fresh full development run is
+needed for a whole-suite claim. Inspecting and tuning to a holdout consumes it.
 
-Positive: “For Atlas, Security owns the gate” may anchor new ownership after an
-At-a-glance Atlas recommendation. Negative: repeating “Atlas must wait for
-security approval” or ending “Key rule: delay Atlas” fails.
+See [unseen holdout authoring](holdouts.md) and the
+[blinded reader-study plan](reader-study.md). For manual ChatGPT evaluation, use
+Temporary Chat with memory disabled, record model/settings/date and visible
+activation indicators, and keep raw transcripts separate from annotations.
 
-When governing inputs are missing, require:
+## Azure API regression and comparison harness
 
-```text
-Governing input: <missing dependency>.
+`tools.azure_eval_harness` uses Agno to run a named Azure OpenAI deployment. It
+injects the selected instruction condition and preserves case history. This
+does not verify a ChatGPT package installation, product system prompt, or host
+activation. The optional same-deployment judge is non-independent.
 
-Example assumption: <number and the assumption that justifies it>.
-```
-
-`Example assumption:` is the required combined Example/Assumption label. A
-“good default,” “I’d use,” or numeric value or range outside this structure
-fails.
-Supplied governing inputs permit a direct number.
-
-Clarification asks one focused question without a conditional recommendation,
-rationale, or implementation detail. Corrections use the literal explicit
-repair pattern; under automatic presentation, material corrections use Full
-format while narrow corrections remain Focused. A material warning places
-prohibition, hazardous state,
-concrete harm, containment, and resume condition in At a glance. Controlling
-text explanations preserve the source under `Controlling text:` and use the
-literal `Non-controlling plain-language summary:` label. Exact output, narrative
-voice, and complete procedure order retain their required shape.
-
-Activation requires the visible host indicator or another exposed host trace.
-Similar output is not activation evidence, and a trace does not prove
-behavioral conformance.
-
-## Automated Azure behavior proxy
-
-`tools.azure_eval_harness` runs the behavior suite through an explicitly named
-Azure OpenAI deployment using Agno. It injects the canonical Skill as the system
-message, creates a new Agno agent for each prescribed case run, preserves turns
-inside that run, captures raw output, applies deterministic presentation and
-budget checks, and optionally requests a structured semantic judgment. The
-judge receives only criteria applicable to the current turn: universal
-accuracy/fact/prohibition checks plus presentation- and contract-specific
-criteria. Unrelated correction and warning criteria are omitted.
-
-This is a regression proxy, not ChatGPT acceptance evidence. It cannot verify
-ChatGPT package installation, automatic Skill selection, the visible Skill
-indicator, memory isolation, product system instructions, or UI behavior.
-The same-deployment semantic judge is not independent and remains subject to
-human review.
-
-Use Agno 2.6.x or newer from the configured evaluation environment. Export
-credentials without putting them on the command line:
+Install Agno 2.6.x or newer in the evaluation environment and configure:
 
 ```sh
 export AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
 export AZURE_OPENAI_API_KEY="<secret>"
-export AZURE_OPENAI_EVAL_DEPLOYMENT="<latest-deployment-name>"
+export AZURE_OPENAI_EVAL_DEPLOYMENT="<deployment-name>"
 export AZURE_OPENAI_API_VERSION="2024-10-21"
 ```
 
-Alternatively, copy `evals/azure.local.example.json` to
-`evals/azure.local.json` and fill its four top-level values. The local file is
-ignored by Git and loaded automatically; use `--config <path>` to select
-another ignored JSON file. Never place real credentials in the committed
-example or Python source.
-
-The harness has no deployment default. `--deployment` or one of
-`AZURE_OPENAI_EVAL_DEPLOYMENT`, `AZURE_OPENAI_CHAT_DEPLOYMENT`, or
-`AZURE_OPENAI_DEPLOYMENT` is required so an older deployment cannot be selected
-silently.
-
-Plan calls without credentials:
+Alternatively use the ignored `evals/azure.local.json`, matching
+`azure.local.example.json`, or pass `--config` with another local configuration.
+The harness has no deployment default. Credentials are not recorded in reports.
 
 ```sh
-python3 -m tools.azure_eval_harness --dry-run
-python3 -m tools.azure_eval_harness --dry-run --case T01 --case T06
+python3.11 -m tools.azure_eval_harness --dry-run
+python3.11 -m tools.azure_eval_harness --case T11 --case T12 --dry-run
+python3.11 -m tools.azure_eval_harness --condition revised \
+  --output evals/runs/revised.json
 ```
 
-Run one case or the complete prescribed suite:
+For matched comparisons, run the same suite and settings with each of
+`--condition baseline`, `minimal`, `legacy`, and `revised`, using separate output
+paths. `baseline` uses a generic helpful-assistant prompt, `minimal` uses the
+short principles prompt, `legacy` uses the preserved v0.4 skill, and `revised`
+uses the compact current skill. `--no-judge` captures raw output and mechanical
+observations without a second model call; semantic status remains `UNVERIFIED`.
+Exit status 1 means `FAIL` or `UNVERIFIED`, so a completed `--no-judge` capture
+normally returns 1 while still preserving its report for reader-study preparation.
+
+Use `--suite path/to/suite.json` for an independently authored holdout or reader
+study. A report records suite/protocol/instruction hashes, condition, split,
+model settings, run plan, and raw responses. Startup and per-run checkpoints are
+atomic; interrupted reports can resume:
 
 ```sh
-python3 -m tools.azure_eval_harness --case T01 --output evals/runs/t01.json
-python3 -m tools.azure_eval_harness --output evals/runs/complete.json
+python3.11 -m tools.azure_eval_harness --resume evals/runs/revised.json
 ```
 
-Use `--no-judge` to capture generations and deterministic checks without the
-second model call. The harness creates the report with status `RUNNING`, writes
-an atomic checkpoint after every completed case run, marks a caught keyboard
-interrupt as `INTERRUPTED`, and marks successful suite execution as `COMPLETE`.
-Each checkpoint records suite/protocol identity, the exact Skill-body hash,
-deployment, API version, judge mode, selected cases, completed case/run keys,
-and current aggregate state.
+For an external suite, pass the same `--suite` on resume. Condition defaults to
+the saved one. Changed instructions, suite, model settings, or condition reject
+resume. Completed runs are skipped. Incomplete interrupted runs replay in a fresh
+session. A completed run with an error remains recorded, rather than being
+silently replaced by a better attempt.
 
-Resume an interrupted or otherwise incomplete checkpoint in place:
+## Local validation
 
 ```sh
-python3 -m tools.azure_eval_harness \
-  --resume evals/runs/complete.json
-```
-
-Resume validates suite ID, suite hash, protocol hash, Skill-body hash,
-deployment, API version, judge mode, selected cases, and planned runs before
-making a model call. Completed runs are skipped; an interrupted run without a
-completed record is replayed in a fresh Agno session. Reports are written under
-ignored `evals/runs/` by default and never contain the API key or full endpoint.
-The same-deployment judge remains non-independent even when its criteria are
-correctly scoped.
-
-## Validation
-
-From the repository root:
-
-```sh
-python3.11 -m json.tool evals/cases.json >/dev/null
 python3.11 -m tools.validate_repository
+python3.11 -m unittest discover -s tests
 ```
 
-Repository validation checks suite identity, case and fact references,
-sequential turns, repetitions, totals, protocol hash, frozen inputs, and the
-Advisory/Enforced boundary.
+Repository checks cover frozen inputs, suite identity, reference integrity, run
+totals, package synchronization, and the Advisory/Mechanical guarantee boundary.

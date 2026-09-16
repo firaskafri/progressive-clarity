@@ -121,10 +121,14 @@ def resolve_turn(
     elif request.presentation_request == "full":
         expected_kind = "views"
         reason = "explicit_full"
-    elif request.turn_kind in _AUTO_FULL_TURNS:
+    elif request.turn_kind in _AUTO_FULL_TURNS and request.depth_useful:
         expected_kind = "views"
         reason = request.turn_kind
-    elif request.turn_kind == "substantial" and not topic.has_committed_overview:
+    elif (
+        request.turn_kind == "substantial"
+        and not topic.has_committed_overview
+        and request.depth_useful
+    ):
         expected_kind = "views"
         reason = "first_substantial"
     else:
@@ -132,7 +136,12 @@ def resolve_turn(
         reason = "ordinary_focused"
 
     marks_overview = (
-        expected_kind == "views" and request.turn_kind in _OVERVIEW_TURNS
+        expected_kind in {"views", "focused"}
+        and request.turn_kind in _OVERVIEW_TURNS
+        and (
+            request.turn_kind != "substantial"
+            or not topic.has_committed_overview
+        )
     )
     return ResolvedTurn(
         topic_id=request.topic_id,

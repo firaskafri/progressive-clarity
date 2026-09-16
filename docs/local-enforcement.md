@@ -1,6 +1,74 @@
 # Local deterministic enforcement
 
-## Current v0.4 implementation
+## Current v0.5 implementation
+
+`pc-core` targets package `0.5.0`, protocol `0.5`, request schema `4.0.0`, and
+envelope/state schemas `3.0.0`. The Advisory skill does not call the wrapper or
+inherit its guarantees.
+
+### Current trusted request
+
+```json
+{
+  "schema_version": "4.0.0",
+  "prompt": "Explain the Atlas adoption decision.",
+  "topic_id": "atlas",
+  "topic_action": "start",
+  "turn_kind": "substantial",
+  "presentation_request": "auto",
+  "depth_useful": true,
+  "controlling_text": null,
+  "summary_max_words": null,
+  "non_fit_kind": null,
+  "required_facts": null
+}
+```
+
+`depth_useful` is a required Boolean caller judgment. Under automatic presentation,
+first substantial orientation and meaningful checkpoints use Full only when it
+is true. Compact consequential answers can use Focused and still mark topic
+orientation. Purpose-specific shapes and explicit presentation take precedence.
+See [the decision table](../SPEC.md#32-authoritative-presentation-decision-table).
+
+The non-streaming wrapper resolves policy before generation, validates buffered
+JSON, renders Markdown, and atomically commits state after success. A failed
+candidate gets one complete repair under the same policy; a second failure
+withholds output. Unknown, active, and inactive topic rules remain strict.
+
+### Revised mechanical boundary
+
+- Full has three ordered, non-empty views and hard English 40/200 caps, with
+  structured warning/repair exemptions. Advisory targets use the same numbers
+  provisionally and do not claim optimal reading length.
+- Corrections require committed withdrawn IDs and replacement IDs. Changed-action
+  IDs may be empty; natural wording is accepted. Meaning remains unverified.
+- Clarification controls accept natural input requests and brief rationale without
+  reserved view headings. They have no fact entries. A Focused answer may combine
+  committed bounded advice with a clarification ask.
+- Facts preserve identity and exact committed text. Primary allocation must be
+  referenced; Full facts may also occur in other views. Repetition creates no
+  new fact IDs. Overview synthesis may be Focused or Full.
+- Exact lexical echoes and near-overlap produce **nonblocking advisory observations**.
+  The `exact_lexical_duplicate_detection` check records that the scan ran, not that
+  repetition is absent or useful. No lexical matcher can establish reader benefit.
+- `rendered_markdown_characters` and `rendered_nonempty_lines` count whole output,
+  including formatting syntax, code, tables, and exempt content. They diagnose
+  bulk, not comprehension or reading time.
+
+Trusted quotation equality, required-fact coverage, strict schemas, branch/count
+transitions, and fail-closed output remain mechanical checks. Accuracy, useful
+depth, clarification relevance, repair meaning, warning sufficiency, and human
+safe stopping remain `UNVERIFIED`.
+
+Use a fresh `conversation-state-v05.json`; no earlier protocol state is silently
+migrated. One owner per state path is required. Remote host history/effects and
+downstream display are outside the local atomic state transaction. See
+[installation](installation.md) and [verification](verification.md).
+
+## Historical v0.4 implementation record
+
+Everything below describes earlier revisions as recorded. Its rules, commands,
+schemas, hashes, and status statements are historical, not current instructions.
 
 The current `pc-core` source implements the Mechanical wrapper profile for
 Progressive Clarity protocol `0.4`. The wrapper request, model envelope, and

@@ -13,26 +13,21 @@ Each example states:
 - whether the Full-format English budget applies;
 - a prompt and representative response.
 
-The 40/200 English budgets apply only to Full responses. User prompts, control
-dialogue, scenario metadata, and Focused responses are outside those budgets.
+The provisional 40/200 English targets apply only to Advisory Full responses;
+the Mechanical profile enforces the same numbers as hard caps. User prompts,
+control dialogue, scenario metadata, and Focused responses are outside them.
 Invisible `words` comments identify prose spans for reproducible review; they
 do not alter rendered output or establish host behavior.
 
-For every Full example, privately draft At a glance, ledger its complete
-propositions, draft In context from new rationale/constraints/actions plus
-minimal anchors, ledger those propositions, and draft At depth from new
-evidence/exceptions/implementation. Delete sentences that restate the ledger
-and delete any concluding At-depth recap.
-
-Compact positive: after “Delay Atlas until security approval,” In context may
-say “For Atlas, Security owns the gate and needs the threat model by Friday.”
-The recurring name anchors new ownership and timing. Compact negative: “Atlas
-must wait for security approval” repeats the conclusion, and ending At depth
-with “Key rule: delay Atlas” is a recap.
+Choose Full only when distinct layers help or the user requests them. Deeper
+views should be predominantly new; brief repetition may connect reasoning or
+keep an action qualified. Remove duplicated explanations and automatic recaps.
+Exact lexical identity alone does not establish unhelpful repetition.
 
 ## Index
 
 - [Simple fact — Focused](simple-answer.md)
+- [Compact decisions, assumptions, and precedence](usefulness.md)
 - [Topic lifecycle — Focused to Full](topic-lifecycle.md)
 - [Decision checkpoint — Full](decision.md)
 - [Status update and re-synthesis](status-update.md)

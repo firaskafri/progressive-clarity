@@ -6,15 +6,15 @@
       "id": "TR01",
       "prompt": "gold prices and forecasts",
       "eligible_for_skill": true,
-      "expected_presentation_if_applied": "full",
-      "rationale": "A first consequential forecast benefits from orientation, caveats, and depth."
+      "expected_presentation_if_applied": "adaptive",
+      "rationale": "Orient with supported evidence when available; clarify time horizon or data needs rather than invent forecasts."
     },
     {
       "id": "TR02",
       "prompt": "Why do central banks raise interest rates when inflation stays high?",
       "eligible_for_skill": true,
-      "expected_presentation_if_applied": "full",
-      "rationale": "A first explanatory answer can orient the topic across all three views."
+      "expected_presentation_if_applied": "adaptive",
+      "rationale": "Choose a compact explanation or distinct depth according to usefulness."
     },
     {
       "id": "TR03",
@@ -27,15 +27,15 @@
       "id": "TR04",
       "prompt": "Compare the M5 Pro and M5 Max for software development.",
       "eligible_for_skill": true,
-      "expected_presentation_if_applied": "full",
-      "rationale": "A consequential first comparison is an orientation-capable answer."
+      "expected_presentation_if_applied": "adaptive",
+      "rationale": "Comparison depth depends on available evidence and the user's workload."
     },
     {
       "id": "TR05",
       "prompt": "Should we delay the mobile release if crash-free sessions remain below target?",
       "eligible_for_skill": true,
-      "expected_presentation_if_applied": "full",
-      "rationale": "A release decision is a checkpoint even when phrased as yes or no."
+      "expected_presentation_if_applied": "focused",
+      "rationale": "A compact bounded recommendation can explain the reliability condition without manufactured depth."
     },
     {
       "id": "TR06",
@@ -48,8 +48,8 @@
       "id": "TR07",
       "prompt": "Summarize the final architecture for the team handoff.",
       "eligible_for_skill": true,
-      "expected_presentation_if_applied": "full",
-      "rationale": "An accumulated-context handoff is a summary checkpoint."
+      "expected_presentation_if_applied": "adaptive",
+      "rationale": "Use distinct layers if the accumulated architecture warrants them."
     },
     {
       "id": "TR08",

@@ -1,6 +1,32 @@
 # Claude plugin and custom Skill distribution
 
-## Current v0.4 distribution target
+## Current v0.5 distribution target
+
+Package `0.5.0` carries the compact Advisory skill in two forms: a repository-root
+Claude plugin and a Claude.ai custom Skill. Both preserve the canonical skill
+body and Apache license; only custom-Skill frontmatter is regenerated.
+
+The revision supports compact consequential answers, distinct depth when useful,
+brief helpful repetition, natural correction, and assumption-aware numeric advice.
+Both packages are instruction-only and have no wrapper, hook, or durable state.
+
+```sh
+python3.11 -m tools.package_claude_plugin
+python3.11 -m tools.package_claude_skill
+unzip -t dist/progressive-clarity-claude-plugin-0.5.0.zip
+unzip -t dist/progressive-clarity-claude-ai-skill-0.5.0.zip
+```
+
+The plugin contains `.claude-plugin/plugin.json` plus the canonical Skill/license;
+the custom upload contains `progressive-clarity/SKILL.md` and `LICENSE`.
+Use `claude --plugin-dir /path/to/progressive-clarity` for source loading, or upload
+the custom-Skill ZIP through the host's supported flow. Current local evidence is
+in [Verification](verification.md); host acceptance and behavior remain unverified.
+
+## Historical v0.4 distribution record
+
+Everything below describes earlier revisions as recorded, including their
+package names, commands, hashes, and host-validation statements.
 
 Progressive Clarity v0.4 has two Claude distribution forms. Both are
 instruction-only and reuse the canonical

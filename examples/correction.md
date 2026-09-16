@@ -27,14 +27,15 @@ That command does not discard working-tree edits.
 
 ### Assistant — correction
 
-Earlier I said `git restore --staged README.md` discards the file's working-tree
-edits. That was wrong or incomplete. It only unstages the path; your
-working-tree edits remain. This changes the action: no copy is required first.
+I was wrong about losing working-tree edits: `git restore --staged README.md`
+only unstages the file. Your edits remain, so the copy-first precaution I
+recommended is unnecessary for this command.
 
 ## Material correction
 
 - **Expected presentation:** The initial date answer is a Focused simple fact.
-  The schedule correction is Full because it changes the operative action; its
+  The schedule correction is Full because schedule, controls, and evidence benefit
+  from distinct layers; its
   repair is the first prose under At a glance.
 - **Required repair facts:** Withdraw Tuesday as the production date; replace
   it with Thursday at 09:00 UTC; identify Tuesday as the dry run; move
@@ -62,9 +63,8 @@ minutes during production.
 #### At a glance
 
 <!-- words:correction-repair:start -->
-Earlier I said production maintenance begins Tuesday. That was wrong or
-incomplete. Production begins Thursday at 09:00 UTC; Tuesday is only the dry
-run. This changes production coverage to Thursday.
+I gave the wrong production date: Tuesday is the dry run. Production begins
+Thursday at 09:00 UTC, so move production coverage to Thursday.
 <!-- words:correction-repair:end -->
 
 #### In context
@@ -76,7 +76,7 @@ Use Tuesday for rehearsal support. Backup validation gates Thursday's cutover.
 #### At depth
 
 <!-- words:correction-depth:start -->
-The status cadence remains every 30 minutes during production maintenance.
+Operations posts status every 30 minutes during production maintenance.
 Record dry-run findings separately so they cannot be mistaken for production
 authorization.
 <!-- words:correction-depth:end -->

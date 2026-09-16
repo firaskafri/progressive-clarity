@@ -5,6 +5,19 @@ from __future__ import annotations
 import re
 
 
+def reading_cost_diagnostics(markdown: str) -> dict[str, int]:
+    """Count whole-output bulk, including Markdown syntax and excluded blocks.
+
+    These diagnostics are not estimates of reader comprehension or reading time.
+    """
+    return {
+        "rendered_markdown_characters": len(markdown),
+        "rendered_nonempty_lines": sum(
+            bool(line.strip()) for line in markdown.splitlines()
+        ),
+    }
+
+
 _FENCE_OPEN = re.compile(r"^ {0,3}(?P<marker>`{3,}|~{3,})")
 _ATX_HEADING = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 _SETEXT_HEADING = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")

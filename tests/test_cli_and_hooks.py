@@ -2,7 +2,7 @@
 
 Description: Exercises validate/render process behavior, stdout withholding,
 diagnostic redaction, Cursor response-to-stop handoff, Claude one-retry
-decisions, protocol-v0.4 envelopes, audit/request/state path isolation, and
+decisions, protocol-v0.5 envelopes, audit/request/state path isolation, and
 checked-in project template schemas.
 Assumptions: Hook APIs cannot establish the trusted structured state available
 to the non-streaming wrapper.
@@ -41,7 +41,7 @@ class ValidateRenderCliTests(unittest.TestCase):
     def test_validate_prints_separated_mechanical_and_advisory_status(self) -> None:
         """Name: Validate report boundary.
 
-        Description: Validates a complete substantial v0.4 candidate.
+        Description: Validates a complete substantial v0.5 candidate.
         Assumptions: Request and envelope identify the same new topic.
         Expectations: Exit zero reports mechanical certification and semantic
         UNVERIFIED status separately.
@@ -141,15 +141,15 @@ class ValidateRenderCliTests(unittest.TestCase):
     def test_render_diagnostics_do_not_echo_invalid_candidate_prose(self) -> None:
         """Name: Invalid-prose diagnostic redaction.
 
-        Description: Repeats a private lexical unit across two views to trigger
-        deterministic duplicate rejection.
+        Description: Exceeds the glance budget while repeating private content
+        across views, exercising mechanical and advisory diagnostic redaction.
         Assumptions: Failure diagnostics may identify the code and locations
         but are not a channel for uncertified response prose.
         Expectations: Stdout is empty and stderr omits the repeated phrase.
         """
         secret = "private candidate phrase."
         data = valid_full_dict()
-        data["payload"]["sections"][0]["content"] = secret
+        data["payload"]["sections"][0]["content"] = secret + " word" * 41
         data["payload"]["sections"][1]["content"] = secret
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

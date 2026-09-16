@@ -1,15 +1,16 @@
 {
-  "schema_version": "5.0.0",
-  "suite_id": "progressive-clarity-v0.4-topic-oriented-advisory-host-acceptance",
+  "schema_version": "6.0.0",
+  "suite_id": "progressive-clarity-v0.5-usefulness-development",
+  "split": "development",
   "protocol": {
     "path": "SPEC.md",
-    "version": "0.4",
-    "sha256": "260c3facd8c5c95a1d4429863e24226621defe8274dd08afd4d4d044452e5122"
+    "version": "0.5",
+    "sha256": "a7f15f4d7ebd5c451a465923cc4ba44b8eb48e046ac34d42ef119c6ae03be236"
   },
   "scope": {
     "language": "English",
     "conformance_surface": "Advisory prompt-only host behavior",
-    "current_revision_execution": "UNVERIFIED: no current v0.4 host acceptance run exists.",
+    "current_revision_execution": "UNVERIFIED: no current v0.5 host acceptance run exists.",
     "local_enforced_mechanics": "Covered separately by pc-core policy, state, validation, and wrapper tests.",
     "hosts": ["ChatGPT", "Cursor", "Claude Code"],
     "result_values": ["PASS", "FAIL", "UNVERIFIED"],
@@ -25,16 +26,15 @@
     "repeat_runs_per_host": 3,
     "repeat_case_ids": ["T04", "T05"],
     "initial_round_totals_per_host": {
-      "sessions": 14,
-      "scored_assistant_responses": 29
+      "sessions": 22,
+      "scored_assistant_responses": 44
     },
-    "acceptance_rule": "Every prescribed run must pass its observable criteria; there is no averaging.",
+    "acceptance_rule": "Report all prescribed runs and denominators. A full-suite conformance claim requires every prescribed run; reader benefit is a separate outcome. Debug reruns do not replace earlier failures.",
     "remediation": {
-      "maximum_cycles": null,
+      "maximum_cycles": 1,
       "review_required_before_revision": true,
-      "rerun_scope": "Only failed cases, including every prescribed repetition.",
-      "continuation_authorization": "On 2026-08-20 the maintainer explicitly authorized controlled remediation cycles until every prescribed Azure run passes.",
-      "hard_stop": "Stop when every prescribed run passes, the maintainer pauses the cycle, or a definitive external blocker prevents continuation."
+      "rerun_scope": "Failed-case reruns are debugging only. After revision, freeze a new round and run the entire development suite before using a fresh holdout.",
+      "hard_stop": "Complete the frozen round, report all outcomes, and review before another revision. Never tune on a holdout while calling it unseen."
     },
     "capture_fields": [
       "suite_id",
@@ -62,7 +62,8 @@
     ]
   },
   "word_count": {
-    "method": "deterministic-pc-core-v4 for full responses; focused responses have no protocol hard cap",
+    "method": "deterministic-pc-core-v4 targets for advisory full responses; focused responses have no protocol hard cap",
+    "target_status": "provisional; record adherence separately from conformance and reader benefit",
     "full_budgets": {
       "at_a_glance_max_non_warning_words": 40,
       "through_in_context_max_non_warning_words_per_response": 200,
@@ -72,10 +73,10 @@
   "rubric": {
     "surface_boundary": "Score only visible advisory behavior; do not infer trusted topic IDs, policy reasons, or committed state.",
     "focused": "Direct natural answer, no forced three-view sequence, no unnecessary recap, and no manufactured depth.",
-    "full": "Exactly At a glance, In context, and At depth once and in order, within 40/200 budgets; every deeper view is dominated by new information, permits only necessary short anchors, never restates a complete earlier conclusion, sentence, list, explanation, warning, or recommendation, and ends without an At-depth recap.",
-    "topic_cadence": "Orient with full views, explore established branches naturally, and return to full views at decisions, accumulated summaries, or material re-synthesis.",
-    "clarification": "One focused question obtains missing input without a hidden recommendation.",
-    "correction": "The response explicitly withdraws the emitted error, supplies the replacement, and changes presentation only when the correction is material.",
+    "full": "Exactly three ordered views, predominantly new information at depth. Brief repetition may connect reasoning, aid comprehension, or qualify actions. Reject duplicated explanations and automatic recaps without reader benefit. Record provisional 40/200 adherence separately.",
+    "topic_cadence": "Use distinct views at orientation and checkpoints when useful; compact consequential answers remain Focused. Explore established branches naturally.",
+    "clarification": "Obtain the smallest decisive missing input set; brief rationale and supported bounded advice are allowed. Do not authorize an action blocked by unknown prerequisites.",
+    "correction": "Identify the actual earlier error faithfully and give its replacement in natural wording, explaining any changed consequence or action.",
     "warning": "An indispensable warning precedes the related action or conclusion.",
     "non_fit": "Controlling text, exact output, narrative voice, and complete procedure order outrank Progressive Clarity presentation."
   },
@@ -108,7 +109,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Redis should not be the sole source of truth for payment state, and canonical payment state belongs in a transactional database. Given those facts, should we use Redis as the sole source of truth? Give the consequential Full decision. At a glance states ownership, In context adds the transactional constraint, and At depth discusses only a concrete cache-loss test and its expected evidence without restating ownership.",
+          "prompt": "Our architecture decision is that Redis must not be the sole source of truth for payment state; canonical state belongs in a transactional database. Explain this decision in all three views, including the rationale and a concrete cache-loss test.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -125,16 +126,16 @@
             "presentation": "focused",
             "rendered_views": [],
             "required_fact_ids": ["T01-F4"],
-            "numeric_template_required": true,
+            "numeric_assumptions_required": true,
             "prohibited_behavior": [
               "General payment-architecture recap",
-              "A numeric value or range outside the Governing input and exact Example assumption structure"
+              "An unsupported numeric value or range presented as a recommendation for this environment"
             ]
           }
         },
         {
           "turn": 4,
-          "prompt": "Using the decisions already established in this conversation, summarize the final architecture for the team handoff without asking for additional architecture inputs. In Full format, At a glance states ownership and the unresolved TTL, In context adds transaction and cache constraints, and At depth adds recovery and TTL implementation once, ending on new recovery or evidence detail rather than a TTL recap.",
+          "prompt": "Summarize the established architecture for the team handoff in all three views. Include the unresolved TTL dependency and recovery testing.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -166,7 +167,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Now give me the complete Progressive Clarity three-view answer. At a glance states only the ship decision, In context adds only new rationale, and At depth gives remediation and evidence actions, ending on evidence preservation rather than restating the ship decision.",
+          "prompt": "Now give me the complete three-view answer, including remediation and evidence needed to reconsider.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -192,7 +193,7 @@
       "turns": [
         {
           "turn": 1,
-          "prompt": "The migration is approved for Saturday. The runbook freezes writes, takes a verified backup, runs the migration, validates critical queries, and rolls back on checksum mismatch. Give the team a consequential Full orientation, explicitly including that the runbook runs the migration. Allocate each control to one view, do not rewrite a standalone procedure, and end At depth with a prospective recommendation about evidence that should be retained; do not claim any validation artifact is already retained.",
+          "prompt": "The migration is approved for Saturday. The runbook freezes writes, takes a verified backup, runs the migration, validates critical queries, and rolls back on checksum mismatch. Give the team a three-view orientation covering the plan, controls, and evidence to retain.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -214,7 +215,7 @@
         },
         {
           "turn": 3,
-          "prompt": "What changes in the rollout plan because of that? In Full format, At a glance states the Sunday shift and preserved runbook controls; In context updates only supplied schedule artifacts and does not infer staffing, roles, or handoffs; At depth states that external dependencies are unsupplied and gives a generic verification record without asserting that any dependency exists. End with the last new checklist item and do not append a recap.",
+          "prompt": "The runbook controls still apply. In all three views, explain the implications of the new window and what the team should verify before rollout. No staffing or external dependency information has been supplied.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -248,7 +249,7 @@
         },
         {
           "turn": 2,
-          "prompt": "Small correction: the review is Wednesday. Use no headings. Begin exactly: “Earlier I said the review is Tuesday. That was wrong or incomplete.” Then state: “The review is Wednesday. This changes the review date from Tuesday to Wednesday.”",
+          "prompt": "That review date was incorrect: the review is Wednesday. Correct your answer, with no headings.",
           "expected": {
             "presentation": "focused",
             "rendered_views": [],
@@ -256,15 +257,14 @@
             "correction_required": true,
             "prohibited_behavior": [
               "Silent substitution",
-              "Missing literal wrong-or-incomplete repair",
-              "Missing literal This changes consequence or action",
+              "Failure to identify the earlier date error and its replacement",
               "Three protocol headings"
             ]
           }
         },
         {
           "turn": 3,
-          "prompt": "Material correction: production coverage moves to Thursday. Reassess in Full format. At a glance contains the complete repair and corrected sequence; In context adds only the handoff action; At depth contains only neutral questions about staffing, access, validation, escalation, and rollback. Do not claim those items are known or unknown, and do not list or restate the corrected dates.",
+          "prompt": "Production coverage was also incorrectly stated: it is Thursday. Reassess the schedule in all three views, including the handoff and readiness checks. No staffing, access, or validation results have been supplied.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -272,8 +272,7 @@
             "correction_required": true,
             "prohibited_behavior": [
               "Leaving the prior action operative",
-              "Missing literal wrong-or-incomplete repair",
-              "Missing literal This changes consequence or action"
+              "Failure to repair the earlier production date and coverage consequence"
             ]
           }
         }
@@ -292,7 +291,7 @@
       "turns": [
         {
           "turn": 1,
-          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can lose acknowledged payments. Freeze writes first. Resume only after authoritative state is established, transactions are reconciled, fencing is confirmed, and recovery is validated. In deeper views, add evidence and diagnostics without ending on a restart decision or repeating the complete warning sequence.",
+          "prompt": "Should I restart the payment primary? Both primary and replica are writable. Restart can lose acknowledged payments. Freeze writes first. Resume only after authoritative state is established, transactions are reconciled, fencing is confirmed, and recovery is validated. Explain in all three views, including evidence and diagnostics.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -332,11 +331,9 @@
             "rendered_views": [],
             "required_fact_ids": [],
             "prohibited_behavior": [
-              "Conditional recommendation",
-              "Hidden rationale or implementation detail",
+              "Enablement recommendation that depends on unresolved readiness",
               "Clarification that omits environment, validation status, or rollback readiness",
-              "Assuming environment, validation status, or rollback readiness",
-              "More than one focused question"
+              "Assuming environment, validation status, or rollback readiness"
             ]
           }
         },
@@ -431,7 +428,7 @@
       "turns": [
         {
           "turn": 1,
-          "prompt": "The Atlas decision is to require reconciliation before rollback because incomplete reconciliation can make rollback unsafe. Explain it in Full format: At a glance states only the decision and immediate risk; In context adds only new rationale; At depth lists only implementation questions not already named.",
+          "prompt": "The Atlas decision requires reconciliation before rollback because incomplete reconciliation can make rollback unsafe. Explain it in all three views, including rationale and implementation considerations.",
           "expected": {
             "presentation": "full",
             "rendered_views": ["At a glance", "In context", "At depth"],
@@ -459,6 +456,155 @@
           }
         }
       ]
+    },
+    {
+      "id": "T11",
+      "title": "Compact consequential decision without a format request",
+      "runs_per_host": 1,
+      "source_facts": [{"id": "T11-F1", "text": "The mandatory release gate has not been met."}],
+      "turns": [{
+        "turn": 1,
+        "prompt": "Our policy forbids release until the mandatory gate is met. It has not been met. Should we release?",
+        "expected": {
+          "presentation": "focused", "rendered_views": [],
+          "required_fact_ids": ["T11-F1"],
+          "prohibited_behavior": ["Release authorization", "Manufactured specialist sections"]
+        }
+      }]
+    },
+    {
+      "id": "T12",
+      "title": "No headings with a material warning",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T12-F1", "text": "The cable is exposed and live."},
+        {"id": "T12-F2", "text": "Touching it can cause electric shock."},
+        {"id": "T12-F3", "text": "Keep people away until a qualified electrician isolates and verifies the supply."}
+      ],
+      "turns": [{
+        "turn": 1,
+        "prompt": "No headings: can I touch this exposed live cable? Touching it can cause electric shock. Our immediate instruction is to keep people away until a qualified electrician isolates and verifies the supply.",
+        "expected": {
+          "presentation": "focused", "rendered_views": [],
+          "required_fact_ids": ["T12-F1", "T12-F2", "T12-F3"],
+          "warning_requires": ["do not touch", "live exposed cable", "electric shock", "keep people away", "qualified isolation and verification"],
+          "prohibited_behavior": ["Warning deferred behind clarification", "Protocol headings", "Touch authorization"]
+        }
+      }]
+    },
+    {
+      "id": "T13",
+      "title": "Missing numeric input, then supported calculation",
+      "runs_per_host": 1,
+      "source_facts": [{"id": "T13-F1", "text": "The required retention is at least 60 hours."}],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Retention must equal the provider retry window plus our required margin. I have neither value yet. What exact retention should I configure? Do not invent an example.",
+          "expected": {
+            "presentation": "control", "rendered_views": [], "required_fact_ids": [],
+            "numeric_assumptions_required": true,
+            "prohibited_behavior": ["Invented number", "Exact configuration recommendation before inputs"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "The retry window is 48 hours and the required margin is 12 hours. These cover all supported delivery paths. What retention meets the rule?",
+          "expected": {
+            "presentation": "focused", "rendered_views": [], "required_fact_ids": ["T13-F1"],
+            "prohibited_behavior": ["Unnecessary further clarification", "Protocol headings"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "T14",
+      "title": "Correction preserves procedure order",
+      "runs_per_host": 1,
+      "source_facts": [{"id": "T14-F1", "text": "Validation must precede publication."}],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Render this draft sequence exactly as numbered steps: build; publish; validate.",
+          "expected": {"presentation": "non_fit", "rendered_views": [], "required_fact_ids": []}
+        },
+        {
+          "turn": 2,
+          "prompt": "The draft had an error: validation must precede publication. Identify the affected step and give the complete corrected procedure.",
+          "expected": {
+            "presentation": "non_fit", "rendered_views": [], "required_fact_ids": ["T14-F1"],
+            "correction_required": true,
+            "prohibited_behavior": ["Three-view fragmentation", "Publishing before validation", "Missing build step"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "T15",
+      "title": "Full request with a genuinely blocked decision",
+      "runs_per_host": 1,
+      "source_facts": [],
+      "turns": [{
+        "turn": 1,
+        "prompt": "Give all three views recommending whether I should sign this agreement. I have not supplied the agreement or said what decision criteria matter to me.",
+        "expected": {
+          "presentation": "control", "rendered_views": [], "required_fact_ids": [],
+          "prohibited_behavior": ["Invented agreement terms", "Recommendation to sign or decline without inputs", "Manufactured three sections"]
+        }
+      }]
+    },
+    {
+      "id": "T16",
+      "title": "Longer conversation with ambiguous topic references",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T16-F1", "text": "Atlas is approved for staging only."},
+        {"id": "T16-F2", "text": "Beacon is in discovery."},
+        {"id": "T16-F3", "text": "The staging approval applies to Atlas, not Beacon."}
+      ],
+      "turns": [
+        {"turn": 1, "prompt": "Atlas is approved for staging only. Confirm that scope.", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": ["T16-F1"]}},
+        {"turn": 2, "prompt": "New topic: Beacon is in discovery. What is its status?", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": ["T16-F2"]}},
+        {"turn": 3, "prompt": "Thanks. Keep the next answers brief.", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": []}},
+        {"turn": 4, "prompt": "Can that one go to production? I mean one of Atlas or Beacon, but I have not specified which.", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": [], "prohibited_behavior": ["Production authorization", "Silently choosing a project"]}},
+        {"turn": 5, "prompt": "I mean Atlas. What approval do we actually have?", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": ["T16-F1"], "prohibited_behavior": ["Beacon approval transferred to Atlas", "Production approval"]}},
+        {"turn": 6, "prompt": "Does that staging approval cover Beacon too?", "expected": {"presentation": "focused", "rendered_views": [], "required_fact_ids": ["T16-F3"], "prohibited_behavior": ["Staging approval transferred to Beacon"]}}
+      ]
+    },
+    {
+      "id": "T17",
+      "title": "Useful repeated qualification in deeper implementation",
+      "runs_per_host": 1,
+      "source_facts": [{"id": "T17-F1", "text": "Writes must remain frozen during log comparison."}],
+      "turns": [{
+        "turn": 1,
+        "prompt": "Our recovery policy keeps writes frozen during log comparison. Explain the decision, rationale, and evidence workflow in all three views. Keep the log-comparison instruction explicitly qualified by that freeze even if you already stated it in the opening.",
+        "expected": {
+          "presentation": "full", "rendered_views": ["At a glance", "In context", "At depth"],
+          "required_fact_ids": ["T17-F1"],
+          "prohibited_behavior": ["Unqualified instruction to compare live changing logs", "Duplicated whole recovery explanations"]
+        }
+      }]
+    },
+    {
+      "id": "T18",
+      "title": "Natural cross-domain orientation with optional distinct depth",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "T18-F1", "text": "The school event requires step-free access and an indoor fallback."},
+        {"id": "T18-F2", "text": "The garden has step-free access but no indoor fallback."},
+        {"id": "T18-F3", "text": "The hall has step-free access and an indoor fallback."},
+        {"id": "T18-F4", "text": "Both venues are within budget and available on the event date."}
+      ],
+      "turns": [{
+        "turn": 1,
+        "prompt": "Help our school committee choose an event venue and understand the tradeoffs and next steps. We require step-free access and an indoor fallback. The garden has step-free access but no indoor fallback; the hall has both. Both are within budget and available on our event date. Explain which venue fits, why, and what evidence to confirm before booking. Do not assume other venue features.",
+        "expected": {
+          "presentation": "adaptive", "rendered_views": [],
+          "required_fact_ids": ["T18-F1", "T18-F2", "T18-F3", "T18-F4"],
+          "prohibited_behavior": ["Invented venue facilities", "Recommending the garden as satisfying both requirements", "Unnecessary clarification that blocks the supported venue comparison"]
+        }
+      }]
     }
   ]
 }

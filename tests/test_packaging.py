@@ -53,12 +53,12 @@ class CrossDistributionMetadataTests(unittest.TestCase):
     Description: Checks OpenAI, Claude plugin, and Claude.ai Skill release
     identity and controlling-text discovery while preserving each packager's
     distinct archive shape.
-    Assumptions: Protocol v0.4 changes every coordinated prompt distribution.
-    Expectations: All channels use version 0.4.4 and canonical skill content.
+    Assumptions: Protocol v0.5 changes every coordinated prompt distribution.
+    Expectations: All channels use version 0.5.0 and canonical skill content.
     """
 
     def test_all_distribution_versions_and_skill_bodies_match(self) -> None:
-        """Name: v0.4 distribution synchronization.
+        """Name: v0.5 distribution synchronization.
 
         Description: Loads all manifests, checks Claude.ai controlling-text
         discovery, and generates its Skill.

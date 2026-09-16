@@ -1,583 +1,332 @@
 # Progressive Clarity Protocol
 
-Version 0.4 release candidate
+Version 0.5 draft
 
-Progressive Clarity is a topic-oriented response protocol. It uses a focused,
-natural answer for ordinary exploration and three additive views when a topic
-needs orientation, re-synthesis, or a meaningful checkpoint.
+Progressive Clarity is a topic-oriented response protocol: orient when useful,
+explore naturally, and re-synthesize when decisions or context materially change.
+Structure serves comprehension; consequential answers may be short.
 
 ## 1. Scope and profiles
 
-This specification is normative for conversational factual answers,
-explanations, recommendations, comparisons, decisions, status updates, and
-summaries. It governs view composition, stopping quality, correction,
-exceptions, and response-budget accounting.
+This specification governs conversational factual answers, explanations,
+recommendations, comparisons, decisions, status updates, and summaries.
+**MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** are normative.
+Document adaptation is informative. Word-budget claims apply to English only.
 
-The keywords **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**
-state requirements. Version 0.4 defines word-budget conformance for English
-Full-format responses only.
+- **Advisory conversational profile:** the model infers topic continuity and
+  useful presentation from visible context. The canonical skill and packaged
+  skills are prompt-only. Their activation and conformance are probabilistic.
+- **Mechanical wrapper profile:** a trusted caller supplies topic action, turn
+  classification, whether distinct depth is useful, and presentation preference.
+  The wrapper verifies the selected structure and state transition. It does not
+  establish the semantic correctness of those classifications.
 
-The protocol has two profiles:
-
-- **Advisory conversational profile:** The model infers topic continuity and
-  presentation from the visible conversation. The canonical skill and ChatGPT
-  package are prompt-only. Activation, topic inference, return to an earlier
-  topic, and presentation selection are best-effort rather than deterministic.
-- **Mechanical wrapper profile:** A trusted caller supplies topic action, turn
-  classification, and presentation request. The wrapper verifies the selected
-  shape and state transition. It does not infer natural-language intent or
-  prove that the caller classified the turn correctly.
-
-Document adaptation is informative. It does not create another conversational
-behavior.
+Version 0.5 revises the v0.4 behavior contract. Earlier results are historical;
+they do not establish current conformance or reader benefit. Package target:
+`0.5.0`. Wrapper requests use schema `4.0.0`; envelope and state shapes remain
+`3.0.0`, with protocol `0.5`. Earlier protocol state is rejected.
 
 ## 2. Universal response requirements
 
-Every governed response, whether Focused or Full, MUST:
+Every governed response MUST:
 
-- answer the immediate request directly when the requested artifact permits;
-- be complete for that request rather than a teaser for later detail;
-- remain accurate, including material scope and uncertainty;
-- place an indispensable caveat with the claim or action it qualifies;
-- put safety, policy, and legal requirements ahead of brevity; and
-- explicitly repair a materially wrong emitted statement.
+- answer the immediate request directly and completely for its purpose;
+- preserve accuracy, material scope, uncertainty, and supplied evidence qualifiers;
+- distinguish established facts from assumptions and prospective advice;
+- place indispensable caveats beside the claims or actions they qualify;
+- put safety, policy, legal requirements, and accuracy ahead of brevity; and
+- explicitly repair an emitted error rather than silently reversing it.
 
-When a numeric recommendation lacks governing inputs, the response MUST use
-this visible structure:
+At each cumulative stopping point, the reader MUST receive a non-misleading
+answer within its stated scope. A decision summary need not contain a complete
+implementation procedure, but MUST NOT imply permission to execute while hiding
+prerequisites later. Requested procedures MUST be complete and ordered.
+Whether a human understood or acted safely remains an empirical outcome, not a
+property certified by formatting or fact declarations.
 
-```text
-Governing input: <missing dependency>.
-
-Example assumption: <number and the assumption that justifies it>.
-```
-
-`Example assumption:` is the required combined Example/Assumption label. The
-response MUST NOT use “good default,” “I’d use,” or a numeric value or range
-outside this structure. When the governing inputs are supplied, a direct
-numeric recommendation is allowed.
-When the user requests a numeric recommendation and the governing input is
-missing, this two-label template MUST be the answer and MUST NOT be replaced by
-a clarification question. Any example number MUST appear only after
-`Example assumption:`.
-
-Later detail MAY narrow an earlier claim but MUST NOT silently reverse its
-operative meaning. A Focused response as a whole MUST be safe to act on or stop
-after. In a Full response, each cumulative stopping point MUST be complete,
-accurate, and safe to stop.
-
-Directness, accuracy, caveat placement, safety, and repair are semantic
-requirements. A deterministic validator can inspect declared structure and
-exact lexical echoes, but it cannot prove those properties.
+Supplied measurements SHOULD retain value, unit, scope, time window, denominator
+or sample size, and source character such as pilot, estimate, or benchmark.
+Material evidence MUST NOT be silently discarded to meet a length preference.
 
 ## 3. Topic and presentation selection
 
-### 3.1 Advisory topic heuristic
+### 3.1 Topic continuity
 
-A topic continues while the objective, decision, or prior context needed to
-answer remains the same.
+Continue while the objective or prior context needed to answer remains relevant.
+Recognize explicit topic switches; acknowledgements and formatting instructions
+normally stay in the current topic. A targeted follow-up selects its branch
+without an unrequested general recap. Return to earlier topics when visible
+context supports it. When uncertain, prefer a Focused answer.
 
-In the Advisory conversational profile:
+Prompt-only continuity is best-effort. The wrapper receives `start` for an
+unknown topic, `continue` for the active topic, and `resume` for a known inactive
+topic. Invalid transitions MUST fail before generation.
 
-- Continue the current topic when the objective, decision, or required context
-  is unchanged.
-- Start a new topic only when the objective changes and prior context is no
-  longer needed.
-- Treat acknowledgements and formatting instructions as part of the current
-  topic; they do not create topics.
-- Treat return to an earlier topic as best-effort. Prompt-only hosts, including
-  ChatGPT, do not provide protocol-controlled durable topic state.
-- When uncertain, continue the current topic and prefer Focused format.
+### 3.2 Authoritative presentation decision table
 
-### 3.2 Mechanical topic input
+Apply the rows in priority order. Requirements for warnings, corrections, and
+assumptions govern content within the selected shape; they do not introduce a
+competing Full-format trigger.
 
-In the Mechanical wrapper profile, the trusted caller MUST identify a topic
-and classify the action as start, continue, or resume. The wrapper MUST reject
-an invalid state transition before generation. It MUST NOT claim that the
-supplied topic boundary is semantically correct.
+| Priority | Situation | Required behavior |
+| --- | --- | --- |
+| 1 | Safety, accuracy, policy, or legal requirement conflicts with brevity | Include indispensable content immediately; exceed a length preference only as needed. |
+| 2 | Exact artifact, quotation, transformation, narrative, or complete procedure | Preserve its functional shape and exact bytes where required. A requested explanation is separate. |
+| 3 | Missing input blocks the requested recommendation | Ask for the smallest decisive input set, optionally with brief rationale or supported bounded advice. Do not authorize the blocked action. |
+| 4 | Explicit all-three, brief/no-headings, or named-view request | Use Full, Focused, or Focused at the named depth respectively. |
+| 5 | First consequential orientation or meaningful checkpoint with useful distinct layers | Use Full. |
+| 6 | Compact consequential answer, simple fact, acknowledgement, ordinary follow-up, or uncertain depth benefit | Use Focused. |
 
-### 3.3 Presentation precedence
+The following combinations resolve using the same table:
 
-Resolve presentation in this order:
+| Combination | Resolution |
+| --- | --- |
+| No headings + material warning | Focused; put the complete indispensable warning first. |
+| Missing numeric input + no defensible example | Ask for the input or give a supported formula; do not manufacture a number. |
+| Exact artifact + explanation | Preserve the artifact; separate the explanation without injecting headings into the artifact. |
+| Correction + procedure | Identify and repair the affected step, then preserve the complete requested sequence. |
+| Full request + insufficient factual basis | Clarify the decisive input; do not invent three sections. |
+| Full request + short but answerable topic | Honor all three views with proportionate grounded detail; do not pad. |
+| Hazard + missing implementation details | Give the known containment or warning immediately; ask only for details needed for the remaining answer. |
 
-1. **Purpose-specific shape:** A clarification, quotation, exact output,
-   transformation, narrative, or complete procedure MUST preserve the shape
-   required by its purpose.
-2. **Explicit presentation:** A request for all three views MUST use Full
-   format. A request for a brief answer or no headings MUST use Focused format.
-   A request for one named view MUST receive a Focused answer at that requested
-   depth; it MUST NOT force the other views.
-3. **Meaningful checkpoint:** A decision checkpoint, accumulated-context
-   summary, material re-synthesis, or material correction MUST use Full format.
-4. **First consequential orientation:** The first consequential answer on a
-   topic that can orient the reader MUST use Full format, including a bounded
-   recommendation.
-5. **Ordinary exploration:** A simple fact, acknowledgement, narrow follow-up,
-   later ordinary turn, or narrow correction MUST use Focused format.
+An answer benefits from distinct layers when the decision, its rationale or
+constraints, and specialist evidence or implementation each provide useful
+content that would be harder to navigate as one compact answer. Importance or a
+yes/no decision alone is insufficient. Full SHOULD NOT be used merely to fill
+three slots. A checkpoint may be a decision, accumulated-context summary,
+material re-synthesis, or correction; it still requires the usefulness judgment.
 
-An orientation-capable answer has enough context to frame the objective,
-consequence, material constraints, or next action. A simple fact does not
-become Full merely because it is the first turn.
+A pure update SHOULD receive a brief acknowledgement without inventing changes
+to other conditions. Requested implications warrant synthesis at an appropriate
+length. A clarification reply continues the pending request and does not create
+a new first orientation. Explaining a plan follows this table; writing or
+executing its procedure preserves the procedure's natural order.
 
-A material re-synthesis revises topic-level implications or a recommendation
-using new or accumulated context. An accumulated-context summary integrates
-the topic rather than restating one narrow branch.
+### 3.3 Focused format
 
-A pure information update receives a Focused acknowledgement. If the same turn
-asks for changed implications, a revised recommendation, or synthesis against
-prior context, it is material re-synthesis and MUST use Full format.
-A pure update MUST state only the supplied change. It MUST NOT claim that
-another step, dependency, condition, or rollback rule remains unchanged unless
-the user also supplied that fact.
+Lead with the answer and use only structure helpful for the immediate request.
+Reserved view headings SHOULD be omitted unless explicitly requested. Ordinary
+headings, lists, code, and tables MAY be used. There is no protocol word cap.
+Simple facts SHOULD normally take one to three sentences, without unrequested
+adjacent use-case catalogues. Longer content must earn its place.
 
-After a clarification supplies the requested inputs, the pending request
-continues the same topic. The answer MUST NOT be classified as a new first
-orientation merely because the clarification withheld a recommendation. It
-SHOULD use Focused format unless another meaningful-checkpoint rule
-independently requires Full.
+### 3.4 Full format
 
-Explaining or orienting the reader to a consequential supplied plan uses Full
-format. Procedure shape takes precedence only when the user asks to write or
-execute the procedure itself, not merely because the plan contains ordered
-steps.
+Render exactly these headings, once and in order. The canonical renderer uses
+level-two Markdown headings:
 
-### 3.4 Focused format
+1. **At a glance:** the answer, decision-relevant consequence, material scope,
+   and indispensable caveat.
+2. **In context:** useful rationale, constraints, ownership, timing, or next action.
+3. **At depth:** purposeful evidence, assumptions, alternatives, exceptions,
+   implementation, measurements, or sources.
 
-A Focused response MUST lead with the answer and use only the structure needed
-for the immediate request. Reserved Progressive Clarity headings are not
-required and SHOULD be omitted. Ordinary headings, lists, code blocks, or
-other task-appropriate structure MAY be used when they improve the answer.
+For English, 40 non-warning words at a glance and 200 cumulatively through
+context are **provisional Advisory targets** and **Mechanical hard caps**.
+Warnings and necessary correction repair are separately counted and exempt only
+as needed. At depth has no hard cap. Length alone never establishes useful depth.
 
-A request for one named view receives that depth of answer without the other
-views. Do not add a reserved view heading unless the user explicitly requires
-that exact heading.
+## 4. Additive composition and useful repetition
 
-Focused format has no 40/200 word budget and no mandatory section count.
-Length MUST remain proportionate to the request. Safety and correction follow
-sections 7 and 8.
+Every deeper Full view MUST be predominantly new information. Brief repetition
+MAY connect reasoning, materially improve comprehension, or keep an action
+properly qualified, including restating a complete proposition when necessary.
+Names, dates, identifiers, and short anchors may recur naturally.
 
-For a simple fact, a Focused response MUST use at most three sentences unless
-an indispensable safety or accuracy caveat requires more. Sentence one MUST
-answer. The response MAY add one indispensable distinction, then MUST stop. It
-MUST NOT add an adjacent use-case catalogue or anticipate the next question.
-Before sending a simple fact, the response MUST remove any unrequested “used
-for,” “such as,” “including,” or similar catalogue. Embedding a list in one
-sentence does not make it proportionate.
+Duplicated explanations, repeated lists, and automatic closing recaps SHOULD
+be removed. A recap is justified only by a concrete reader need or explicit
+request, not by a habit of ending every answer with a summary. A semantic review
+of repetition MUST identify the repeated passage and explain why it adds no
+useful connection or qualification; lexical identity alone is insufficient.
 
-### 3.5 Full format
+For example, after “Keep writes frozen during recovery,” a deeper section may
+say “With writes still frozen, compare the transaction logs” to qualify an action.
+Repeating the whole recovery explanation under every heading adds no value.
 
-A Full response MUST render these headings exactly once and in this order:
+Composition SHOULD start with the answer, then add needed rationale and depth,
+then remove filler and unhelpful duplication. No particular private drafting
+workflow or proposition ledger is required.
 
-1. **At a glance**
-2. **In context**
-3. **At depth**
+## 5. English word accounting and visible reading cost
 
-The canonical Markdown renderer uses level-two headings. Other renderers MAY
-adapt heading level to their artifact while preserving text and order.
-Headings do not count toward a prose budget.
+### 5.1 Deterministic budget counter
 
-#### At a glance
-
-At a glance gives the direct answer, its decision-relevant consequence,
-material scope, and every caveat indispensable to a correct stopping point.
-
-Its non-warning English prose MUST contain no more than 40 counted words.
-An indispensable warning MAY exceed the cap only as far as section 8 requires.
-
-#### In context
-
-In context adds only what the reader needs to understand or act: new rationale,
-scope, constraints, ownership, timing, controls, or next action.
-
-Combined non-warning prose in At a glance and In context MUST contain no more
-than 200 counted words in that response. This is a per-response limit, not
-conversation state.
-
-#### At depth
-
-At depth adds purposeful specialist detail: evidence, assumptions,
-measurements, alternatives, exceptions, implementation guidance, procedures,
-or sources.
-
-At depth has no hard word limit. It MUST remain relevant, organized, and
-additive. Length alone does not satisfy this view.
-
-## 4. Full-format composition and repetition
-
-Every deeper view MUST be dominated by new information. A brief anchoring
-reference MAY recur only when it is needed to understand new content. Names,
-dates, identifiers, and short anaphoric cues such as “this decision” or “that
-constraint” MAY recur.
-
-A deeper view MUST NOT repeat or paraphrase a complete conclusion, sentence,
-list, explanation, warning, or recommendation. The headline recommendation
-belongs in At a glance. In context explains new rationale, scope, constraints,
-ownership, timing, or action. At depth adds new evidence, exceptions,
-alternatives, implementation, or sources. At depth MUST NOT end with a recap,
-summary, “key rule,” or restated operative recommendation.
-At a glance SHOULD contain the decision and indispensable consequence without
-preemptively stating a remediation, validation, recovery, or implementation
-method that a deeper view will explain.
-
-An anchoring reference MUST NOT reassert the earlier operative proposition
-before adding detail. It SHOULD use the shortest cue that makes the new content
-understandable. A component name or role boundary MAY recur when the sentence's
-operative content is materially new implementation, evidence, exception, or
-action. Repeating the complete rule and then elaborating does not become an
-anchor.
-
-The composer MUST use this private workflow:
-
-1. Draft At a glance.
-2. Extract its complete propositions into a “do not restate” ledger.
-3. Draft In context using only new rationale, constraints, or actions plus
-   minimal anchors.
-4. Add its complete propositions to the ledger.
-5. Draft At depth using only new evidence, exceptions, or implementation.
-6. Delete any sentence that restates a ledger proposition.
-7. Delete any concluding recap from At depth.
-8. Inspect the final At-depth sentence or list item. Retain it only when it adds
-   new evidence, exception, implementation, or source; otherwise delete it.
-9. When At depth ends with a list, stop at its last new item. Do not append a
-   concluding paragraph that restates the decision, warning, or condition.
-
-Compact positive example: At a glance says “Delay Atlas until security
-approval.” In context may say “For Atlas, Security owns the approval gate and
-needs the threat model by Friday.” The recurring name anchors new ownership and
-timing.
-
-Compact negative example: At a glance says “Delay Atlas until security
-approval.” In context says “Atlas must wait for security approval,” or At depth
-ends “Key rule: delay Atlas.” Both restate the operative conclusion.
-
-Necessary correction reuse follows section 7. Exact-artifact exceptions and
-any separately requested Full overview or explanation follow section 9.
-
-In either format, a supplied measurement SHOULD retain its value, unit, scope,
-time window, denominator or sample size, and source character such as pilot,
-estimate, or benchmark. Material supplied evidence MUST NOT be silently
-omitted to satisfy a budget or preference for brevity; clarify or use the
-warning/non-fit rules when necessary.
-
-## 5. Full-format English word-count algorithm
-
-Human scoring and `pc-core` use the following ordered deterministic algorithm
-for Full-format budgets.
-
-### 5.1 Included and excluded Markdown
-
+The Mechanical profile retains the v0.4 algorithm for reproducible counts.
 Normalize CRLF and bare CR to LF, then:
 
-1. Exclude fenced code blocks opened by at least three backticks or tildes
-   after no more than three leading spaces and closed by at least the opening
-   marker length of the same character.
-2. Exclude an ATX heading line. Exclude a Setext heading line together with its
-   immediately following `===` or `---` underline.
-3. Exclude a GitHub-style data table when a pipe-containing header is followed
-   by a pipe-containing delimiter row whose two or more cells each match
-   `:?-{3,}:?`. Exclude the header, delimiter, and contiguous following
-   non-empty pipe-containing rows.
-4. Remove an inline or reference Markdown image, including alt text and
-   destination or reference label. Replace an inline or reference link with its
-   visible text. Remove a reference destination definition, autolink, or bare
-   URL.
-5. Remove a footnote-reference marker but retain explanatory footnote prose
-   after its definition marker. Remove a footnote backlink.
-6. Remove these citation-marker forms: a bracket containing only numeric
-   references and comma/dash ranges; a textual bracket label ending in a
-   separate one-to-four-digit reference number, such as `[Ops Memo 7]`; and a
-   parenthetical author-date marker containing a comma followed by a year from
-   1900 through 2099, such as `(Smith, 2025)`.
-7. Remove HTML comments and tags. Remove leading blockquote, unordered-list,
-   ordered-list, and task-checkbox markers. Delete these Markdown punctuation
-   characters without inserting whitespace: backslash, backtick, `*`, `_`,
-   `{`, `}`, `[`, `]`, `(`, `)`, `#`, `+`, `.`, `!`, `>`, `|`, `~`, and `-`.
+1. Exclude fenced code blocks opened by at least three backticks or tildes after
+   no more than three leading spaces and closed by at least the opening marker
+   length of the same character.
+2. Exclude ATX headings. Exclude a Setext heading and its immediately following
+   `===` or `---` underline.
+3. Exclude a GitHub-style data table when a pipe-containing header is followed by
+   a pipe-containing delimiter row whose two or more cells each match
+   `:?-{3,}:?`. Exclude contiguous following non-empty pipe-containing rows.
+4. Remove Markdown images including alt text and destination/reference label.
+   Replace links with visible text. Remove reference destination definitions,
+   autolinks, and bare URLs.
+5. Remove footnote-reference markers and backlinks; retain explanatory footnote
+   prose after its definition marker.
+6. Remove citation markers consisting of bracketed numeric references/ranges,
+   textual bracket labels ending in a separate one-to-four-digit reference
+   number, or parenthetical author-date markers with a comma followed by a year
+   from 1900 through 2099.
+7. Remove HTML comments/tags and leading blockquote, list, or task markers.
+   Delete these Markdown punctuation characters without inserting whitespace:
+   backslash, backtick, `*`, `_`, `{`, `}`, `[`, `]`, `(`, `)`, `#`, `+`, `.`,
+   `!`, `>`, `|`, `~`, and `-`.
 
-The remaining reader-visible assistant prose is included, including cue labels,
-list text, visible link text, inline-code content after backtick removal, and
-explanatory footnote prose. The user prompt, non-rendered state, and genuine
-clarification control dialogue are excluded.
+Split remaining prose at Unicode whitespace. Count each token containing an
+ASCII letter or digit as one word. Attached punctuation does not split tokens;
+unspaced contractions, hyphenated compounds, dates, times, and code-like tokens
+count once. Standalone symbols do not count. Visible labels, link text,
+inline-code content, list text, and explanatory footnotes are included.
 
-### 5.2 Token count and budgets
+### 5.2 Reading cost is separate
 
-Split included prose at Unicode whitespace. Count each resulting token that
-contains at least one ASCII letter `A-Z` or `a-z`, or digit `0-9`, as one word.
-Do not split a token at attached punctuation.
+The counter excludes material that still costs attention: tables, code, headings,
+and exempt warnings. Authors MUST NOT move prose into excluded structures to
+evade budgets. Review the whole rendered answer for visible bulk, density,
+navigation, and whether qualifications can be found before acting.
 
-An unspaced contraction or hyphenated compound therefore counts once. Compact
-dates, times, numbers, currency amounts, inequalities, and code-like tokens
-also count once. A standalone symbol without an ASCII letter or digit does not
-count.
+Implementations SHOULD report supplemental rendered character and non-empty-line
+counts, including excluded blocks, beside prose budgets. These are diagnostics,
+not validated measures of reading time. Reader studies SHOULD measure actual
+retrieval time and comprehension separately and test the 40/200 thresholds.
 
-Budget accounting is:
+## 6. Clarification and numeric recommendations
 
-- At a glance non-warning prose: at most 40 words.
-- At a glance plus In context non-warning prose in the current response: at
-  most 200 words.
-- At depth prose: outside the hard cap.
-- An indispensable warning: separately counted and exempt only as necessary.
-- Necessary correction repair text: separately counted and exempt only as
-  necessary.
+Ask only for missing inputs that materially change the answer or determine
+whether the action is supportable. Obtain the smallest decisive set, using one
+or more natural questions or a compact input request. A brief rationale and a
+supported bounded answer MAY accompany it. Do not authorize an action contingent
+on unresolved prerequisites. Known containment MUST NOT wait for an answer.
 
-## 6. Branch focus and clarification
+Do not replace requested fiction, a complete supplied procedure, or a bounded
+answer determined by visible facts with unnecessary clarification. Preserve the
+boundary between confirmed readiness and unknown readiness.
 
-The Advisory conversational profile uses visible conversation context to
-retain the active topic, selected branch, and statements requiring correction.
-This memory is best-effort. The Mechanical wrapper profile uses the
-caller-selected topic state described in section 10. Neither profile treats
-Focused or Full presentation as a depth state that the user must progress
-through.
+Numeric advice MUST expose governing assumptions and avoid unsupported precision.
+Depending on the missing input and task, the response MAY:
 
-A targeted follow-up selects only the named branch and excludes sibling
-branches and general recap. It uses Focused format unless an earlier
-presentation rule requires Full format.
+- ask for the decisive input;
+- provide a supported relationship or formula; or
+- provide a clearly conditional example with assumptions beside its numbers.
 
-Before making a recommendation, privately check whether required environment,
-validation, rollback, ownership, or governing constraints are missing. If
-missing information prevents a complete or safe answer, the response MUST
-contain only one clarification question. It MUST have no heading, conditional
-recommendation, generic plan, rationale, or implementation detail. It MAY
-incorporate an indispensable warning clause within that question only when the
-warning cannot safely wait.
-
-This clarification gate applies when missing input blocks a recommendation. It
-MUST NOT replace a requested narrative or a complete high-level procedure whose
-content and order the user has already supplied.
-It also MUST NOT replace a bounded answer already determined by visible facts
-or a requested summary of decisions established in the conversation. Remaining
-implementation unknowns MAY be identified without blocking that answer.
-
-For example, `Should I enable the new index now?` lacks the environment,
-validation result, and rollback readiness. A conforming response asks one
-question for those inputs and gives no recommendation. After the user supplies
-staging, passed validation, and available rollback, a Focused recommendation
-MAY follow while preserving the staging/production boundary.
-For that example, a complete Focused answer states that validation passed,
-rollback is available, enablement is limited to staging, and staging
-authorization is not production approval.
+No literal labels, example number, or universal default are required. An example
+MUST NOT be presented as a recommendation for the user's actual environment.
+When inputs suffice, a direct recommendation is allowed.
 
 ## 7. Corrections
 
-A correction is a repair, not ordinary elaboration. When an emitted statement
-is wrong or materially incomplete, the next relevant response MUST begin with:
+An emitted error MUST be repaired promptly and explicitly. The repair MUST
+identify the earlier error faithfully and give its replacement. It MUST explain
+the changed consequence or action when there is one. Natural wording is allowed;
+do not fabricate a retraction or a consequence to satisfy a template.
 
-```text
-Earlier I said <withdrawn statement>. That was wrong or incomplete.
-<replacement statement>. This changes <consequence or action>.
-```
+Put the repair first in conversational prose, or first under At a glance when
+Full is selected. Include any urgent warning beside it. For a requested corrected
+procedure, identify the affected step and preserve the requested step order.
+An exact artifact remains byte-preserved; a separately requested correction or
+explanation MUST NOT be silently inserted into controlling source text.
 
-The withdrawn statement MUST preserve the operative wording of the visible
-earlier response or faithfully isolate the affected proposition from a combined
-sentence. It MUST NOT insert a qualifier, date, or scope that was not part of
-the earlier response.
-
-Under automatic presentation, a narrow correction uses Focused format and puts
-the complete repair first; a material correction uses Full format and puts the
-complete repair as the first prose under At a glance. Explicit presentation
-requests retain the precedence defined in section 3.3. A correction is material
-when it changes the operative decision, action, risk, scope, or topic-level
-understanding; otherwise it is narrow.
-
-If the same response requires a warning, the literal correction opening remains
-first and the warning follows it immediately.
-
-“Corrected,” “outdated,” “superseded,” or an implicit substitution without the
-literal opening above does not satisfy the correction requirement.
-
-In a Full correction, only context necessary to identify, retract, replace, and
-state the changed action is exempt from the normal budget. Unaffected facts and
-new explanation follow normal Full-format allocation and budgets.
-
-The assistant MUST NOT invent a retraction for a claim it did not emit.
+The wrapper requires structured withdrawn and replacement fact references;
+changed-action references may be empty when no action changes. Withdrawn IDs
+must exist in committed topic state. Presence of references and repair placement
+is mechanical; faithfulness, explicitness, and consequence sufficiency are semantic.
 
 ## 8. Safety and legal precedence
 
-Safety, policy, legal, and accuracy requirements outrank brevity. A material
-warning MUST appear with the related action or conclusion. In Focused format,
-put it in the earliest actionable prose. In Full format, put it in the earliest
-relevant view and never defer an At a glance warning to In context or At depth.
+An indispensable warning MUST accompany the related claim or action early enough
+to prevent a misleading stopping point. Preserve the known hazard, concrete
+harm, immediate containment, and conditions for proceeding when material to the
+case. Do not invent a hazard or universal restart checklist.
 
-In Full format, At a glance MUST contain the prohibited action, hazardous
-state, concrete harm, immediate containment, and condition for resuming. A
-warning element MUST NOT be deferred to In context or At depth. Include a
-causal mechanism when needed to make the harm understandable. A checkpoint
-time is not authorization unless the source says it is.
+Warnings do not force Full. In a Focused answer put them in the earliest
+actionable prose; in Full put indispensable decision-level warnings at a glance.
+Deeper detail may repeat a short qualification needed to keep an action safe,
+but SHOULD NOT repeat the entire warning sequence. A checkpoint time alone
+does not authorize action. Warning sufficiency remains `UNVERIFIED` mechanically.
 
-In context and At depth MUST NOT repeat the complete warning or containment
-sequence. They MAY add new diagnostics, evidence, or implementation.
-A condition for resuming MAY name the prohibited operation, but it MUST NOT
-become operational or numbered restart instructions.
-When the user supplies a hazardous state, concrete harm, and immediate
-containment for a consequential action, the response MUST use Full format and
-place the complete warning in At a glance. It MUST NOT replace that answer with
-a clarification.
+## 9. Purpose-specific structures
 
-Warning placement and Full-format arithmetic can be mechanically inspected.
-Whether a warning is indispensable, sufficient, accurate, or safe remains
-semantic and `UNVERIFIED`.
+- Preserve complete natural order for tutorials and procedures.
+- Preserve sequence, pacing, tense, and voice for narrative writing.
+- Preserve requested exact values, code, data, formats, and transformations.
+- Preserve controlling legal or authoritative source bytes. When reproduced
+  with an explanation, use `Controlling text:` and
+  `Non-controlling plain-language summary:` to separate source and explanation.
+- Verbatim-only reproduction contains only the exact source.
 
-## 9. Non-fit structures
+Requested fiction may invent creative details. A supplied complete high-level
+procedure does not require unnecessary system-specific commands, owners, or
+values. An optional Full overview requires a separate request and must not
+damage the artifact. Required repeated source bytes are always preserved.
 
-Do not force the three views onto output whose function depends on another
-shape:
+## 10. Mechanical wrapper and guarantee boundary
 
-- **Tutorials and procedures:** preserve complete natural step order. Do not
-  withhold required later steps.
-- **Narrative or voice-dependent writing:** preserve sequence, pacing, tense,
-  and voice.
-- **Exact output and transformations:** preserve the requested value, format,
-  code, data, or verbatim reproduction without added headings.
-- **Controlling legal or authoritative text:** preserve source bytes exactly.
-  When an explanation or summary is requested, use exactly:
+The non-streaming wrapper MUST resolve trusted metadata before generation,
+buffer the complete envelope, validate it, render canonical Markdown, and commit
+state only after success. It permits one initial candidate and one complete
+repair under the same resolved policy. Two failures withhold candidate output
+and leave state unchanged.
 
-```text
-Controlling text:
-<exact source>
+### 10.1 Request, state, and fact semantics
 
-Non-controlling plain-language summary:
-<summary>
-```
+Request schema `4.0.0` adds required Boolean `depth_useful` to the existing
+prompt, topic, turn, presentation, controlling-text, non-fit, and required-fact
+fields. Callers set it true only when distinct layers help. Under `auto`, first
+substantial orientation and checkpoint turns use Full only when it is true.
+Explicit presentation and purpose-specific shapes retain their precedence.
 
-For an open-ended fiction request, the response MAY choose ordinary creative
-details and MUST produce the requested narrative; the prohibition on invented
-factual claims does not ban requested fiction. When the user supplies a
-complete high-level procedure, the response MUST render every supplied step in
-order and MUST NOT demand system-specific commands, owners, or values that are
-unnecessary to preserve that procedure.
+Each topic retains its branch, stable facts, host sessions, and
+`has_committed_overview`. A successful first substantial answer or meaningful
+checkpoint marks orientation, including a compact Focused answer. Explicit Full
+formatting of a simple or narrow turn does not. Failed turns never mutate state.
 
-Controlling text with a requested explanation is eligible for the Advisory
-Skill. Only verbatim-only reproduction remains outside Skill activation.
+Fact `allocation` identifies primary response-local placement. A Full fact may
+also be referenced in other views; its primary placement must be referenced.
+Repeated references do not create new facts. Existing IDs retain exact text;
+cross-turn references declare `prior_context`, `synthesis`, `correction`, or
+`quotation` as appropriate. `synthesis` is valid for a topic-wide overview in
+either format. Exact lexical echoes are nonblocking observations: usefulness
+cannot be decided by a lexical matcher.
 
-Exact controlling text, quotations, code, data, and other user-required
-verbatim artifacts MAY retain repeated source bytes when exactness requires
-them. The artifact itself is outside Progressive Clarity cross-view
-no-repetition checks. If a separate summary, overview, or explanation uses Full
-format, it remains subject to new-information dominance and
-no-complete-restatement rules.
+Clarification `control` contains natural clarification text without reserved
+view headings and no fact ledger entries. If bounded advice needs committed
+facts, the caller selects a Focused ordinary answer that can include an input
+request. A control turn's relevance and completeness remain semantic.
 
-An optional, separate overview MAY use Full format when the user separately
-requests all three views and it does not damage the required artifact.
+### 10.2 What a mechanical pass establishes
 
-## 10. Mechanical wrapper profile and guarantee boundary
+Only implemented checks over the trusted request, committed state, selected
+kind, envelope, and renderer: version/shape consistency; topic/branch/count
+transitions; Full section order, content, and hard budgets; structured warning
+placement; correction reference structure; fact identity and declared reuse;
+trusted quotation equality/hash; and supplied authoritative fact coverage.
 
-The canonical `SKILL.md` and ChatGPT package use the Advisory conversational
-profile. They are prompt-only surfaces with no backend, MCP server, protocol
-hook, deterministic output gate, or protocol-controlled durable topic store.
+It does not establish accuracy, completeness, warning sufficiency, useful depth,
+helpful repetition, correct caller classification, clarification quality, repair
+meaning, human safe stopping, or equality to an intended non-fit artifact without
+trusted expected bytes. These remain `UNVERIFIED`. Post-response hooks remain
+Advisory/block-and-retry and cannot certify displayed output or topic state.
 
-The local non-streaming `pc-core` wrapper implements the Mechanical wrapper
-profile only when it:
+## 11. Evaluation and conformance
 
-1. receives a trusted wrapper request and committed state separately from model
-   output;
-2. resolves caller-supplied topic action, turn classification, and presentation
-   request before generation;
-3. buffers a complete schema `3.0.0` envelope using protocol `0.4`;
-4. validates versions, selected response kind, target-topic state, Full-format
-   section order and budgets when applicable, Focused content when selected,
-   clarification question-only shape, fact-ID integrity and reuse declarations,
-   correction structure, quotation bytes and hash when trusted source is
-   supplied, and exact lexical duplicates while exempting required verbatim
-   artifact bytes;
-5. renders only from the validated envelope; and
-6. atomically commits the complete next state only after validation succeeds.
+Review directness, qualifications, appropriate shape, additive usefulness,
+assumptions, clarification relevance, faithful repair, and artifact preservation.
+Score Advisory length targets separately from mechanical hard-cap conformance.
 
-The wrapper withholds an invalid candidate. It permits at most two total
-generation attempts: one initial candidate and one complete repair using the
-same resolved presentation. If the second candidate fails, it emits no
-candidate response and leaves committed state unchanged.
+Development regressions, unseen holdouts, and reader outcomes are separate
+evidence tracks. Freeze prompts, model settings, rubric, and run plan before
+evaluation. Preserve failures and report denominators; failed-case reruns are
+debugging evidence rather than a new full-suite acceptance result. Once used to
+tune instructions, a holdout becomes development material and must be replaced.
 
-Post-response host hooks are **Advisory/block-and-retry**. They MAY inspect
-visible headings and reject an empty view inside an exact three-heading
-sequence. Heading-free, fenced, or partial reserved headings are nonblocking.
-Visible budget and lexical-echo observations remain `UNVERIFIED` because hooks
-cannot identify structured exceptions. Hooks cannot certify presentation
-selection, topic state, trusted request classification, or output already
-displayed.
-
-### 10.1 Request, topic state, and envelope
-
-Version 0.4 wrapper request, envelope, and state schemas are `3.0.0`.
-
-The trusted request supplies:
-
-- `topic_action`: start, continue, or resume;
-- `topic_id`;
-- `turn_kind`;
-- `presentation_request`: auto, focused, or full; and
-- any controlling text, summary limit, non-fit kind, or authoritative required
-  facts used by the selected shape.
-
-Start requires an unknown topic. Continue requires the active topic. Resume
-requires a known inactive topic. Each known topic retains its branch, fact
-ledger, host sessions, and whether a topic-wide overview has been committed.
-Starting creates fresh topic state; resuming restores the selected topic state.
-A failed or withheld response MUST NOT create, activate, or mutate a topic.
-
-A certified topic-wide substantial answer, decision or summary checkpoint,
-material re-synthesis, or material correction marks the overview committed.
-Explicit Full formatting of a simple or narrow turn does not.
-
-The envelope declares the selected response kind and target-topic transition.
-Response kinds include Focused content, Full views, clarification control,
-quotation, and non-fit output. Fact allocation is response-local: a fact used
-in Focused prose MAY later appear in the appropriate Full view. A stored fact
-retains its stable ID, exact text, and first turn rather than permanently
-retaining a presentation allocation.
-
-`prior_context` marks necessary cross-turn reference; `synthesis` marks reuse
-while building a later Full overview. `correction` and `quotation` mark only
-their structured exceptions. Exact normalized lexical repetition is
-mechanically inspectable. Required exact controlling text, quotations, code,
-data, and other verbatim artifacts are exempt from that check and MAY preserve
-repeated source bytes.
-
-Cross-view new-information dominance applies only to Full format. Exact
-sentence and list-unit duplication remains mechanically rejected. Whether a
-recurring short anchor is necessary, a paraphrase restates a complete
-proposition, or At depth ends in a semantic recap remains advisory because
-lexical similarity does not prove those properties. Fact declarations cannot
-prove that every material proposition was extracted, split appropriately, or
-placed well.
-
-### 10.2 Guarantee boundary
-
-Mechanical `PASS` guarantees only implemented checks over the trusted request,
-committed state, resolved presentation, structured envelope, and canonical
-renderer buffered by that wrapper. It does not guarantee:
-
-- semantic accuracy or completeness;
-- human safe-stopping outcomes;
-- warning indispensability or sufficiency;
-- correctness of the caller's topic, turn, or presentation classification;
-- semantic appropriateness of Focused versus Full format;
-- equality between an accepted non-fit payload and the user's intended
-  artifact without trusted expected bytes;
-- necessity of recurring anchors and semantic complete-proposition
-  restatement;
-- absence of a concluding At-depth recap;
-- purposeful At depth content;
-- hidden-reversal absence;
-- Advisory host activation, topic inference, or topic resumption;
-- host-wide behavior outside the wrapper; or
-- compatibility with an untested host.
-
-Those properties remain advisory and `UNVERIFIED` without an independent
-oracle.
-
-## 11. Conformance check
-
-Before sending a governed response, verify:
-
-1. the topic continues unless the objective changed and prior context is
-   unnecessary;
-2. purpose-specific output shape and explicit presentation requests were
-   resolved before automatic Full triggers;
-3. a Focused response answers directly without forced protocol headings;
-4. a Full response has exactly three ordered views, satisfies the 40/200
-   English budgets, makes every deeper view predominantly new, permits only
-   necessary short anchors, does not restate a complete earlier proposition,
-   and ends At depth without a recap;
-5. every material scope boundary and indispensable caveat appears early enough;
-6. a correction begins with explicit withdrawal, replacement, and changed
-   consequence or action;
-7. later detail preserves earlier claims or uses explicit correction; and
-8. a required non-fit structure remains intact.
+Compare ordinary responses, minimal core-principles instructions, the archived
+v0.4 long skill, and the revised skill on matched tasks. Blind condition labels
+and counterbalance presentation for reader assessment. Measure correct action
+interpretation, constraint recognition, retrieval time, and preference separately
+from protocol compliance. See [the evaluation guide](evals/README.md) and
+[reader study plan](evals/reader-study.md). No reader-benefit claim is established
+until observations support it.

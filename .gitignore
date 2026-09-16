@@ -30,3 +30,5 @@ coverage/
 dist/
 evals/runs/
 evals/azure.local.json
+evals/holdouts/
+evals/studies/

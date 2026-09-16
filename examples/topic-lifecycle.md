@@ -4,11 +4,11 @@ This fictional transcript demonstrates the primary Advisory cadence on one
 continuing release-decision topic:
 
 1. a simple fact uses Focused format;
-2. the first consequential, orientation-capable answer uses Full format;
+2. a consequential orientation with useful distinct detail uses Full format;
 3. a narrow follow-up returns to Focused format; and
 4. an accumulated team summary uses Full format.
 
-The 40/200 English budget applies only to the two Full responses.
+The provisional 40/200 English targets apply only to the two Full responses.
 
 ## Turn 1 — simple fact
 
@@ -39,7 +39,7 @@ the fix has not passed review; reassess after tomorrow's review.
 #### In context
 
 <!-- words:lifecycle-orientation-context:start -->
-Limit validation to the affected older-device startup cohort and assign one
+Start validation with the affected older-device startup cohort and assign one
 release owner to record the go/no-go decision.
 <!-- words:lifecycle-orientation-context:end -->
 

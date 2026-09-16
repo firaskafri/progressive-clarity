@@ -1,7 +1,7 @@
 {
   "name": "progressive-clarity",
-  "version": "0.4.4",
-  "description": "Prompt-only topic-oriented guidance that keeps ordinary exploration focused and makes deeper Full views predominantly new.",
+  "version": "0.5.0",
+  "description": "Prompt-only topic-oriented guidance for direct, qualified answers, natural follow-ups, compact decisions, and distinct depth when useful.",
   "author": {
     "name": "Firas Kafri",
     "url": "https://github.com/firaskafri"

@@ -32,7 +32,7 @@ class FileStateStoreTests(unittest.TestCase):
     """
 
     def test_missing_state_returns_v04_initial_defaults(self) -> None:
-        """Name: Missing-state v0.4 initialization.
+        """Name: Missing-state v0.5 initialization.
 
         Description: Loads a path that has never been committed.
         Assumptions: A missing file denotes a new conversation, not corruption.
@@ -141,20 +141,21 @@ class FileStateStoreTests(unittest.TestCase):
                 with self.assertRaisesRegex(StateError, message):
                     MemoryStateStore(incompatible)
 
-    def test_v03_state_file_is_rejected_without_migration(self) -> None:
-        """Name: Persisted v0.3 protocol-state rejection.
+    def test_earlier_state_files_are_rejected_without_migration(self) -> None:
+        """Name: Earlier protocol-state rejection.
 
-        Description: Writes a schema-3.0.0 state that declares protocol 0.3.
-        Assumptions: Protocol 0.4 changes semantics without changing state shape.
+        Description: Writes schema-3.0.0 states declaring protocols 0.3 and 0.4.
+        Assumptions: Protocol 0.5 changes semantics without changing state shape.
         Expectations: Loading fails closed instead of silently reinterpreting it.
         """
         old_state = ConversationState.initial().to_dict()
-        old_state["protocol_version"] = "0.3"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "state.json"
-            path.write_text(json.dumps(old_state), encoding="utf-8")
-            with self.assertRaisesRegex(StateError, "state protocol"):
-                FileStateStore(path).load()
+            for version in ("0.3", "0.4"):
+                old_state["protocol_version"] = version
+                path.write_text(json.dumps(old_state), encoding="utf-8")
+                with self.subTest(version=version), self.assertRaisesRegex(StateError, "state protocol"):
+                    FileStateStore(path).load()
 
     def test_malformed_state_fails_closed(self) -> None:
         """Name: Malformed-state refusal.

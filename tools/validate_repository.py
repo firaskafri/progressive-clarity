@@ -33,28 +33,34 @@ SKILL_DIR = ROOT / "skills" / "progressive-clarity"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 FROZEN_FILES = {
     Path("SPEC.md"): (
-        "260c3facd8c5c95a1d4429863e24226621defe8274dd08afd4d4d044452e5122"
+        "a7f15f4d7ebd5c451a465923cc4ba44b8eb48e046ac34d42ef119c6ae03be236"
     ),
     Path("skills/progressive-clarity/SKILL.md"): (
-        "3fd240f7e70efb92b75b3a8fa064034af8a42b049b50d9e10cd98ebd972508e2"
+        "38b1466a3036e639a98824c4b5e4ea71918fda7a5844c82d8c597a2c090cea4c"
     ),
     Path("evals/cases.json"): (
-        "068ad1b881e674959d07b59e4f811f4e4e89beefa3f96f8b6a24d07ea7546844"
+        "b1afbd91172c1786dbffc42551d87b6db069b742c3ff5f270e1ef93b2bcdc19a"
+    ),
+    Path("evals/baselines/v0.4-skill.md"): (
+        "3fd240f7e70efb92b75b3a8fa064034af8a42b049b50d9e10cd98ebd972508e2"
+    ),
+    Path("evals/baselines/minimal.md"): (
+        "cb445ca07bd99f13c4bab1a09b5437bbf2a033ec1969a9abeb01aac7ef49869c"
     ),
 }
-EXPECTED_SCHEMA_VERSION = "5.0.0"
+EXPECTED_SCHEMA_VERSION = "6.0.0"
 EXPECTED_SUITE_ID = (
-    "progressive-clarity-v0.4-topic-oriented-advisory-host-acceptance"
+    "progressive-clarity-v0.5-usefulness-development"
 )
-EXPECTED_CASE_IDS = tuple(f"T{number:02d}" for number in range(1, 11))
+EXPECTED_CASE_IDS = tuple(f"T{number:02d}" for number in range(1, 19))
 EXPECTED_REPEAT_CASE_IDS = ("T04", "T05")
 EXPECTED_TOTALS_PER_HOST = {
-    "sessions": 14,
-    "scored_assistant_responses": 29,
+    "sessions": 22,
+    "scored_assistant_responses": 44,
 }
 EXPECTED_PACKAGE_VERSION = RELEASE_VERSION
 EXPECTED_WORD_COUNT_METHOD = (
-    "deterministic-pc-core-v4 for full responses; "
+    "deterministic-pc-core-v4 targets for advisory full responses; "
     "focused responses have no protocol hard cap"
 )
 FACT_REFERENCE_FIELDS = {
@@ -83,6 +89,9 @@ IGNORED_REPOSITORY_PARTS = {
     "build",
     "coverage",
     "dist",
+    "runs",
+    "holdouts",
+    "studies",
     "node_modules",
 }
 LINK_PATTERN = re.compile(
@@ -473,6 +482,8 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         )
     if suite.get("suite_id") != EXPECTED_SUITE_ID:
         errors.append(f"evals/cases.json: suite_id must be {EXPECTED_SUITE_ID}")
+    if suite.get("split") != "development":
+        errors.append("evals/cases.json: public suite must be labeled development")
 
     expected_protocol_hash = FROZEN_FILES[Path("SPEC.md")]
     protocol = suite.get("protocol")
@@ -481,8 +492,8 @@ def validate_evaluation_suite(errors: list[str]) -> None:
         protocol = {}
     if protocol.get("path") != "SPEC.md":
         errors.append("evals/cases.json: protocol path must be SPEC.md")
-    if protocol.get("version") != "0.4":
-        errors.append("evals/cases.json: protocol version must be 0.4")
+    if protocol.get("version") != "0.5":
+        errors.append("evals/cases.json: protocol version must be 0.5")
     if protocol.get("sha256") != expected_protocol_hash:
         errors.append("evals/cases.json: protocol hash does not match frozen SPEC.md")
 
@@ -651,10 +662,10 @@ def validate_evaluation_suite(errors: list[str]) -> None:
                 )
                 continue
             presentation = expected.get("presentation")
-            if presentation not in {"focused", "full", "control", "non_fit"}:
+            if presentation not in {"focused", "full", "control", "non_fit", "adaptive"}:
                 errors.append(
                     f"evals/cases.json: {case_id} turn {turn.get('turn')} "
-                    "presentation must be focused, full, control, or non_fit"
+                    "presentation must be focused, full, control, non_fit, or adaptive"
                 )
             rendered_views = expected.get("rendered_views")
             expected_views = (
