@@ -21,7 +21,13 @@ The plugin contains `.claude-plugin/plugin.json` plus the canonical Skill/licens
 the custom upload contains `progressive-clarity/SKILL.md` and `LICENSE`.
 Use `claude --plugin-dir /path/to/progressive-clarity` for source loading, or upload
 the custom-Skill ZIP through the host's supported flow. Current local evidence is
-in [Verification](verification.md); host acceptance and behavior remain unverified.
+in [Verification](verification.md).
+
+Claude Console records the plugin as `passed_review` for source revision
+`f34fbf03ba644f7b86d6c9413504878d4f76762b`, with Claude Code and Cowork as
+supported platforms. The public community catalog does not yet contain the
+plugin, so catalog synchronization and installability remain unverified. Review
+approval does not establish host activation or rendered behavior.
 
 ## Historical v0.4 distribution record
 

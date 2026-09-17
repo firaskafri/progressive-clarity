@@ -18,6 +18,23 @@ mkdir -p "/path/to/project/.claude/skills"
 cp -R skills/progressive-clarity "/path/to/project/.claude/skills/"
 ```
 
+### Repository marketplaces
+
+The repository includes catalogs for direct Git-backed installation while
+public directories synchronize:
+
+```sh
+claude plugin marketplace add firaskafri/progressive-clarity
+claude plugin install progressive-clarity@firas-kafri-plugins
+
+codex plugin marketplace add firaskafri/progressive-clarity
+```
+
+After adding the Codex marketplace, install Progressive Clarity from that
+marketplace in the Plugins Directory. Repository marketplace availability is
+separate from OpenAI public-directory publication and Anthropic community
+catalog availability.
+
 ### Current package builds
 
 ```sh

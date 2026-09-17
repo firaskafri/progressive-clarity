@@ -14,7 +14,10 @@ v0.4 long skill, and revised skill. Reader packets are blinded and counterbalanc
 their creation is not a participant study.
 
 Current live-host conformance, unseen-holdout results, and reader benefit remain
-**UNVERIFIED**. No v0.5 publication or upload is claimed.
+**UNVERIFIED**. Claude Console records the plugin as having passed review for
+source revision `f34fbf03ba644f7b86d6c9413504878d4f76762b`; the public community
+catalog has not yet synchronized, so public listing and installability remain
+unverified. No OpenAI v0.5 review or publication is claimed.
 
 ### Local checks — 2026-09-16
 

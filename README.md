@@ -68,8 +68,12 @@ attention. These thresholds are design choices to evaluate, not proven optima.
 
 **Protocol v0.5 draft; coordinated package target 0.5.0.** This revision introduces
 usefulness-based presentation, a shorter skill, expanded development cases, and
-a matched comparison/reader-study workflow. See the [verification record](docs/verification.md)
-for checks actually run. Live-host conformance and reader benefits remain unverified.
+a matched comparison/reader-study workflow. Claude Console review passed for
+the candidate source revision; public catalog synchronization and installability
+remain pending. OpenAI v0.5 review status, live-host conformance, and reader
+benefits remain unverified. See the [publication checklist](docs/publication-readiness.md),
+[submission materials](docs/submission-materials.md), and
+[verification record](docs/verification.md).
 
 The skill is **Advisory**: prompt-only instructions cannot guarantee activation,
 topic memory, or semantic quality. The optional non-streaming **`pc-core` wrapper**

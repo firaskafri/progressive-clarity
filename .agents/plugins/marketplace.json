@@ -1,0 +1,22 @@
+{
+  "name": "progressive-clarity",
+  "interface": {
+    "displayName": "Progressive Clarity"
+  },
+  "plugins": [
+    {
+      "name": "progressive-clarity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/firaskafri/progressive-clarity.git",
+        "ref": "main",
+        "sha": "f34fbf03ba644f7b86d6c9413504878d4f76762b"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

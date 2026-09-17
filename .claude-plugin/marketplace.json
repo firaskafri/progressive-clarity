@@ -1,0 +1,20 @@
+{
+  "name": "firas-kafri-plugins",
+  "description": "Plugins by Firas Kafri for clearer AI-assisted work.",
+  "owner": {
+    "name": "Firas Kafri",
+    "url": "https://github.com/firaskafri"
+  },
+  "plugins": [
+    {
+      "name": "progressive-clarity",
+      "source": {
+        "source": "github",
+        "repo": "firaskafri/progressive-clarity",
+        "sha": "f34fbf03ba644f7b86d6c9413504878d4f76762b"
+      },
+      "description": "Prompt-only guidance for direct, qualified answers and useful depth.",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to package
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.release_tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Verify and publish release artifacts
+    if: github.repository == 'firaskafri/progressive-clarity'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.8"
+
+      - name: Verify tag and package versions
+        run: |
+          test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
+          uv run --python 3.11 --no-project python - "$RELEASE_TAG" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          import tomllib
+
+          tag = sys.argv[1]
+          if not tag.startswith("v"):
+              raise SystemExit("release tag must start with v")
+          expected = tag.removeprefix("v")
+          versions = {
+              "pyproject.toml": tomllib.loads(
+                  Path("pyproject.toml").read_text(encoding="utf-8")
+              )["project"]["version"],
+              ".codex-plugin/plugin.json": json.loads(
+                  Path(".codex-plugin/plugin.json").read_text(encoding="utf-8")
+              )["version"],
+              ".claude-plugin/plugin.json": json.loads(
+                  Path(".claude-plugin/plugin.json").read_text(encoding="utf-8")
+              )["version"],
+          }
+          mismatches = {
+              path: version
+              for path, version in versions.items()
+              if version != expected
+          }
+          if mismatches:
+              raise SystemExit(
+                  f"tag {tag} does not match package versions: {mismatches}"
+              )
+          PY
+
+      - name: Validate source and tests
+        run: |
+          python3 -m json.tool evals/cases.json >/dev/null
+          python3 -m tools.validate_repository
+          uv run --python 3.11 --no-project \
+            python -m unittest discover -s tests -v
+          uvx --from ruff==0.12.9 ruff check pc_core tests tools
+          npx --yes @anthropic-ai/claude-code@2.1.274 \
+            plugin validate .claude-plugin/plugin.json
+          npx --yes @anthropic-ai/claude-code@2.1.274 \
+            plugin validate .
+
+      - name: Build release artifacts
+        run: |
+          uv build --out-dir dist
+          uv run --python 3.11 --no-project \
+            python -m tools.package_openai_plugin
+          uv run --python 3.11 --no-project \
+            python -m tools.package_claude_plugin
+          uv run --python 3.11 --no-project \
+            python -m tools.package_claude_skill
+          (
+            cd dist
+            sha256sum \
+              progressive-clarity-*.zip \
+              progressive_clarity_core-* \
+              | sort -k 2 > SHA256SUMS.txt
+          )
+
+      - name: Publish GitHub release
+        run: |
+          artifacts=(
+            dist/SHA256SUMS.txt
+            dist/progressive-clarity-openai-plugin-*.zip
+            dist/progressive-clarity-claude-plugin-*.zip
+            dist/progressive-clarity-claude-ai-skill-*.zip
+            dist/progressive_clarity_core-*.tar.gz
+            dist/progressive_clarity_core-*.whl
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" --clobber "${artifacts[@]}"
+          else
+            gh release create "$RELEASE_TAG" \
+              --verify-tag \
+              --generate-notes \
+              --title "Progressive Clarity ${RELEASE_TAG#v}" \
+              "${artifacts[@]}"
+          fi
