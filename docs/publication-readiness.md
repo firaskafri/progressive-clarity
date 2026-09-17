@@ -61,6 +61,38 @@ Professional name and trademark clearance for “Progressive Clarity” remains 
 documented legal-risk decision. It is not represented as completed by package
 validation or vendor review.
 
+## Anthropic catalog synchronization
+
+The Claude Console submission is complete; do not resubmit it merely because
+the public directory is delayed. Verify both public discovery surfaces:
+
+```sh
+gh api repos/anthropics/claude-plugins-community/contents/.claude-plugin/marketplace.json \
+  --jq .content \
+  | base64 --decode \
+  | jq '.plugins[] | select(
+      .name == "progressive-clarity"
+      or (.source.repo? == "firaskafri/progressive-clarity")
+    )'
+```
+
+Also check <https://claude.com/plugins/progressive-clarity>. Once either source
+lists the plugin, record its public URL and pinned source revision here, then
+verify installation from the official marketplace.
+
+If the entry remains absent for seven days after the latest `passed_review`
+update, contact Anthropic support with the plugin name, public repository,
+review date, and submission identifier. Keep the submission identifier and
+account details private rather than posting them in a public issue.
+
+The self-hosted marketplace remains an available distribution path during the
+sync delay:
+
+```sh
+claude plugin marketplace add firaskafri/progressive-clarity
+claude plugin install progressive-clarity@firas-kafri-plugins
+```
+
 ## Evidence gaps that do not block packaging
 
 - Current v0.5 live ChatGPT and Claude behavior has not been recorded against
