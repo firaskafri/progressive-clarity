@@ -31,6 +31,9 @@ live behavior so that one state is not mistaken for another.
 - [x] An isolated Claude Code install from
   `firaskafri/progressive-clarity` resolves
   `progressive-clarity@firas-kafri-plugins` as version `0.5.0`.
+- [x] An isolated Codex 0.154.0 install from the repository marketplace
+  resolves `progressive-clarity@progressive-clarity` as version `0.5.0` pinned
+  to tag `v0.5.0` and the approved source revision.
 - [x] Publication tracking, marketplace catalogs, validation coverage, and the
   release workflow are committed and pushed.
 - [x] Immutable tag `v0.5.0` points to the approved candidate revision.
