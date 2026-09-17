@@ -69,7 +69,9 @@ validation or vendor review.
 ## Anthropic catalog synchronization
 
 The Claude Console submission is complete; do not resubmit it merely because
-the public directory is delayed. Verify both public discovery surfaces:
+the public directory is delayed. Progress is tracked in
+[issue #1](https://github.com/firaskafri/progressive-clarity/issues/1).
+Verify both public discovery surfaces:
 
 ```sh
 gh api repos/anthropics/claude-plugins-community/contents/.claude-plugin/marketplace.json \
