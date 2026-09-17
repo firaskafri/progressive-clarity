@@ -61,12 +61,12 @@ Python wrapper, see [Installation](docs/installation.md).
   procedures keep the shape their purpose requires.
 
 For English Full answers, 40 words at a glance and 200 cumulatively through
-context are provisional guidance. Tables, code, and warnings still consume
+context are current guidance. Tables, code, and warnings still consume
 attention. These thresholds are design choices to evaluate, not proven optima.
 
 ## Status and guarantees
 
-**Protocol v0.5 draft; coordinated package target 0.5.0.** This revision introduces
+**Protocol v0.5; published package 0.5.0.** This revision introduces
 usefulness-based presentation, a shorter skill, expanded development cases, and
 a matched comparison/reader-study workflow. Claude Console review passed for
 the candidate source revision; public catalog synchronization and installability

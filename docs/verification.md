@@ -1,6 +1,6 @@
 # Verification record
 
-## Current v0.5 draft
+## Current v0.5 release
 
 Protocol `0.5`, coordinated package target `0.5.0`, revises the v0.4 behavioral
 contract. The canonical skill is shorter, depth selection is usefulness-based,

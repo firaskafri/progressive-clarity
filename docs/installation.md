@@ -1,6 +1,6 @@
 # Install Progressive Clarity
 
-## Current v0.5 draft
+## Current v0.5 release
 
 The source targets package `0.5.0`, protocol `0.5`. Copy the complete
 `skills/progressive-clarity/` directory to a supported host's project skill folder:
