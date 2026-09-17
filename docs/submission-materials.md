@@ -151,7 +151,6 @@ do not replace it with the three-view explanatory format.
 - Claude: review passed for source revision
   `f34fbf03ba644f7b86d6c9413504878d4f76762b`; public community catalog
   synchronization remains pending.
-- OpenAI: authenticated portal status has not yet been verified for `0.5.0`.
-- Public website privacy and terms pages are implemented in the deployment
-  repository but must be deployed and verified before supplying those URLs to
-  OpenAI.
+- OpenAI: package `0.5.0` is published in the Plugins Directory under the
+  existing Progressive Clarity listing.
+- Public website privacy and terms pages are deployed and verified.

@@ -65,7 +65,7 @@ class PublicationMetadataTests(unittest.TestCase):
             {
                 "source": "url",
                 "url": f"{REPOSITORY}.git",
-                "ref": "main",
+                "ref": "v0.5.0",
                 "sha": APPROVED_CLAUDE_REVISION,
             },
         )
@@ -99,6 +99,7 @@ class PublicationMetadataTests(unittest.TestCase):
             {
                 "source": "github",
                 "repo": "firaskafri/progressive-clarity",
+                "ref": "v0.5.0",
                 "sha": APPROVED_CLAUDE_REVISION,
             },
         )

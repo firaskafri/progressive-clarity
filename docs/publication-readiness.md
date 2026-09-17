@@ -30,6 +30,10 @@ live behavior so that one state is not mistaken for another.
   approved candidate revision.
 - [x] Publication tracking, marketplace catalogs, validation coverage, and the
   release workflow are committed and pushed.
+- [x] Immutable tag `v0.5.0` points to the approved candidate revision.
+- [x] The GitHub release contains the three deterministic host archives, Python
+  distributions, and checksums.
+- [x] OpenAI package `0.5.0` is published in the Plugins Directory.
 - [x] The website serves the candidate archives and manifests.
 - [x] The public privacy and terms pages are deployed and pass exact-route
   smoke checks in website release `20260917T120102Z-13926-f8b646ae`.
@@ -43,17 +47,9 @@ in this repository.
 
 ## Remaining blockers
 
-- [ ] Create and push the immutable `v0.5.0` tag at the approved candidate
-  revision.
-- [ ] Publish a GitHub release containing the deterministic archives and
-  checksums.
 - [ ] Confirm Progressive Clarity appears in Anthropic's public
   `claude-plugins-community` catalog and record the catalog-pinned revision.
   Review has passed, but the public mirror has not synchronized yet.
-- [ ] Confirm the OpenAI submission's current status in the authenticated
-  OpenAI Platform portal.
-- [ ] If OpenAI has not approved package `0.5.0`, submit the exact deterministic
-  archive with the reviewed listing and test material.
 - [ ] After the source tag exists, rebuild the website artifacts from that tag
   and change the website ledger from `unpublished` to `published` with the full
   source revision and release date.

@@ -9,7 +9,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/firaskafri/progressive-clarity.git",
-        "ref": "main",
+        "ref": "v0.5.0",
         "sha": "f34fbf03ba644f7b86d6c9413504878d4f76762b"
       },
       "policy": {

@@ -17,7 +17,8 @@ Current live-host conformance, unseen-holdout results, and reader benefit remain
 **UNVERIFIED**. Claude Console records the plugin as having passed review for
 source revision `f34fbf03ba644f7b86d6c9413504878d4f76762b`; the public community
 catalog has not yet synchronized, so public listing and installability remain
-unverified. No OpenAI v0.5 review or publication is claimed.
+unverified. OpenAI package `0.5.0` is published in the Plugins Directory under
+the existing Progressive Clarity listing.
 
 ### Local checks — 2026-09-16
 

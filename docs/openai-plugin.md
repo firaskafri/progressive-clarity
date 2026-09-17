@@ -15,8 +15,12 @@ unzip -t dist/progressive-clarity-openai-plugin-0.5.0.zip
 
 The archive contains the manifest, two static SVG assets, and the canonical
 Skill and license. See [Verification](verification.md) for current local evidence.
-Current portal publication, installation, activation, and live behavior remain
-`UNVERIFIED`; historical hashes below must not identify this version.
+OpenAI package `0.5.0` is published under the existing Progressive Clarity
+Plugins Directory listing. The published version was prepared from the archive
+with SHA-256
+`c1acd2e17b1b6fd7d9e5c3ea480117770edf2ea921ad5c589d5d2930ee89cf44`.
+Authenticated installation, activation, and live behavior remain `UNVERIFIED`;
+historical hashes below must not identify this version.
 
 ## Historical v0.4 package record
 
