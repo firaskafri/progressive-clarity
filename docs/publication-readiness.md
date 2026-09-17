@@ -4,7 +4,7 @@ This checklist is the source of truth for publishing Progressive Clarity. It
 separates repository evidence, vendor review, public catalog availability, and
 live behavior so that one state is not mistaken for another.
 
-## Current candidate
+## Current release
 
 - Protocol: `0.5`
 - Package: `0.5.0`
@@ -34,9 +34,12 @@ live behavior so that one state is not mistaken for another.
 - [x] The GitHub release contains the three deterministic host archives, Python
   distributions, and checksums.
 - [x] OpenAI package `0.5.0` is published in the Plugins Directory.
-- [x] The website serves the candidate archives and manifests.
+- [x] The website release ledger records tag `v0.5.0`, the approved full source
+  revision, and release date `2026-09-17`.
+- [x] Published website release `20260917T122844Z-55624-e850873a` is healthy,
+  drift-free, and serves metadata identical to the committed ledger.
 - [x] The public privacy and terms pages are deployed and pass exact-route
-  smoke checks in website release `20260917T120102Z-13926-f8b646ae`.
+  smoke checks.
 - [x] Claude Console records the plugin as `passed_review`.
 - [x] The approved Claude submission targets the exact candidate revision.
 - [x] Claude approved the plugin for Claude Code and Cowork.
@@ -50,11 +53,6 @@ in this repository.
 - [ ] Confirm Progressive Clarity appears in Anthropic's public
   `claude-plugins-community` catalog and record the catalog-pinned revision.
   Review has passed, but the public mirror has not synchronized yet.
-- [ ] After the source tag exists, rebuild the website artifacts from that tag
-  and change the website ledger from `unpublished` to `published` with the full
-  source revision and release date.
-- [ ] Deploy the published-provenance website artifact and verify every public
-  archive against its recorded SHA-256.
 
 Professional name and trademark clearance for “Progressive Clarity” remains a
 documented legal-risk decision. It is not represented as completed by package
