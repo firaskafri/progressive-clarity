@@ -28,7 +28,11 @@ live behavior so that one state is not mistaken for another.
   marketplace without warnings.
 - [x] Repository marketplace catalogs for Claude and OpenAI are pinned to the
   approved candidate revision.
+- [x] Publication tracking, marketplace catalogs, validation coverage, and the
+  release workflow are committed and pushed.
 - [x] The website serves the candidate archives and manifests.
+- [x] The public privacy and terms pages are deployed and pass exact-route
+  smoke checks in website release `20260917T120102Z-13926-f8b646ae`.
 - [x] Claude Console records the plugin as `passed_review`.
 - [x] The approved Claude submission targets the exact candidate revision.
 - [x] Claude approved the plugin for Claude Code and Cowork.
@@ -39,8 +43,6 @@ in this repository.
 
 ## Remaining blockers
 
-- [ ] Commit and push the publication tracker, marketplace catalogs, validation
-  coverage, and release workflow.
 - [ ] Create and push the immutable `v0.5.0` tag at the approved candidate
   revision.
 - [ ] Publish a GitHub release containing the deterministic archives and
@@ -52,8 +54,6 @@ in this repository.
   OpenAI Platform portal.
 - [ ] If OpenAI has not approved package `0.5.0`, submit the exact deterministic
   archive with the reviewed listing and test material.
-- [ ] Deploy and verify the Progressive Clarity privacy and terms pages before
-  supplying those URLs to OpenAI.
 - [ ] After the source tag exists, rebuild the website artifacts from that tag
   and change the website ledger from `unpublished` to `published` with the full
   source revision and release date.
