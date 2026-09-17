@@ -39,7 +39,7 @@ live behavior so that one state is not mistaken for another.
 - [x] OpenAI package `0.5.0` is published in the Plugins Directory.
 - [x] The website release ledger records tag `v0.5.0`, the approved full source
   revision, and release date `2026-09-17`.
-- [x] Published website release `20260917T122844Z-55624-e850873a` is healthy,
+- [x] Published website release `20260917T130223Z-9953-91e4ddf4` is healthy,
   drift-free, and serves metadata identical to the committed ledger.
 - [x] The public privacy and terms pages are deployed and pass exact-route
   smoke checks.
