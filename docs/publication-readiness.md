@@ -28,6 +28,9 @@ live behavior so that one state is not mistaken for another.
   marketplace without warnings.
 - [x] Repository marketplace catalogs for Claude and OpenAI are pinned to the
   approved candidate revision.
+- [x] An isolated Claude Code install from
+  `firaskafri/progressive-clarity` resolves
+  `progressive-clarity@firas-kafri-plugins` as version `0.5.0`.
 - [x] Publication tracking, marketplace catalogs, validation coverage, and the
   release workflow are committed and pushed.
 - [x] Immutable tag `v0.5.0` points to the approved candidate revision.
