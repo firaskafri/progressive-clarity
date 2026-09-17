@@ -36,7 +36,9 @@ live behavior so that one state is not mistaken for another.
 - [x] Immutable tag `v0.5.0` points to the approved candidate revision.
 - [x] The GitHub release contains the three deterministic host archives, Python
   distributions, and checksums.
-- [x] OpenAI package `0.5.0` is published in the Plugins Directory.
+- [x] OpenAI package `0.5.0` is publicly visible in the
+  [Plugins Directory](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2)
+  with the reviewed listing copy, prompts, website, privacy, and terms links.
 - [x] The website release ledger records tag `v0.5.0`, the approved full source
   revision, and release date `2026-09-17`.
 - [x] Published website release `20260917T130223Z-9953-91e4ddf4` is healthy,
