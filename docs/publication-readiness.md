@@ -44,7 +44,7 @@ live behavior so that one state is not mistaken for another.
   with the reviewed listing copy, prompts, website, privacy, and terms links.
 - [x] The website release ledger records tag `v0.5.0`, the approved full source
   revision, and release date `2026-09-17`.
-- [x] Published website release `20260917T130223Z-9953-91e4ddf4` is healthy,
+- [x] Published website release `20260920T135005Z-49880-3a550689` is healthy,
   drift-free, and serves metadata identical to the committed ledger.
 - [x] The public privacy and terms pages are deployed and pass exact-route
   smoke checks.
