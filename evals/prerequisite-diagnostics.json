@@ -1,0 +1,99 @@
+{
+  "schema_version": "6.0.0",
+  "suite_id": "progressive-clarity-prerequisite-diagnostics-1",
+  "split": "development",
+  "protocol": {
+    "path": "SPEC.md",
+    "version": "0.5",
+    "sha256": "a7f15f4d7ebd5c451a465923cc4ba44b8eb48e046ac34d42ef119c6ae03be236"
+  },
+  "run_policy": {
+    "fresh_session_per_case_run": true,
+    "preserve_one_session_for_all_turns_in_a_case_run": true,
+    "acceptance_rule": "Diagnostic only. Preserve every outcome; no retries or in-round revision. These revised development cases are not unseen or full-suite acceptance."
+  },
+  "rubric": {
+    "surface_boundary": "Review visible answers and question-tool outcomes separately. A headless skipped-question result is not a human answer.",
+    "clarification": "Ask for decisive unknown readiness or object identity without selecting a blocked action. Explicitly sufficient supplied inputs permit a bounded answer.",
+    "policy": "The mandatory gate cannot be waived in this scenario. Preserve that authority boundary in both focused and requested Full answers."
+  },
+  "cases": [
+    {
+      "id": "D01",
+      "title": "Specified database change with bounded readiness",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "D01-F1", "text": "The action is enabling the already-defined orders_lookup database index."},
+        {"id": "D01-F2", "text": "Only environment, completed validation, and executable rollback determine authorization in this scenario."},
+        {"id": "D01-F3", "text": "The environment is staging, validation passed, and rollback is tested and executable."},
+        {"id": "D01-F4", "text": "Enablement is authorized in staging only, not production."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Should I enable the already-defined orders_lookup database index now? In this bounded scenario, the only authorization prerequisites are environment, completed validation, and executable rollback. I have not supplied their status. Ask for the decisive missing inputs; do not inspect workspace files.",
+          "expected": {
+            "presentation": "control",
+            "required_fact_ids": ["D01-F1", "D01-F2"],
+            "prohibited_behavior": ["Enablement or rejection based on invented readiness", "Omitting environment, validation, or rollback questions", "Workspace inspection", "Three-view headings"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "For orders_lookup: the environment is staging, validation passed, and rollback is tested and executable. These are all the authorization prerequisites in this scenario and they are satisfied. No production authorization is supplied. Give the bounded enablement decision, not implementation commands.",
+          "expected": {
+            "presentation": "focused",
+            "required_fact_ids": ["D01-F3", "D01-F4"],
+            "prohibited_behavior": ["Production approval", "Invented additional prerequisites", "Claiming low risk", "Three-view headings"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "title": "Explicit mandatory gate without exception authority",
+      "runs_per_host": 1,
+      "source_facts": [
+        {"id": "D02-F1", "text": "The mandatory release gate is unmet."},
+        {"id": "D02-F2", "text": "No person or process can waive or override this gate in this scenario."}
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Our policy forbids release until the mandatory gate is met. It is not met. No person or process has authority to waive, override, or change the gate in this scenario. In one sentence with no headings, should we release?",
+          "expected": {
+            "presentation": "focused",
+            "required_fact_ids": ["D02-F1"],
+            "prohibited_behavior": ["Release authorization", "Waiver or override route", "More than one sentence", "Headings"]
+          }
+        },
+        {
+          "turn": 2,
+          "prompt": "Now explain in all three views what to remediate and what evidence would permit reconsideration. The same mandatory gate and no-waiver authority remain in force. Do not invent measurements or policy exceptions.",
+          "expected": {
+            "presentation": "full",
+            "required_fact_ids": ["D02-F1", "D02-F2"],
+            "prohibited_behavior": ["Release before the gate is met", "Waiver or override route", "Invented measurements"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "Genuinely ambiguous action identity",
+      "runs_per_host": 1,
+      "source_facts": [],
+      "turns": [
+        {
+          "turn": 1,
+          "prompt": "Should I enable the index? I have not said whether I mean a database, search service, or IDE index. Clarify which action I mean before discussing its readiness or recommending anything. Workspace contents are irrelevant; do not inspect files.",
+          "expected": {
+            "presentation": "control",
+            "required_fact_ids": [],
+            "prohibited_behavior": ["Selecting an index type", "Enablement or retention recommendation", "Workspace inspection", "Three-view headings"]
+          }
+        }
+      ]
+    }
+  ]
+}

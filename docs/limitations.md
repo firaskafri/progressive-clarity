@@ -2,8 +2,11 @@
 
 ## Current v0.5 scope and limitations
 
-Protocol v0.5 is a draft targeting package 0.5.0. Its shorter skill and
-usefulness-based rules are design changes, not measured improvements.
+Protocol v0.5 is distributed in published package 0.5.0. Publication and verified
+repository marketplace installs do not establish live-host conformance or reader
+benefits. Its shorter skill and usefulness-based rules are design changes, not
+measured improvements. See [publication readiness](publication-readiness.md) for
+the recorded distribution status and pending Anthropic official-catalog checks.
 
 - Prompt-only activation, topic continuity, depth selection, assumption support,
   clarification quality, and correction faithfulness remain probabilistic.

@@ -76,36 +76,38 @@ jobs:
         run: |
           python3 -m json.tool .codex-plugin/plugin.json >/dev/null
           python3 -m tools.package_openai_plugin
-          first_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.5.0.zip)"
+          version="$(python3 -c 'from tools.package_common import RELEASE_VERSION; print(RELEASE_VERSION)')"
+          first_hash="$(sha256sum "dist/progressive-clarity-openai-plugin-$version.zip")"
           python3 -m tools.package_openai_plugin
-          second_hash="$(sha256sum dist/progressive-clarity-openai-plugin-0.5.0.zip)"
+          second_hash="$(sha256sum "dist/progressive-clarity-openai-plugin-$version.zip")"
           test "$first_hash" = "$second_hash"
-          unzip -t dist/progressive-clarity-openai-plugin-0.5.0.zip
+          unzip -t "dist/progressive-clarity-openai-plugin-$version.zip"
 
       - name: Build deterministic Claude packages
         run: |
+          version="$(python3 -c 'from tools.package_common import RELEASE_VERSION; print(RELEASE_VERSION)')"
           python3 -m json.tool .claude-plugin/plugin.json >/dev/null
           python3 -m tools.package_claude_plugin
           plugin_first="$(
-            sha256sum dist/progressive-clarity-claude-plugin-0.5.0.zip
+            sha256sum "dist/progressive-clarity-claude-plugin-$version.zip"
           )"
           python3 -m tools.package_claude_plugin
           plugin_second="$(
-            sha256sum dist/progressive-clarity-claude-plugin-0.5.0.zip
+            sha256sum "dist/progressive-clarity-claude-plugin-$version.zip"
           )"
           test "$plugin_first" = "$plugin_second"
-          unzip -t dist/progressive-clarity-claude-plugin-0.5.0.zip
+          unzip -t "dist/progressive-clarity-claude-plugin-$version.zip"
 
           python3 -m tools.package_claude_skill
           skill_first="$(
-            sha256sum dist/progressive-clarity-claude-ai-skill-0.5.0.zip
+            sha256sum "dist/progressive-clarity-claude-ai-skill-$version.zip"
           )"
           python3 -m tools.package_claude_skill
           skill_second="$(
-            sha256sum dist/progressive-clarity-claude-ai-skill-0.5.0.zip
+            sha256sum "dist/progressive-clarity-claude-ai-skill-$version.zip"
           )"
           test "$skill_first" = "$skill_second"
-          unzip -t dist/progressive-clarity-claude-ai-skill-0.5.0.zip
+          unzip -t "dist/progressive-clarity-claude-ai-skill-$version.zip"
 
       - name: Run official Claude plugin validation
         run: |

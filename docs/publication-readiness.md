@@ -6,6 +6,71 @@ live behavior so that one state is not mistaken for another.
 
 ## Current release
 
+The working tree targets unpublished candidate `0.5.1-rc.10` for acceptance
+repair. It is not approved or published. The release identities and completed
+publication checks below refer only to immutable published `0.5.0`; repository
+marketplace catalogs remain pinned to that release. Candidate validation and
+targeted debugging do not replace vendor review or a full development round.
+The rc.7 full development round completed with 12 PASS and 10 FAIL case runs,
+so stable release, website deployment, and vendor submissions are blocked.
+
+rc.10 is a [local-only repair](release-candidate-rc10.md), with no live-model
+results. The rc.9 preparation checklist below is historical. Its local bundle
+must not be submitted as rc.10, and the current workflow's matching-version
+guard rejects an rc.9 tag against rc.10 metadata. No new publication is authorized.
+
+## Experimental rc.10 gates — not ready to publish
+
+- [x] Current installation instructions and experimental notes name rc.10;
+  earlier rc.9 artifacts and behavior records are explicitly historical.
+- [x] Local repository validation, 172 tests, Ruff, and diff checks pass.
+- [x] Release workflow requires the latest main-push CI run for the exact tagged
+  SHA to be completed successfully; absent, pending, failed, or stale results block.
+- [ ] Review and commit the intended changes; record the exact commit SHA.
+- [ ] Push that commit only when authorized and verify CI success for that SHA,
+  including package builds and official Claude validation. Local checks are not CI.
+- [ ] Build/check rc.10 artifacts from that exact source revision; do not reuse
+  the rc.9 bundle or release the current uncommitted working tree.
+- [ ] Explicitly authorize creation of immutable `v0.5.1-rc.10` at the verified
+  commit and publish it as a prerelease with `--latest=false` using reviewed notes.
+- [ ] Verify remote source pin, prerelease/not-latest status, inventory, and checksums.
+
+Stable 0.5.1 remains blocked pending behavioral acceptance. No commit, push,
+tag, or publication was performed by this documentation cleanup.
+
+## Historical experimental rc.9 preparation
+
+The user explicitly authorized preparing a disclosed experimental prerelease,
+not promoting rc.9 to stable or changing the acceptance rubric. Stable 0.5.1,
+vendor submissions, and production website promotion remain blocked. An opt-in
+GitHub prerelease was a separate distribution scope. The rc.9 bundle retains its
+original notes; [current experimental notes](experimental-prerelease.md) now
+describe rc.10 and must not be treated as the historical rc.9 notes.
+
+- [x] Candidate notes disclose T10, T15, T18 and host/semantic limitations.
+- [x] Workflow rejects stable/mismatched tags, marks releases prerelease and
+  not latest, refuses existing releases, and checks isolated artifacts/checksums.
+- [x] Repository checks, diff checks, 170 unit tests, and Ruff 0.12.9 pass locally.
+- [x] Claude Code 2.1.274 validates plugin and marketplace manifests.
+- [x] Wheel and sdist build and install in separate temporary environments;
+  installed protocol/schema imports and console-script help pass.
+- [x] Three host archives build twice identically from the current cleaned skill.
+- [x] Clean local bundle: `dist/experimental-0.5.1-rc.9/`, with five packages,
+  `SHA256SUMS.txt`, release notes, and preparation metadata. Existing root
+  `dist/` archives are historical; do not publish them instead of this bundle.
+- [ ] Review and commit the intended source changes; the bundle records an
+  uncommitted working tree and is not committed-source provenance.
+- [ ] Run CI on that exact commit, create immutable `v0.5.1-rc.9` there, and
+  explicitly authorize push/publication. No tag, push, or publication was done.
+- [ ] Run the experimental workflow and verify remote prerelease/not-latest
+  status, notes, inventory, and attached checksums against the actual CI build.
+
+The workflow can be dispatched only for an existing matching RC tag. Never use
+an old stable tag, move an existing tag, overwrite release assets, or attach stale
+local artifacts. CI-built Python artifacts may differ from local builds; compare
+their own checksums and record their source revision rather than claiming byte
+identity without checking. No PyPI publication or marketplace pin change is included.
+
 - Protocol: `0.5`
 - Package: `0.5.0`
 - Approved Claude source revision:

@@ -11,6 +11,8 @@ Progressive Clarity identity or claim catalog publication prematurely.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -127,6 +129,123 @@ class PublicationMetadataTests(unittest.TestCase):
             "- [ ] Confirm Progressive Clarity appears in Anthropic's public",
             tracker,
         )
+
+    def test_release_tag_guard_rejects_stable_and_mismatched_tags(self) -> None:
+        """Name: Executable prerelease tag guard.
+
+        Description: Executes the workflow's actual Python guard for candidate,
+        stable, malformed, and mismatched tags without running publication.
+        Assumptions: The workflow keeps its version check in one Python heredoc.
+        Expectations: Only the canonical candidate with reviewed notes passes.
+        """
+        from tools.package_common import RELEASE_VERSION
+
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        source = workflow.split('<<\'PY\'\n', 1)[1].split('\n          PY', 1)[0]
+        source = "\n".join(line.removeprefix("          ") for line in source.splitlines())
+        for tag, valid in (
+            (f"v{RELEASE_VERSION}", True),
+            ("v0.5.1", False),
+            ("v0.5.0", False),
+            ("v0.5.1-rc.0", False),
+            ("v0.5.1-rc.999", False),
+            ("v0.5.1-rc.9", False),
+            ("v0.5.1-rc.9/unsafe", False),
+        ):
+            with self.subTest(tag=tag):
+                result = subprocess.run(
+                    [sys.executable, "-", tag], input=source, text=True,
+                    capture_output=True, cwd=ROOT, check=False,
+                )
+                self.assertEqual(result.returncode == 0, valid, result.stderr)
+
+    def test_release_workflow_preserves_experimental_and_immutable_boundaries(self) -> None:
+        """Name: Prerelease publishing safeguards.
+
+        Description: Checks explicit experimental labeling, artifact isolation,
+        checksum verification, and refusal to overwrite published assets.
+        Assumptions: Static checks supplement executable tag checks and CI builds.
+        Expectations: Publication cannot mark this candidate latest or stable,
+        silently overwrite an existing release, or omit reviewed limitations.
+        """
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        for safeguard in (
+            '--prerelease', '--latest=false',
+            '--notes-file docs/experimental-prerelease.md',
+            'Existing release must not be overwritten',
+            'dist must be empty', 'test "${#packages[@]}" -eq 5',
+            'sha256sum --check SHA256SUMS.txt',
+        ):
+            self.assertIn(safeguard, workflow)
+        self.assertNotIn('--clobber', workflow)
+        self.assertNotIn('--generate-notes', workflow)
+        notes = (ROOT / "docs/experimental-prerelease.md").read_text()
+        for boundary in ('T10', 'T15', 'T18', 'not a stable', 'not vendor-approved'):
+            self.assertIn(boundary, notes)
+
+    def test_current_installation_documentation_matches_candidate_version(self) -> None:
+        """Name: Current candidate documentation versions.
+
+        Description: Checks current installation instructions and release notes
+        against the canonical version, without rewriting historical evidence.
+        Assumptions: Historical installation sections begin at the v0.4 heading.
+        Expectations: Current commands and filenames name the current candidate,
+        not stale rc.9 artifacts or already-published 0.5.0 build targets.
+        """
+        from tools.package_common import RELEASE_VERSION
+
+        installation = (ROOT / "docs/installation.md").read_text().split(
+            "## Historical v0.4 installation record", 1
+        )[0]
+        for host in ("openai-plugin", "claude-plugin", "claude-ai-skill"):
+            self.assertIn(f"progressive-clarity-{host}-{RELEASE_VERSION}.zip", installation)
+        self.assertNotIn("now builds unpublished candidate `0.5.1-rc.9`", installation)
+        self.assertNotIn("The source targets package `0.5.0`", installation)
+        notes = (ROOT / "docs/experimental-prerelease.md").read_text()
+        self.assertIn(f"`{RELEASE_VERSION}`", notes)
+        self.assertIn("No rc.10 release assets have been published yet.", notes)
+
+    def test_release_ci_guard_requires_latest_exact_commit_success(self) -> None:
+        """Name: Exact-commit CI release gate.
+
+        Description: Executes the workflow CI guard with successful, missing,
+        failed, pending, stale-commit, and superseded-success reports.
+        Assumptions: GitHub reports are untrusted until their commit and latest
+        run state are checked; no network or publication is needed in this test.
+        Expectations: Only a completed successful latest run on the exact SHA
+        permits publication; all other states fail closed.
+        """
+        import tempfile
+
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        section = workflow.split(
+            "- name: Require successful CI on the exact release commit", 1
+        )[1]
+        source = section.split("<<'PY'\n", 1)[1].split("\n          PY", 1)[0]
+        source = "\n".join(line.removeprefix("          ") for line in source.splitlines())
+        sha = "a" * 40
+        good = {"headSha": sha, "status": "completed", "conclusion": "success", "databaseId": 1}
+        reports = (
+            ([good], True),
+            ([], False),
+            ([dict(good, headSha="b" * 40)], False),
+            ([dict(good, conclusion="failure")], False),
+            ([dict(good, status="in_progress", conclusion=None)], False),
+            ([good, dict(good, databaseId=2, conclusion="failure")], False),
+            ([dict(good, conclusion="failure"), dict(good, databaseId=2)], True),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            report = Path(directory) / "ci.json"
+            for runs, expected in reports:
+                with self.subTest(runs=runs):
+                    report.write_text(json.dumps(runs))
+                    result = subprocess.run(
+                        [sys.executable, "-", sha, str(report)], input=source,
+                        text=True, capture_output=True, check=False,
+                    )
+                    self.assertEqual(result.returncode == 0, expected, result.stderr)
+        self.assertIn('--event push --branch main', workflow)
+        self.assertIn('actions: read', workflow)
 
 
 if __name__ == "__main__":

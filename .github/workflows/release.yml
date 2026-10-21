@@ -1,17 +1,18 @@
-name: Release
+name: Experimental prerelease
 
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v*.*.*-rc.*"
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing release tag to package
+        description: Existing experimental RC tag to package (stable releases are blocked)
         required: true
         type: string
 
 permissions:
+  actions: read
   contents: write
 
 concurrency:
@@ -47,13 +48,20 @@ jobs:
           uv run --python 3.11 --no-project python - "$RELEASE_TAG" <<'PY'
           import json
           from pathlib import Path
+          import re
           import sys
           import tomllib
 
           tag = sys.argv[1]
-          if not tag.startswith("v"):
-              raise SystemExit("release tag must start with v")
+          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*", tag):
+              raise SystemExit("only experimental RC tags are allowed; stable release acceptance is blocked")
           expected = tag.removeprefix("v")
+          from tools.package_common import RELEASE_VERSION
+          if expected != RELEASE_VERSION:
+              raise SystemExit("tag must match the canonical package version")
+          notes = Path("docs/experimental-prerelease.md")
+          if not notes.is_file() or f"`{expected}`" not in notes.read_text(encoding="utf-8"):
+              raise SystemExit("reviewed experimental notes must name the exact candidate version")
           versions = {
               "pyproject.toml": tomllib.loads(
                   Path("pyproject.toml").read_text(encoding="utf-8")
@@ -76,6 +84,38 @@ jobs:
               )
           PY
 
+      - name: Require successful CI on the exact release commit
+        run: |
+          release_sha="$(git rev-parse HEAD)"
+          gh run list --workflow ci.yml --commit "$release_sha" \
+            --event push --branch main --limit 100 \
+            --json headSha,status,conclusion,databaseId > "$RUNNER_TEMP/release-ci.json"
+          python3 - "$release_sha" "$RUNNER_TEMP/release-ci.json" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+
+          sha, report = sys.argv[1:]
+          runs = json.loads(Path(report).read_text(encoding="utf-8"))
+          if not isinstance(runs, list) or not runs:
+              raise SystemExit("release blocked: no main push CI run for the exact commit")
+          latest = max(runs, key=lambda run: run["databaseId"])
+          if (
+              latest.get("headSha") != sha
+              or latest.get("status") != "completed"
+              or latest.get("conclusion") != "success"
+          ):
+              raise SystemExit("release blocked: latest exact-commit CI must complete successfully")
+          print(f"Verified CI run {latest['databaseId']} for {sha}")
+          PY
+
+      - name: Refuse an existing release
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Existing release must not be overwritten: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
       - name: Validate source and tests
         run: |
           python3 -m json.tool evals/cases.json >/dev/null
@@ -90,6 +130,10 @@ jobs:
 
       - name: Build release artifacts
         run: |
+          if test -d dist && test -n "$(ls -A dist)"; then
+            echo "dist must be empty to avoid mixed-version artifacts" >&2
+            exit 1
+          fi
           uv build --out-dir dist
           uv run --python 3.11 --no-project \
             python -m tools.package_openai_plugin
@@ -107,20 +151,18 @@ jobs:
 
       - name: Publish GitHub release
         run: |
+          shopt -s nullglob
+          packages=(dist/*.zip dist/*.tar.gz dist/*.whl)
+          test "${#packages[@]}" -eq 5
           artifacts=(
             dist/SHA256SUMS.txt
-            dist/progressive-clarity-openai-plugin-*.zip
-            dist/progressive-clarity-claude-plugin-*.zip
-            dist/progressive-clarity-claude-ai-skill-*.zip
-            dist/progressive_clarity_core-*.tar.gz
-            dist/progressive_clarity_core-*.whl
+            "${packages[@]}"
           )
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" --clobber "${artifacts[@]}"
-          else
-            gh release create "$RELEASE_TAG" \
-              --verify-tag \
-              --generate-notes \
-              --title "Progressive Clarity ${RELEASE_TAG#v}" \
-              "${artifacts[@]}"
-          fi
+          (cd dist && sha256sum --check SHA256SUMS.txt)
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --prerelease \
+            --latest=false \
+            --notes-file docs/experimental-prerelease.md \
+            --title "Progressive Clarity ${RELEASE_TAG#v} — experimental" \
+            "${artifacts[@]}"

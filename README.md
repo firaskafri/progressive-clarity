@@ -66,12 +66,35 @@ attention. These thresholds are design choices to evaluate, not proven optima.
 
 ## Status and guarantees
 
+**Experimental candidate: 0.5.1-rc.10 (local validation only, not published).**
+The [minimal rc.10 repair](docs/release-candidate-rc10.md) targets format narration
+and repeated comparison content. No live model run has tested this candidate.
+Opt-in experimentation only: T10, T15, and T18 still fail response-scope and
+fact-preservation checks in preceding candidates. Stable 0.5.1 acceptance remains blocked. Mechanical
+validation is not behavioral certification. Read the
+[experimental release notes](docs/experimental-prerelease.md) before trying it.
+
+[rc.9 evidence](docs/release-candidate-rc9.md) and the
+[instruction-delivery comparison](docs/instruction-delivery-comparison.md)
+retain the failures. The candidate is not vendor-approved; repository marketplace
+pins and approved public release downloads still resolve to unchanged 0.5.0.
+
 **Protocol v0.5; published package 0.5.0.** This revision introduces
 usefulness-based presentation, a shorter skill, expanded development cases, and
-a matched comparison/reader-study workflow. Claude Console review passed for
-the candidate source revision; public catalog synchronization and installability
-remain pending. OpenAI package 0.5.0 is published. Live-host conformance and
-reader benefits remain unverified. See the [publication checklist](docs/publication-readiness.md),
+a matched comparison/reader-study workflow.
+
+- Versioned downloads are available in the
+  [GitHub release](https://github.com/firaskafri/progressive-clarity/releases/tag/v0.5.0).
+- OpenAI package 0.5.0 is published in the
+  [Plugins Directory](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
+- Direct Claude Code and Codex installs from the repository marketplaces are
+  verified; see [Installation](docs/installation.md).
+- Claude review passed for the approved source revision. Anthropic's official
+  public catalog synchronization and installation from that catalog remain pending.
+
+These are recorded release states, not a fresh availability check. Current v0.5
+live-host conformance and reader benefits remain unverified. See the
+[publication checklist](docs/publication-readiness.md),
 [submission materials](docs/submission-materials.md), and
 [verification record](docs/verification.md).
 

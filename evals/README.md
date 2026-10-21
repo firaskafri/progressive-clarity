@@ -7,11 +7,22 @@ Three evidence tracks answer different questions:
 3. **Reader outcomes:** do people interpret actions and constraints correctly,
    retrieve information efficiently, and prefer the answers?
 
-Current v0.5 live-host, holdout, and reader-outcome results are **UNVERIFIED**.
+Current v0.5 full-suite live-host, holdout, and reader-outcome results are
+**UNVERIFIED**. A [bounded Cursor smoke](../docs/cursor-v05-smoke.md) captured
+18 responses on 2026-10-21 with named conformance failures, not acceptance.
 Local `tests/` cover mechanical contracts and harness behavior without inference.
+A [full rc.5 Cursor startup-rule round](../docs/cursor-full-development.md) now
+records 44 responses in 22 sessions, with observable failures and no acceptance
+pass. This is a rule integration, not dynamic Skill activation or unseen testing.
 Historical host observations remain in [Verification](../docs/verification.md).
 
 ## Development suite
+
+The separate [minimal prerequisite diagnostics](prerequisite-diagnostics.json)
+clarify action identity and policy authority without changing the frozen suite.
+[Results and limitations](../docs/prerequisite-diagnostics.md) record a five-response
+run of unchanged rc.6. These are explicit development checks, not unseen holdouts
+or full-suite acceptance; no new harness is required.
 
 `cases.json` contains 18 cases, 22 sessions, and 44 scored responses per host.
 T04 corrections and T05 warnings each have three prescribed runs. Preserve one

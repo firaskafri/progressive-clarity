@@ -54,7 +54,7 @@ class CrossDistributionMetadataTests(unittest.TestCase):
     identity and controlling-text discovery while preserving each packager's
     distinct archive shape.
     Assumptions: Protocol v0.5 changes every coordinated prompt distribution.
-    Expectations: All channels use version 0.5.0 and canonical skill content.
+    Expectations: All channels use the candidate version and canonical skill content.
     """
 
     def test_all_distribution_versions_and_skill_bodies_match(self) -> None:
@@ -85,6 +85,84 @@ class CrossDistributionMetadataTests(unittest.TestCase):
             package_claude_skill.PACKAGED_DESCRIPTION,
         )
         self.assertEqual(generated_body, canonical.body)
+
+    def test_numeric_guidance_is_preserved_in_every_distribution(self) -> None:
+        """Name: Numeric uncertainty instruction propagation.
+
+        Description: Checks follow-up, missing-input, and summary safeguards in each host's
+        packaged Skill and verifies that changed bytes use a new version.
+        Assumptions: Text checks protect instruction distribution, not model
+        semantics; live behavior requires a separate inference run.
+        Expectations: Every channel retains the candidate safeguards and cannot
+        reuse the published 0.5.0 package version.
+        """
+        claude, _manifest_bytes = package_claude_plugin.load_manifest()
+        canonical = load_canonical_skill_source(
+            package_claude_skill.SKILL_DIR,
+            root=package_claude_skill.ROOT,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            dist = Path(directory)
+            with (
+                mock.patch.object(package_claude_plugin, "DIST_DIR", dist),
+                mock.patch.object(package_claude_plugin, "print_archive_report"),
+            ):
+                self.assertEqual(package_claude_plugin.main(), 0)
+            with zipfile.ZipFile(
+                dist / f"{claude['name']}-claude-plugin-{claude['version']}.zip"
+            ) as archive:
+                claude_skill = archive.read("skills/progressive-clarity/SKILL.md")
+        skills = {
+            "OpenAI": _openai_entries()["skills/progressive-clarity/SKILL.md"],
+            "Claude": claude_skill,
+            "Claude.ai": package_claude_skill.generate_packaged_skill(
+                canonical.body
+            ),
+        }
+        safeguards = (
+            "For an update without a question, emit the changed fact and stop.",
+            "Treat conversational names as opaque identifiers, not product names.",
+            "Do not suggest",
+            "production coverage was Tuesday; it is Thursday.",
+            "These are output labels, not illustrative headings.",
+            "supplied stop branches only.",
+            "Answer only the current request using the established facts.",
+            "Keep every supplied decision fact, including facts shared by all options.",
+            "Plausible domain knowledge is not evidence about this situation:",
+            "Stop when that request is answered.",
+            "Do not explain which format you are omitting or",
+            "it does not restate the same comparison as a table or list.",
+            "At depth adds evidence or verification details, not another rationale recap.",
+            "An explicit request for three views does not supply missing",
+            "**Known blocker:**",
+            "**Unknown prerequisites:**",
+            "**Sufficient supplied inputs:**",
+            "mention waivers, exceptions, policy changes, owners, or approvals, even",
+            "state that staging readiness is not production approval; do not claim low risk.",
+            "Apply the protocol silently.",
+            "This applies to pre-tool commentary as well as the final answer.",
+            "a prerequisite for warning about a known hazard.",
+            "Select presentation again for each turn.",
+            "Continuing the topic does not mean continuing its previous layout.",
+            "neither requires separate rationale and depth sections.",
+            "**Decisive inputs missing:**",
+            "Missing requirements also block nonnumeric configuration choices.",
+            "storage mechanism does not settle its retention policy.",
+            "This includes nonnumeric choices such as disabling expiry or indefinite retention.",
+            'Do not append a typical range, fallback, minimum, or "safe default".',
+            "**Inputs sufficient:**",
+            "**Hypothetical example useful:**",
+            "That buffer requires capacity for 60 requests at the supplied rate.",
+            "not a capacity recommendation for your workload.",
+            "In follow-ups and summaries, keep unresolved numeric dependencies unresolved.",
+            "if you already recommended one, retract it and obtain the decisive missing input.",
+        )
+        self.assertNotEqual(RELEASE_VERSION, "0.5.0")
+        for host, skill in skills.items():
+            with self.subTest(host=host):
+                text = skill.decode("utf-8")
+                for safeguard in safeguards:
+                    self.assertIn(safeguard, text)
 
     def test_claude_ai_generation_rejects_empty_canonical_body(self) -> None:
         """Name: Empty Claude.ai canonical body refusal.

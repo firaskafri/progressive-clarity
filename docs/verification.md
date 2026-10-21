@@ -1,8 +1,68 @@
 # Verification record
 
+Current working tree: unpublished [rc.10 local-only repair](release-candidate-rc10.md).
+No inference was authorized for rc.10; all prior live outputs refer to their
+recorded earlier hashes. Mechanical checks do not establish repaired behavior.
+
+Historical candidate [rc.9](release-candidate-rc9.md) was
+a shorter response-scope consolidation with a separately frozen diagnostic round.
+Earlier rc.8 and other candidate observations below remain historical.
+The rc.9 five-response round completed but failed T10, T15, and T18. No full
+acceptance round or further revision followed; release acceptance remains blocked.
+
+Historical candidate rc.8 has a [reviewed remediation record](release-candidate-rc8.md):
+27 targeted responses completed, with remaining T10, T15, and T18 failures.
+rc.7 results remain historical; neither round establishes release acceptance.
+
+The [evaluation-assumptions audit](evaluation-assumptions-review.md) qualifies
+T02/T06 scoring and records headless question-tool rejection. Historical totals
+remain evaluator judgments, not independently adjudicated conformance rates.
+
 ## Current v0.5 release
 
-Protocol `0.5`, coordinated package target `0.5.0`, revises the v0.4 behavioral
+The historical [acceptance repair candidate 0.5.1-rc.7](release-candidate-rc7.md)
+was not accepted or published.
+The preceding [decision-prerequisite candidate 0.5.1-rc.6](prerequisite-candidate.md)
+is historical debugging evidence, not the current candidate.
+The fresh rc.7 full development round completed all 44 responses across 22
+sessions and produced 12 PASS / 10 FAIL / 0 UNVERIFIED case runs. Release
+acceptance failed; rc.7 must not be promoted or submitted.
+The preceding [silent-application candidate 0.5.1-rc.5](preamble-candidate.md)
+is historical debugging evidence, not the current candidate.
+The rc.6 targeted prerequisite round completed six responses in four sessions
+but still failed T02 waiver handling and T06 clarification/readiness handling.
+T11's supplied gate-decision check passed; T15 withheld a recommendation without
+three-view headings, but compact clarification quality remains unverified.
+The preceding [focused-follow-up candidate 0.5.1-rc.4](focused-followup-candidate.md)
+is retained as historical debugging evidence.
+The rc.5 bounded round completed all four responses but failed silent application
+in 4/4 sessions and warning-first placement in all three T05 repetitions. The
+visible commentary precedes the exact skill read; no host-integration fix is
+established.
+A subsequent [startup-rule integration experiment](cursor-startup-rule.md) with
+the unchanged rc.5 body completed four responses, passing 1/1 direct-opening and
+3/3 warning-first-opening checks. It used an always-applied project rule with no
+Skill-read prefix; explicit-skill failures and full-suite evidence gaps remain.
+The subsequent [full startup-rule development round](cursor-full-development.md)
+completed all 44 responses in 22 sessions, with no execution errors or retries.
+Conservative case-run review records 4 PASS, 12 FAIL, and 6 UNVERIFIED; this is
+not acceptance, independent fact certification, or reader research.
+It retains the preceding [numeric-advice candidate history](numeric-advice-candidate.md).
+The rc.4 four-turn targeted round passed focused-follow-up and numeric dependency
+checks, while the first-turn loading preamble still failed directness. No overall
+T01 or full-suite conformance pass is claimed.
+The preceding rc.1 targeted Cursor rerun failed numeric advice and summary
+propagation; rc.2 added a decision rule and contrasting examples. Its targeted
+rerun avoided concrete invented durations but still failed T01, with unsupported
+retention fallback and presentation violations. rc.3 explicitly blocks unsupported
+nonnumeric configuration fallbacks. Its first execution timed out; a separately
+authorized fresh round completed all four turns and passed the named numeric
+and configuration checks while still failing T01 presentation and directness.
+These targeted candidates do not
+establish full-suite conformance. The release record below
+refers to published `0.5.0`, not candidate approval or publication.
+
+Protocol `0.5`, published package `0.5.0`, revises the v0.4 behavioral
 contract. The canonical skill is shorter, depth selection is usefulness-based,
 and literal repair/numeric templates and lexical-duplicate rejection are removed.
 Request schema `4.0.0` adds `depth_useful`; envelope/state shapes remain `3.0.0`
@@ -13,12 +73,17 @@ Comparison conditions include ordinary baseline, minimal principles, archived
 v0.4 long skill, and revised skill. Reader packets are blinded and counterbalanced;
 their creation is not a participant study.
 
-Current live-host conformance, unseen-holdout results, and reader benefit remain
-**UNVERIFIED**. Claude Console records the plugin as having passed review for
+Current full-suite live-host conformance, unseen-holdout results, and reader
+benefit remain **UNVERIFIED**. A [bounded Cursor v0.5 smoke](cursor-v05-smoke.md)
+on 2026-10-21 captured 18 responses with named conformance failures; it is not
+an acceptance pass. Claude Console records the plugin as having passed review for
 source revision `f34fbf03ba644f7b86d6c9413504878d4f76762b`; the public community
-catalog has not yet synchronized, so public listing and installability remain
-unverified. OpenAI package `0.5.0` is published in the Plugins Directory under
-the existing Progressive Clarity listing.
+catalog synchronization and installation from that official catalog remain
+unverified. Direct Claude Code and Codex repository marketplace installs are
+verified in the [publication checklist](publication-readiness.md). OpenAI package
+`0.5.0` is published in the Plugins Directory under the existing Progressive
+Clarity listing. These recorded distribution checks do not establish current
+live-host behavior or constitute a fresh availability check.
 
 ### Local checks — 2026-09-16
 

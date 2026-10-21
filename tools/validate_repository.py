@@ -36,7 +36,7 @@ FROZEN_FILES = {
         "a7f15f4d7ebd5c451a465923cc4ba44b8eb48e046ac34d42ef119c6ae03be236"
     ),
     Path("skills/progressive-clarity/SKILL.md"): (
-        "38b1466a3036e639a98824c4b5e4ea71918fda7a5844c82d8c597a2c090cea4c"
+        "0a05293fae8741d2885ae131b0055dadb268c7ba955f018e21c28193f1ea03e4"
     ),
     Path("evals/cases.json"): (
         "b1afbd91172c1786dbffc42551d87b6db069b742c3ff5f270e1ef93b2bcdc19a"

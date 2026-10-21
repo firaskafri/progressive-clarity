@@ -2,7 +2,16 @@
 
 ## Current v0.5 release
 
-The source targets package `0.5.0`, protocol `0.5`. Copy the complete
+The working tree targets unpublished candidate `0.5.1-rc.10`, protocol `0.5`.
+Only local mechanical validation has been completed; no live rc.10 behavior
+or exact-commit CI pass is established. The prepared rc.9 bundle is historical
+and must not be installed or published as rc.10. For the
+published `0.5.0` skill, use the pinned repository marketplaces below or the
+versioned release downloads. Copying the skill or installing Python from this
+working tree uses the candidate, not the approved release. Candidate builds
+produce separate `0.5.1-rc.10` host ZIPs; do not upload them as `0.5.0` or rc.9.
+
+For an opt-in manual candidate copy, copy the complete
 `skills/progressive-clarity/` directory to a supported host's project skill folder:
 
 | Host | Project skill folder | Explicit invocation |
@@ -11,7 +20,11 @@ The source targets package `0.5.0`, protocol `0.5`. Copy the complete
 | Cursor | `.agents/skills/` or `.cursor/skills/` | Skill picker |
 
 The skill contains only instructions and a license. Activation and behavior remain
-Advisory. For example, from this checkout:
+Advisory. For an optional always-applied Cursor project rule that places the
+protocol body in startup context, see [Cursor startup-rule integration](cursor-startup-rule.md).
+This is a different installation profile, not proof of dynamic Skill activation.
+
+For a manual skill copy, from this checkout:
 
 ```sh
 mkdir -p "/path/to/project/.claude/skills"
@@ -43,16 +56,17 @@ python3.11 -m tools.package_claude_plugin
 python3.11 -m tools.package_claude_skill
 ```
 
-These produce `dist/progressive-clarity-openai-plugin-0.5.0.zip`,
-`dist/progressive-clarity-claude-plugin-0.5.0.zip`, and
-`dist/progressive-clarity-claude-ai-skill-0.5.0.zip`. Build evidence is recorded
+These produce `dist/progressive-clarity-openai-plugin-0.5.1-rc.10.zip`,
+`dist/progressive-clarity-claude-plugin-0.5.1-rc.10.zip`, and
+`dist/progressive-clarity-claude-ai-skill-0.5.1-rc.10.zip`. Build evidence is recorded
 in [Verification](verification.md); publication and host activation are separate.
 
 ### Current wrapper setup
 
 Python 3.11+ can run the source directly with `python3.11 -m pc_core`, or install
 this checkout in a project virtual environment using `python -m pip install .`.
-The distribution is `progressive-clarity-core`, target `0.5.0`.
+The distribution is `progressive-clarity-core`, target `0.5.1-rc.10` (normalized
+to `0.5.1rc10` in Python distribution filenames).
 
 Request schema **4.0.0** requires a Boolean **`depth_useful`**, used for automatic
 orientation/checkpoint presentation. Envelope and state schemas remain **3.0.0**
