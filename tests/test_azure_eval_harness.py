@@ -19,7 +19,7 @@ import json
 import os
 import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -257,6 +257,83 @@ class AzureEvalHarnessTests(unittest.TestCase):
 
         self.assertEqual(config.deployment, "latest-eval")
         self.assertNotIn("local-secret", repr(config.public_metadata()))
+
+    def test_main_never_discovers_a_local_credential_file(self) -> None:
+        """Name: No implicit local credential discovery.
+
+        Description: Runs the command with a conventional local config present
+        but without environment credentials or an explicit config option.
+        Assumptions: Local evaluation configuration requires deliberate selection.
+        Expectations: No config is read, no suite runs, and configuration fails.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "evals").mkdir()
+            (root / "evals" / "azure.local.json").write_text("{}")
+            with (
+                mock.patch("tools.azure_eval_harness.ROOT", root),
+                mock.patch.dict(os.environ, {}, clear=True),
+                mock.patch("tools.azure_eval_harness.load_local_config") as loader,
+                mock.patch("tools.azure_eval_harness.run_suite") as runner,
+                redirect_stderr(io.StringIO()),
+            ):
+                exit_code = main(["--case", "T01"])
+            loader.assert_not_called()
+            runner.assert_not_called()
+        self.assertEqual(exit_code, 2)
+
+    def test_main_loads_only_an_explicitly_selected_config(self) -> None:
+        """Name: Explicit Azure configuration selection.
+
+        Description: Selects a temporary JSON config through the command option.
+        Assumptions: The suite runner is mocked and no network request occurs.
+        Expectations: Selected values reach the runner and never command output.
+        """
+        config = _test_config()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "selected.json"
+            path.write_text(json.dumps({
+                "endpoint": config.endpoint,
+                "api_key": config.api_key,
+                "deployment": config.deployment,
+                "api_version": config.api_version,
+            }))
+            with (
+                mock.patch.dict(os.environ, {}, clear=True),
+                mock.patch(
+                    "tools.azure_eval_harness.load_local_config",
+                    wraps=load_local_config,
+                ) as loader,
+                mock.patch(
+                    "tools.azure_eval_harness.run_suite",
+                    return_value={"overall": "PASS"},
+                ) as runner,
+                redirect_stdout(io.StringIO()) as stdout,
+            ):
+                exit_code = main([
+                    "--case", "T01", "--config", str(path),
+                    "--output", str(Path(directory) / "result.json"),
+                ])
+            loader.assert_called_once_with(path)
+            self.assertEqual(runner.call_args.kwargs["config"], config)
+            self.assertNotIn(config.api_key, stdout.getvalue())
+        self.assertEqual(exit_code, 0)
+
+    def test_dry_run_does_not_read_even_an_explicit_config(self) -> None:
+        """Name: Credential-free dry planning.
+
+        Description: Supplies a nonexistent explicit config during a dry run.
+        Assumptions: Planning must not require credentials or live dependencies.
+        Expectations: Planning succeeds without inspecting the config file.
+        """
+        with (
+            mock.patch.dict(os.environ, {}, clear=True),
+            mock.patch("tools.azure_eval_harness.load_local_config") as loader,
+            redirect_stdout(io.StringIO()),
+        ):
+            exit_code = main(["--dry-run", "--config", "/nonexistent/config.json"])
+        loader.assert_not_called()
+        self.assertEqual(exit_code, 0)
 
     def test_checkpoint_exists_before_first_case_execution(self) -> None:
         """Name: Startup checkpoint creation.
@@ -740,12 +817,7 @@ class AzureEvalHarnessTests(unittest.TestCase):
         """
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "checkpoint.json"
-            missing_config = Path(directory) / "missing-local-config.json"
             with (
-                mock.patch(
-                    "tools.azure_eval_harness.DEFAULT_LOCAL_CONFIG_PATH",
-                    missing_config,
-                ),
                 mock.patch.object(
                     AzureEvalConfig,
                     "from_environment",

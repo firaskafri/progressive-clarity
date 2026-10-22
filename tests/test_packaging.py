@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import struct
 import tempfile
 import unittest
 import zipfile
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest import mock
@@ -221,6 +223,84 @@ class CanonicalSkillSourceTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "LICENSE bytes differ"):
                 load_canonical_skill_source(skill_dir, root=root)
+
+
+class ClaudePackagingTests(unittest.TestCase):
+    """Name: Claude listing icon and archive contract.
+
+    Description: Checks the raster listing asset and prompt-only package boundary.
+    Assumptions: The conventional icon location avoids extra manifest fields.
+    Expectations: A compliant icon is packaged deterministically without tooling.
+    """
+
+    def test_archive_includes_icon_and_only_prompt_distribution_files(self) -> None:
+        """Name: Claude prompt-only icon inventory.
+
+        Description: Packages the checked-in icon, manifest, and canonical Skill.
+        Assumptions: ZIP inventory is an explicit allowlist, not a repository copy.
+        Expectations: Four exact entries preserve source bytes and build identically.
+        """
+        manifest, manifest_bytes = package_claude_plugin.load_manifest()
+        entries = package_claude_plugin.source_entries(manifest, manifest_bytes)
+        self.assertEqual(sorted(entries), [
+            ".claude-plugin/icon.png",
+            ".claude-plugin/plugin.json",
+            "skills/progressive-clarity/LICENSE",
+            "skills/progressive-clarity/SKILL.md",
+        ])
+        self.assertEqual(entries[".claude-plugin/icon.png"],
+                         package_claude_plugin.ICON_PATH.read_bytes())
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "first.zip"
+            second = Path(directory) / "second.zip"
+            write_archive(first, entries)
+            write_archive(second, entries)
+            verify_archive(first, entries)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_icon_rejects_invalid_formats_sizes_and_dimensions(self) -> None:
+        """Name: Directory PNG bounds and header checks.
+
+        Description: Mutates header dimensions, checksum, trailer, and byte size.
+        Assumptions: Header checks enforce listing bounds, not full image decoding.
+        Expectations: Valid source passes and every incompatible asset fails.
+        """
+        valid = package_claude_plugin.load_icon()
+        variants = [b"<svg/>", valid[:-12], valid + bytes(2_000_000)]
+        bad_checksum = bytearray(valid)
+        bad_checksum[29] ^= 1
+        variants.append(bytes(bad_checksum))
+        for width, height in ((511, 511), (2049, 2049), (1024, 512)):
+            content = bytearray(valid)
+            content[16:24] = struct.pack(">II", width, height)
+            content[29:33] = struct.pack(">I", zlib.crc32(content[12:29]))
+            variants.append(bytes(content))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "icon.png"
+            with mock.patch.object(package_claude_plugin, "ICON_PATH", path):
+                for content in variants:
+                    with self.subTest(size=len(content), header=content[:24]):
+                        path.write_bytes(content)
+                        with self.assertRaises(ValueError):
+                            package_claude_plugin.load_icon()
+                path.unlink()
+                with self.assertRaises(ValueError):
+                    package_claude_plugin.load_icon()
+                path.symlink_to(package_claude_plugin.ROOT / ".claude-plugin/icon.png")
+                with self.assertRaises(ValueError):
+                    package_claude_plugin.load_icon()
+
+    def test_source_entries_reject_mismatched_manifest_bytes(self) -> None:
+        """Name: Claude validated manifest byte identity.
+
+        Description: Mutates the parsed manifest after validating source bytes.
+        Assumptions: Packaging must preserve the exact validated manifest pair.
+        Expectations: Divergent parsed data is rejected before archive creation.
+        """
+        manifest, manifest_bytes = package_claude_plugin.load_manifest()
+        manifest["description"] += " changed"
+        with self.assertRaisesRegex(ValueError, "validated bytes do not match"):
+            package_claude_plugin.source_entries(manifest, manifest_bytes)
 
 
 class OpenAiPackagingTests(unittest.TestCase):

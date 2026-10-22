@@ -16,6 +16,7 @@ from pc_core.model import (
     THROUGH_IN_CONTEXT_MAX_NON_WARNING_WORDS,
 )
 from tools.package_claude_plugin import load_manifest as load_claude_manifest
+from tools.package_claude_plugin import source_entries as claude_source_entries
 from tools.package_claude_skill import (
     PACKAGE_VERSION as CLAUDE_SKILL_VERSION,
 )
@@ -271,7 +272,8 @@ def validate_distributions(errors: list[str]) -> None:
         versions["OpenAI plugin"] = openai.get("version")
 
     try:
-        claude, _manifest_bytes = load_claude_manifest()
+        claude, claude_bytes = load_claude_manifest()
+        claude_source_entries(claude, claude_bytes)
     except (OSError, ValueError) as exc:
         errors.append(f"Claude plugin: {exc}")
     else:

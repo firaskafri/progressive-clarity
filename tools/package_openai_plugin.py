@@ -35,9 +35,32 @@ EXPECTED_INTERFACE_KEYS = {
     "shortDescription",
     "longDescription",
     "developerName",
+    "category",
+    "capabilities",
+    "websiteURL",
+    "supportURL",
+    "privacyPolicyURL",
+    "termsOfServiceURL",
     "composerIcon",
     "logo",
 }
+ALLOWED_INTERFACE_CATEGORIES = frozenset(
+    {
+        "Productivity",
+        "Creativity",
+        "Developer Tools",
+        "Business & Operations",
+        "Data & Analytics",
+        "Communication",
+        "Education & Research",
+        "Security",
+        "Finance",
+        "Healthcare",
+        "Travel",
+        "Entertainment",
+        "Other",
+    }
+)
 PUBLISHER_NAME = "FIRAS HASHEM AHMAD AL KAFRI"
 EXPECTED_PLUGIN_NAME = "progressive-clarity"
 ASSET_FIELDS = ("composerIcon", "logo")
@@ -102,6 +125,35 @@ def load_manifest() -> tuple[dict[str, object], bytes]:
         raise ValueError(
             "interface.shortDescription must meet the 30-character directory limit"
         )
+    category = interface["category"]
+    if category not in ALLOWED_INTERFACE_CATEGORIES:
+        raise ValueError(
+            "interface.category must be a supported non-empty directory category"
+        )
+    capabilities = interface["capabilities"]
+    if (
+        not isinstance(capabilities, list)
+        or len(capabilities) > 20
+        or any(
+            not isinstance(item, str) or not item.strip() or len(item) > 120
+            for item in capabilities
+        )
+    ):
+        raise ValueError("interface.capabilities must be a list of short strings")
+    for field in (
+        "websiteURL",
+        "supportURL",
+        "privacyPolicyURL",
+        "termsOfServiceURL",
+    ):
+        value = interface[field]
+        if (
+            not isinstance(value, str)
+            or not value.startswith("https://")
+            or len(value) > 1024
+            or "@" in value.split("://", 1)[1].split("/", 1)[0]
+        ):
+            raise ValueError(f"interface.{field} must be an HTTPS URL")
     for field in ASSET_FIELDS:
         asset_path(interface[field])
     return manifest, manifest_bytes

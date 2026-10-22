@@ -11,6 +11,7 @@ Expectations: Metadata and hook drift fail locally before packaging or host use.
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -72,6 +73,27 @@ Expectations: Result.
         errors: list[str] = []
         validate_python_package(errors)
         self.assertEqual(errors, [])
+
+    def test_workflows_install_pinned_tools_before_running_local_binaries(self) -> None:
+        """Name: Separate CI dependency installation and validation.
+
+        Description: Inspects both workflow bodies for pinned installations and
+        explicit local validator commands instead of download-and-run shortcuts.
+        Assumptions: CI dependency installation is not plugin installation.
+        Expectations: Both workflows retain official checks without npx or uvx.
+        """
+        for name in ("ci.yml", "release.yml"):
+            with self.subTest(workflow=name):
+                workflow = (validate_repository.ROOT / ".github/workflows" / name
+                            ).read_text(encoding="utf-8")
+                self.assertIsNone(re.search(r"\b(?:npx|uvx)\b", workflow))
+                self.assertIn("uv tool install --python 3.11 ruff==0.12.9", workflow)
+                self.assertIn("@anthropic-ai/claude-code@2.1.274", workflow)
+                self.assertIn('"$RUNNER_TEMP/validation-bin/ruff" check', workflow)
+                self.assertIn('"$RUNNER_TEMP/claude-validator/node_modules/.bin/claude"',
+                              workflow)
+                self.assertLess(workflow.index("- name: Install pinned validation tools"),
+                                workflow.index('"$RUNNER_TEMP/validation-bin/ruff" check'))
 
     def test_distribution_versions_match_current_draft(self) -> None:
         """Name: Cross-surface candidate versions.

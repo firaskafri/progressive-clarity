@@ -24,6 +24,15 @@ jobs:
         with:
           version: "0.11.8"
 
+      - name: Install pinned validation tools
+        env:
+          UV_TOOL_BIN_DIR: ${{ runner.temp }}/validation-bin
+        run: |
+          uv tool install --python 3.11 ruff==0.12.9
+          npm install --prefix "$RUNNER_TEMP/claude-validator" \
+            --no-audit --no-fund --save-exact \
+            @anthropic-ai/claude-code@2.1.274
+
       - name: Validate repository
         run: |
           python3 -m json.tool evals/cases.json >/dev/null
@@ -36,7 +45,7 @@ jobs:
             python -m unittest discover -s tests -v
           uv run --python 3.11 --no-project \
             python -m compileall -q pc_core tests tools
-          uvx --from ruff==0.12.9 ruff check pc_core tests tools
+          "$RUNNER_TEMP/validation-bin/ruff" check pc_core tests tools
 
       - name: Verify installable Python package
         run: |
@@ -112,9 +121,9 @@ jobs:
 
       - name: Run official Claude plugin validation
         run: |
-          npx --yes @anthropic-ai/claude-code@2.1.274 \
+          "$RUNNER_TEMP/claude-validator/node_modules/.bin/claude" \
             plugin validate .claude-plugin/plugin.json
-          npx --yes @anthropic-ai/claude-code@2.1.274 \
+          "$RUNNER_TEMP/claude-validator/node_modules/.bin/claude" \
             plugin validate .
 
       - name: Check out pinned skills-ref

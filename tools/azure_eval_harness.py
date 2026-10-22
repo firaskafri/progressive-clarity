@@ -35,7 +35,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SUITE_PATH = ROOT / "evals" / "cases.json"
 DEFAULT_SKILL_PATH = ROOT / "skills" / "progressive-clarity" / "SKILL.md"
 DEFAULT_RUNS_DIR = ROOT / "evals" / "runs"
-DEFAULT_LOCAL_CONFIG_PATH = ROOT / "evals" / "azure.local.json"
 RESULT_SCHEMA_VERSION = "2.0.0"
 CONDITIONS = ("baseline", "minimal", "legacy", "revised")
 HOST_NAME = "azure-openai-agno"
@@ -1446,7 +1445,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--deployment")
     parser.add_argument("--endpoint")
     parser.add_argument("--api-version")
-    parser.add_argument("--config", type=Path)
+    parser.add_argument(
+        "--config", type=Path,
+        help="Explicitly selected Azure JSON configuration; no local file is auto-loaded.",
+    )
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT_SECONDS)
     parser.add_argument(
         "--max-completion-tokens",
@@ -1486,12 +1488,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             summary["split"] = suite.get("split", "development")
             print(json.dumps(summary, indent=2, sort_keys=True))
             return 0
-        config_path = args.config
-        if config_path is None and DEFAULT_LOCAL_CONFIG_PATH.is_file():
-            config_path = DEFAULT_LOCAL_CONFIG_PATH
         local_config = (
-            load_local_config(config_path)
-            if config_path is not None
+            load_local_config(args.config)
+            if args.config is not None
             else None
         )
         config = AzureEvalConfig.from_environment(

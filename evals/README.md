@@ -104,9 +104,12 @@ export AZURE_OPENAI_EVAL_DEPLOYMENT="<deployment-name>"
 export AZURE_OPENAI_API_VERSION="2024-10-21"
 ```
 
-Alternatively use the ignored `evals/azure.local.json`, matching
-`azure.local.example.json`, or pass `--config` with another local configuration.
-The harness has no deployment default. Credentials are not recorded in reports.
+Alternatively explicitly pass `--config evals/azure.local.json`, matching
+`azure.local.example.json`, or select another configuration with `--config`.
+No local credential file is discovered or loaded automatically. The harness has
+no deployment default. Credentials are not recorded in reports. This is optional
+maintainer tooling, not a plugin capability: neither prompt-only plugin asks for
+credentials, reads local configuration, or runs this harness.
 
 ```sh
 python3.11 -m tools.azure_eval_harness --dry-run

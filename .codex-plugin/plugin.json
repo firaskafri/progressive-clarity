@@ -11,6 +11,12 @@
     "shortDescription": "Orient, explore naturally",
     "longDescription": "Answer directly with important qualifications up front. Keep ordinary follow-ups and compact decisions focused; use At a glance, In context, and At depth when distinct layers help. Topic inference and semantic quality remain advisory.",
     "developerName": "FIRAS HASHEM AHMAD AL KAFRI",
+    "category": "Productivity",
+    "capabilities": [],
+    "websiteURL": "https://firaskafri.com/progressive-clarity/",
+    "supportURL": "https://firaskafri.com/contact/",
+    "privacyPolicyURL": "https://firaskafri.com/progressive-clarity/privacy/",
+    "termsOfServiceURL": "https://firaskafri.com/progressive-clarity/terms/",
     "composerIcon": "./assets/progressive-clarity-composer.svg",
     "logo": "./assets/progressive-clarity-logo.svg"
   }
