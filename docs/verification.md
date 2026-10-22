@@ -1,5 +1,14 @@
 # Verification record
 
+Stable `0.5.1` preparation preserves accepted rc.21 skill bytes. The accepted
+candidate and complete response evidence are committed at
+`f8f3a200bbcb5dcaf913a443787f13ef68ffa776`. The stable acceptance validator pins
+that evidence and rechecks all 44 deterministic results, all criterion judgments,
+and 13 Full audits without inference. Local 173 tests, repository validation,
+Ruff, official Claude package/catalog validation, five stable builds, ZIP body
+integrity, checksums, and isolated installed-wheel CLI/import checks pass.
+No remote stable publication or exact-SHA CI is claimed by these local checks.
+
 Current candidate is [rc.21](release-candidate-rc21.md), uncommitted and unpublished.
 Its fresh full context-v1 round cleared all 44 deterministic checks, all 44
 separate Sol review judgments, and all 13 supplemental Astra Full-audit judgments.

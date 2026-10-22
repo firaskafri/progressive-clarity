@@ -66,12 +66,13 @@ attention. These thresholds are design choices to evaluate, not proven optima.
 
 ## Status and guarantees
 
-**Experimental candidate: 0.5.1-rc.21 (unpublished).**
+**Stable package 0.5.1 prepared (unpublished).**
+See the [stable release notes](docs/release-0.5.1.md).
 The [rc.21 development round](docs/release-candidate-rc21.md) cleared all 44
 response judgments and the preplanned 13-response supplemental Full audit on
 Azure `gpt-6-astra`. This clears the tested behavioral blocker, not publication,
-other-model/host conformance, unseen holdouts, or vendor approval. The source is
-uncommitted; exact-SHA CI and immutable release gates remain outstanding.
+other-model/host conformance, unseen holdouts, or vendor approval. The accepted candidate is committed; stable release preparation, exact-SHA CI,
+and immutable remote release gates remain outstanding.
 Earlier [rc.16](docs/release-candidate-rc16.md), [rc.17](docs/release-candidate-rc17.md),
 [rc.18](docs/release-candidate-rc18.md), [rc.19](docs/release-candidate-rc19.md), and
 [rc.20](docs/release-candidate-rc20.md) failures are preserved.

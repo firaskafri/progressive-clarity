@@ -1,13 +1,14 @@
-name: Experimental prerelease
+name: Immutable release
 
 on:
   push:
     tags:
       - "v*.*.*-rc.*"
+      - "v0.5.1"
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing experimental RC tag to package (stable releases are blocked)
+        description: Existing RC or accepted v0.5.1 tag to package
         required: true
         type: string
 
@@ -53,15 +54,19 @@ jobs:
           import tomllib
 
           tag = sys.argv[1]
-          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*", tag):
-              raise SystemExit("only experimental RC tags are allowed; stable release acceptance is blocked")
+          stable = tag == "v0.5.1"
+          if not stable and not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*", tag):
+              raise SystemExit("only RC tags or accepted v0.5.1 are allowed")
           expected = tag.removeprefix("v")
           from tools.package_common import RELEASE_VERSION
           if expected != RELEASE_VERSION:
               raise SystemExit("tag must match the canonical package version")
-          notes = Path("docs/experimental-prerelease.md")
+          if stable:
+              from tools.validate_release_acceptance import validate_acceptance
+              validate_acceptance()
+          notes = Path("docs/release-0.5.1.md" if stable else "docs/experimental-prerelease.md")
           if not notes.is_file() or f"`{expected}`" not in notes.read_text(encoding="utf-8"):
-              raise SystemExit("reviewed experimental notes must name the exact candidate version")
+              raise SystemExit("reviewed release notes must name the exact version")
           versions = {
               "pyproject.toml": tomllib.loads(
                   Path("pyproject.toml").read_text(encoding="utf-8")
@@ -159,10 +164,14 @@ jobs:
             "${packages[@]}"
           )
           (cd dist && sha256sum --check SHA256SUMS.txt)
+          release_options=(--prerelease --notes-file docs/experimental-prerelease.md)
+          if test "$RELEASE_TAG" = "v0.5.1"; then
+            python3 -m tools.validate_release_acceptance
+            release_options=(--notes-file docs/release-0.5.1.md)
+          fi
           gh release create "$RELEASE_TAG" \
             --verify-tag \
-            --prerelease \
             --latest=false \
-            --notes-file docs/experimental-prerelease.md \
-            --title "Progressive Clarity ${RELEASE_TAG#v} — experimental" \
+            "${release_options[@]}" \
+            --title "Progressive Clarity ${RELEASE_TAG#v}" \
             "${artifacts[@]}"

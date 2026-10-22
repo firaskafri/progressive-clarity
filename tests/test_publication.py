@@ -130,8 +130,8 @@ class PublicationMetadataTests(unittest.TestCase):
             tracker,
         )
 
-    def test_release_tag_guard_rejects_stable_and_mismatched_tags(self) -> None:
-        """Name: Executable prerelease tag guard.
+    def test_release_tag_guard_rejects_unaccepted_and_mismatched_tags(self) -> None:
+        """Name: Executable accepted release tag guard.
 
         Description: Executes the workflow's actual Python guard for candidate,
         stable, malformed, and mismatched tags without running publication.
@@ -145,7 +145,7 @@ class PublicationMetadataTests(unittest.TestCase):
         source = "\n".join(line.removeprefix("          ") for line in source.splitlines())
         for tag, valid in (
             (f"v{RELEASE_VERSION}", True),
-            ("v0.5.1", False),
+            ("v0.5.1", RELEASE_VERSION == "0.5.1"),
             ("v0.5.0", False),
             ("v0.5.1-rc.0", False),
             ("v0.5.1-rc.999", False),
@@ -165,7 +165,7 @@ class PublicationMetadataTests(unittest.TestCase):
         Description: Checks explicit experimental labeling, artifact isolation,
         checksum verification, and refusal to overwrite published assets.
         Assumptions: Static checks supplement executable tag checks and CI builds.
-        Expectations: Publication cannot mark this candidate latest or stable,
+        Expectations: Publication cannot mark this release latest without promotion,
         silently overwrite an existing release, or omit reviewed limitations.
         """
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
@@ -179,8 +179,11 @@ class PublicationMetadataTests(unittest.TestCase):
             self.assertIn(safeguard, workflow)
         self.assertNotIn('--clobber', workflow)
         self.assertNotIn('--generate-notes', workflow)
-        notes = (ROOT / "docs/experimental-prerelease.md").read_text()
-        for boundary in ('T10', 'T15', 'T18', 'not a stable', 'not vendor-approved'):
+        self.assertIn('validate_acceptance()', workflow)
+        self.assertIn('--notes-file docs/release-0.5.1.md', workflow)
+        self.assertIn('release_options=(--notes-file docs/release-0.5.1.md)', workflow)
+        notes = (ROOT / "docs/release-0.5.1.md").read_text()
+        for boundary in ('T10', 'T15', 'T18', 'not yet published', 'vendor-approved'):
             self.assertIn(boundary, notes)
 
     def test_current_installation_documentation_matches_candidate_version(self) -> None:
@@ -201,9 +204,56 @@ class PublicationMetadataTests(unittest.TestCase):
             self.assertIn(f"progressive-clarity-{host}-{RELEASE_VERSION}.zip", installation)
         self.assertNotIn("now builds unpublished candidate `0.5.1-rc.9`", installation)
         self.assertNotIn("The source targets package `0.5.0`", installation)
-        notes = (ROOT / "docs/experimental-prerelease.md").read_text()
+        notes = (ROOT / "docs/release-0.5.1.md").read_text()
         self.assertIn(f"`{RELEASE_VERSION}`", notes)
         self.assertIn(f"No {RELEASE_VERSION} release assets have been published yet.", notes)
+
+    def test_stable_acceptance_record_fails_closed_on_changed_inputs(self) -> None:
+        """Name: Immutable stable acceptance gate.
+
+        Description: Validates the reviewed evidence and rejects modified source,
+        missing evidence, and changed judgment records without inference.
+        Assumptions: A temporary root contains only acceptance inputs.
+        Expectations: Exact accepted inputs pass; altered or absent inputs fail.
+        """
+        import shutil
+        import tempfile
+
+        from tools.validate_release_acceptance import EVIDENCE_PATH, validate_acceptance
+
+        validate_acceptance()
+        paths = (
+            EVIDENCE_PATH,
+            Path("skills/progressive-clarity/SKILL.md"),
+            Path("evals/release-acceptance-context-v1.json"),
+            Path("evals/cases.json"),
+            Path("SPEC.md"),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for relative in paths:
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / relative, target)
+            validate_acceptance(root)
+            for relative in paths:
+                with self.subTest(path=relative):
+                    target = root / relative
+                    original = target.read_bytes()
+                    target.write_bytes(original + b"\n")
+                    if relative != Path("evals/release-acceptance-context-v1.json"):
+                        with self.assertRaises(ValueError):
+                            validate_acceptance(root)
+                    else:
+                        suite = json.loads(original)
+                        suite["cases"][0]["title"] += " changed"
+                        target.write_text(json.dumps(suite))
+                        with self.assertRaises(ValueError):
+                            validate_acceptance(root)
+                    target.write_bytes(original)
+            (root / EVIDENCE_PATH).unlink()
+            with self.assertRaises(FileNotFoundError):
+                validate_acceptance(root)
 
     def test_release_ci_guard_requires_latest_exact_commit_success(self) -> None:
         """Name: Exact-commit CI release gate.

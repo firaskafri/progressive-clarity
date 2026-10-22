@@ -6,7 +6,7 @@ live behavior so that one state is not mistaken for another.
 
 ## Current release
 
-The working tree targets unpublished candidate `0.5.1-rc.21` for acceptance
+The working tree targets unpublished stable package `0.5.1` for acceptance
 repair. It is not approved or published. The release identities and completed
 publication checks below refer only to immutable published `0.5.0`; repository
 marketplace catalogs remain pinned to that release. Candidate validation and
@@ -15,10 +15,20 @@ targeted debugging do not replace vendor review or a full development round.
 The [rc.21 full round](release-candidate-rc21.md) cleared 44 separate-model
 judgments and its 13-response supplemental Full audit. Behavioral development
 acceptance is cleared for the disclosed Azure configuration only. Publication
-remains gated: the candidate is uncommitted, with no current exact-SHA CI, tag,
-or remote artifact verification. RC-only workflow, no-overwrite protection,
-non-latest prerelease status, and exact-SHA CI requirements are unchanged.
+remains gated: the stable preparation has no current exact-SHA CI, tag,
+or remote artifact verification. The workflow now permits only accepted stable `v0.5.1` or RC tags; stable
+publication checks the pinned acceptance record. No-overwrite protection,
+non-latest initial publication, and exact-SHA CI requirements remain mandatory.
 Prior failures and reviewer disagreement remain historical evidence.
+
+Accepted rc.21 and complete public evidence are committed at
+`f8f3a200bbcb5dcaf913a443787f13ef68ffa776`. Stable `0.5.1` preserves those skill
+bytes and adds a pinned, offline acceptance validator. Local 173 tests, repository
+validation, Ruff, official Claude manifest/catalog validation, five artifact
+builds, archive integrity/body checks, and isolated wheel installation pass.
+Local artifacts are under `/tmp/pc-stable-051-artifacts/`; they are not remote
+release assets. Push, exact-SHA CI, immutable tagging, and remote verification
+remain required. Approved marketplace pins are unchanged.
 
 rc.14's [complete Azure round](release-candidate-rc14.md) completed but does not
 establish acceptance: T06 misses the frozen expected decision and all semantic

@@ -28,6 +28,7 @@ jobs:
         run: |
           python3 -m json.tool evals/cases.json >/dev/null
           python3 -m tools.validate_repository
+          python3 -m tools.validate_release_acceptance
 
       - name: Test deterministic pc-core
         run: |
