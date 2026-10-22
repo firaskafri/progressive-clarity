@@ -66,11 +66,36 @@ attention. These thresholds are design choices to evaluate, not proven optima.
 
 ## Status and guarantees
 
-**Experimental candidate: 0.5.1-rc.10 (local validation only, not published).**
-The [minimal rc.10 repair](docs/release-candidate-rc10.md) targets format narration
-and repeated comparison content. No live model run has tested this candidate.
-Opt-in experimentation only: T10, T15, and T18 still fail response-scope and
-fact-preservation checks in preceding candidates. Stable 0.5.1 acceptance remains blocked. Mechanical
+**Experimental candidate: 0.5.1-rc.21 (unpublished).**
+The [rc.21 development round](docs/release-candidate-rc21.md) cleared all 44
+response judgments and the preplanned 13-response supplemental Full audit on
+Azure `gpt-6-astra`. This clears the tested behavioral blocker, not publication,
+other-model/host conformance, unseen holdouts, or vendor approval. The source is
+uncommitted; exact-SHA CI and immutable release gates remain outstanding.
+Earlier [rc.16](docs/release-candidate-rc16.md), [rc.17](docs/release-candidate-rc17.md),
+[rc.18](docs/release-candidate-rc18.md), [rc.19](docs/release-candidate-rc19.md), and
+[rc.20](docs/release-candidate-rc20.md) failures are preserved.
+The [rc.15 composition repair](docs/release-candidate-rc15.md) completed 15
+targeted responses. Bounded completion of its stalled review yielded ten PASS
+and five FAIL response judgments; that historical candidate failed acceptance.
+The [rc.14 complete Azure round](docs/release-candidate-rc14.md) completed all 44
+responses after four passing targeted safety checks. T06's frozen expected
+decision remains unmet; overall semantics are not independently adjudicated.
+Stable release remains blocked; no release action has been performed.
+The [rc.13 safety repair](docs/release-candidate-rc13.md) targets the failed
+restart-condition and warning-coverage checks from the full Azure rc.12 round.
+A [four-response rc.13 safety check](docs/azure-safety-rc13.md) still failed T05
+run 1's restart condition; stable acceptance remains blocked.
+The [rc.12 scope repair](docs/release-candidate-rc12.md) limits verification to
+supplied criteria. Its [single T18 check](docs/sonnet-t18-rc12.md) passed, but no
+full rc.12 acceptance round has run; stable acceptance remains blocked.
+The [narrow rc.11 repair](docs/release-candidate-rc11.md) targets format promises
+and automatic Full selection. The historical [rc.10 Sonnet round](docs/sonnet-targeted-rc10.md)
+still failed format-promise and additivity checks; no full acceptance pass exists.
+A [two-response rc.11 check](docs/sonnet-targeted-rc11.md) passed T15's boundary
+and T18's Focused/shared-fact checks, but T18 still exceeded scope. Stable acceptance remains blocked.
+Opt-in experimentation only: T10, T15, and T18 failed response-scope and
+fact-preservation checks in preceding candidates. Stable 0.5.1 publication remains gated. Mechanical
 validation is not behavioral certification. Read the
 [experimental release notes](docs/experimental-prerelease.md) before trying it.
 

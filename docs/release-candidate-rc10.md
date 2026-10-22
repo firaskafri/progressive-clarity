@@ -1,8 +1,13 @@
 # Local-only repair candidate — 0.5.1-rc.10
 
 The user selected minimal instruction changes and local validation only.
-**No paid inference is authorized or performed for this candidate.** Stable
+Initially no paid inference was authorized for this candidate. Stable
 acceptance remains blocked; no behavioral fix is claimed.
+
+The user subsequently authorized one [targeted Sonnet round](sonnet-targeted-rc10.md)
+only. All five responses completed, but T15 format promises and T18 additivity
+still failed. No full round or further paid calls followed; historical local-only
+preparation statements below describe the original authorization boundary.
 
 This candidate replaces two overlapping passages after the
 [Sonnet scoring review](sonnet-scoring-review.md):

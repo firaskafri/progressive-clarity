@@ -203,7 +203,7 @@ class PublicationMetadataTests(unittest.TestCase):
         self.assertNotIn("The source targets package `0.5.0`", installation)
         notes = (ROOT / "docs/experimental-prerelease.md").read_text()
         self.assertIn(f"`{RELEASE_VERSION}`", notes)
-        self.assertIn("No rc.10 release assets have been published yet.", notes)
+        self.assertIn(f"No {RELEASE_VERSION} release assets have been published yet.", notes)
 
     def test_release_ci_guard_requires_latest_exact_commit_success(self) -> None:
         """Name: Exact-commit CI release gate.

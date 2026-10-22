@@ -1,8 +1,55 @@
 # Verification record
 
-Current working tree: unpublished [rc.10 local-only repair](release-candidate-rc10.md).
-No inference was authorized for rc.10; all prior live outputs refer to their
-recorded earlier hashes. Mechanical checks do not establish repaired behavior.
+Current candidate is [rc.21](release-candidate-rc21.md), uncommitted and unpublished.
+Its fresh full context-v1 round cleared all 44 deterministic checks, all 44
+separate Sol review judgments, and all 13 supplemental Astra Full-audit judgments.
+The tested Azure behavioral blocker is resolved; publication, live-host behavior,
+unseen holdouts, and reader outcomes remain separate, unverified gates.
+Historical failures in rc.16–rc.20 and original T06 evidence remain intact.
+Earlier current-state statements below are historical snapshots, not current
+release clearance.
+
+The bounded rc.15 completion review finished all twelve outstanding judgments
+without regenerating answers. Combined results are ten PASS and five FAIL;
+the stalled execution is resolved, but behavioral acceptance remains blocked.
+
+Historical candidate [rc.15](release-candidate-rc15.md): 15 targeted generation
+responses completed; separate review produced three passes then stalled, leaving
+twelve judgments UNVERIFIED. No full-round or release clearance follows.
+
+Historical candidate [rc.14](release-candidate-rc14.md). Four safety
+checks and a complete 44-response Azure round finished without mechanical errors,
+but T06's frozen decision expectation remains unmet; stable acceptance is blocked.
+
+The [rc.13 safety round](azure-safety-rc13.md) completed four responses; T05
+run 1 still permitted restart under a weaker condition. T12 and the other two
+T05 targeted checks passed, but stable acceptance remains blocked.
+
+Historical candidate [rc.13](release-candidate-rc13.md), mechanically validated
+but behaviorally untested; rc.12 full-round safety failures remain historical.
+
+The [full Azure rc.12 round](azure-full-rc12.md) completed 44 responses in 22
+sessions with no mechanical failures. No-judge semantics remain UNVERIFIED;
+visible T05 run 2 and T12 safety-contract violations block stable acceptance.
+
+The [rc.12 Grok diagnostic](grok-targeted-rc12.md) completed five responses:
+T15's targeted check passed, but T10/T18 Full additivity failed. No acceptance
+or release clearance follows from the factual-scope improvements.
+
+Historical candidate [rc.12](release-candidate-rc12.md), local/uncommitted,
+mechanically validated with a [targeted T18 pass](sonnet-t18-rc12.md), not a full
+acceptance pass. rc.11 results below are historical.
+
+Historical local candidate: [rc.11](release-candidate-rc11.md), uncommitted and
+with a [two-response Sonnet check](sonnet-targeted-rc11.md): T15 passed its
+targeted boundary, but T18 still exceeded scope despite Focused/fact-preservation
+improvements. The rc.10 failed round below remains historical.
+
+Historical committed candidate: unpublished [rc.10 repair](release-candidate-rc10.md).
+One separately authorized [targeted Sonnet round](sonnet-targeted-rc10.md) completed
+five responses on committed rc.10 but still failed T15 format promises and T18
+additivity. No full acceptance pass is established. Earlier outputs retain their
+recorded hashes; mechanical checks do not establish repaired behavior.
 
 Historical candidate [rc.9](release-candidate-rc9.md) was
 a shorter response-scope consolidation with a separately frozen diagnostic round.

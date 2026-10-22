@@ -1,10 +1,16 @@
-# Progressive Clarity 0.5.1-rc.10 — experimental prerelease
+# Progressive Clarity 0.5.1-rc.21 — experimental prerelease
 
-**Package `0.5.1-rc.10` is for opt-in experimentation, not a stable or verified
-behavioral release. Stable 0.5.1 acceptance remains blocked.** The approved
+**Package `0.5.1-rc.21` is for opt-in experimentation, not a stable or verified
+behavioral release. Stable 0.5.1 publication remains gated.** The approved
 0.5.0 marketplace pins are unchanged. This candidate is not vendor-approved.
 
 ## Changes
+
+Current [rc.21 evidence](release-candidate-rc21.md) records 44 separate-model
+passes and 13 supplemental Full-audit passes in a fresh Azure context-v1 round.
+This clears the tested development behavioral gate, not stable publication,
+live-host conformance, unseen generalization, or universal model compatibility.
+Prior failures and reviewer disagreements remain historical evidence.
 
 The candidate clarifies numeric uncertainty, per-turn presentation, explicit
 correction, literal source labels, and response scope. These are instruction
@@ -13,7 +19,7 @@ changes, not proven improvements. Protocol 0.5 and wrapper schemas are unchanged
 ## Historical failures and untested repairs — read before trying
 
 These failures were observed in preceding candidates, not in a live rc.10 run.
-rc.10's format-narration and additivity changes are mechanically validated only.
+rc.11's clarification and automatic-Full selection changes are locally validated only.
 The following limitations remain release risks, not verified fixes.
 
 - **T10:** may infer database/migration context, add unsupported implications to
@@ -32,13 +38,13 @@ Do not rely on this candidate as a safety, legal, financial, or operational
 approval mechanism. Review the entire response against the original facts and
 controlling requirements. Formatting and mechanical validation do not prove
 semantic correctness. Reader benefits and other hosts' current behavior are
-unverified. This release does not weaken or satisfy the stable acceptance rubric.
+unverified. This candidate does not weaken the acceptance rubric or bypass release gates.
 
 ## Artifacts and use
 
 When explicitly published, three host ZIPs, a Python wheel, and an sdist must
-accompany `SHA256SUMS.txt`. No rc.10 release assets have been published yet.
-Python filenames normalize `0.5.1-rc.10` to `0.5.1rc10`; they identify the same
+accompany `SHA256SUMS.txt`. No 0.5.1-rc.21 release assets have been published yet.
+Python filenames normalize `0.5.1-rc.21` to `0.5.1rc21`; they identify the same
 prerelease. Download only the artifact for the intended profile and verify its
 checksum before installation. Use a temporary/test project and begin a fresh
 host session; do not replace production policy or unrelated configuration.
@@ -51,15 +57,22 @@ requiring Python 3.11+, and checks mechanics, not semantic quality.
 
 See [installation](installation.md), [limitations](limitations.md), and the
 optional [Cursor project-rule profile](cursor-startup-rule.md). Installing from
-the existing repository marketplaces still installs approved **0.5.0**, not rc.10.
+the existing repository marketplaces still installs approved **0.5.0**, not rc.18.
 Manual copies do not auto-update. Remove only the installed candidate directory
 or generated rule to uninstall; preserve other skills and rules.
 
 ## Evidence and feedback
 
-This rc.10 body has not been run against a live model. Earlier candidate failures
-remain historical, not rc.10 outcomes. Current canonical skill SHA-256:
-`0a05293fae8741d2885ae131b0055dadb268c7ba955f018e21c28193f1ea03e4`.
+The [two-response rc.11 check](sonnet-targeted-rc11.md) passed the T15 boundary
+and T18 Focused/fact checks, but T18 still exceeded scope. No full acceptance
+pass exists. The rc.10 failed round remains historical.
+rc.12's [single T18 check](sonnet-t18-rc12.md) passed; no full acceptance round
+has passed. The rc.11 capture is historical.
+The [rc.12 full Azure round](azure-full-rc12.md) failed T05 run 2 and T12 safety
+checks. The [rc.13 safety round](azure-safety-rc13.md) still failed T05 run 1's
+restart condition; no full acceptance pass is established.
+Current canonical skill SHA-256:
+`3d329872cbad63d985506786603d318637aedf7d8eee78de5e78d85d73c0f5dc`.
 Repository tests, archive validation, and checksums establish mechanical
 integrity only. Local capture files are not a public independently adjudicated
 study. See [rc.9 results](release-candidate-rc9.md) and

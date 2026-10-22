@@ -6,16 +6,40 @@ live behavior so that one state is not mistaken for another.
 
 ## Current release
 
-The working tree targets unpublished candidate `0.5.1-rc.10` for acceptance
+The working tree targets unpublished candidate `0.5.1-rc.21` for acceptance
 repair. It is not approved or published. The release identities and completed
 publication checks below refer only to immutable published `0.5.0`; repository
 marketplace catalogs remain pinned to that release. Candidate validation and
 targeted debugging do not replace vendor review or a full development round.
+
+The [rc.21 full round](release-candidate-rc21.md) cleared 44 separate-model
+judgments and its 13-response supplemental Full audit. Behavioral development
+acceptance is cleared for the disclosed Azure configuration only. Publication
+remains gated: the candidate is uncommitted, with no current exact-SHA CI, tag,
+or remote artifact verification. RC-only workflow, no-overwrite protection,
+non-latest prerelease status, and exact-SHA CI requirements are unchanged.
+Prior failures and reviewer disagreement remain historical evidence.
+
+rc.14's [complete Azure round](release-candidate-rc14.md) completed but does not
+establish acceptance: T06 misses the frozen expected decision and all semantic
+results remain unverified in the no-judge report. Prior candidate gates below
+are historical; no current candidate commit, CI pass, tag, or publication exists.
+
+rc.13 is a [safety repair](release-candidate-rc13.md); its four-response targeted
+round still failed T05 run 1. Stable acceptance remains blocked.
+Historical rc.12 is a [scope repair](release-candidate-rc12.md), with one targeted T18 pass
+and no full acceptance round.
+Historical rc.11 is a [narrow repair](release-candidate-rc11.md). Its authorized two-response
+check passed T15's targeted boundary but retained a T18 scope failure.
+The rc.10 commit, failed behavior record, and preparation gates below
+are historical. The workflow rejects rc.10 tags against current rc.11 metadata;
+no current exact-commit CI or publication gate has passed.
 The rc.7 full development round completed with 12 PASS and 10 FAIL case runs,
 so stable release, website deployment, and vendor submissions are blocked.
 
-rc.10 is a [local-only repair](release-candidate-rc10.md), with no live-model
-results. The rc.9 preparation checklist below is historical. Its local bundle
+rc.10 began as a [local-only repair](release-candidate-rc10.md). Its subsequently
+authorized five-response Sonnet round still failed format promises and additivity.
+The rc.9 preparation checklist below is historical. Its local bundle
 must not be submitted as rc.10, and the current workflow's matching-version
 guard rejects an rc.9 tag against rc.10 metadata. No new publication is authorized.
 

@@ -18,6 +18,15 @@ Historical host observations remain in [Verification](../docs/verification.md).
 
 ## Development suite
 
+The separate `release-acceptance-context-v1.json` changes only T06's title and
+prompts to identify the action and sufficient authorization inputs; expectations
+and rubric are unchanged. The original suite/results remain intact. See the
+[context-suite review](../docs/rc14-context-review.md) for the historical seven
+composition failures. The [rc.21 full round](../docs/release-candidate-rc21.md) cleared 44 separate-model
+judgments and 13 supplemental Full-audit judgments. Prior failures remain intact.
+This clears the disclosed Azure development configuration only; the public
+suite is not an unseen holdout, live-host activation test, or reader study.
+
 The separate [minimal prerequisite diagnostics](prerequisite-diagnostics.json)
 clarify action identity and policy authority without changing the frozen suite.
 [Results and limitations](../docs/prerequisite-diagnostics.md) record a five-response
@@ -82,6 +91,11 @@ does not verify a ChatGPT package installation, product system prompt, or host
 activation. The optional same-deployment judge is non-independent.
 
 Install Agno 2.6.x or newer in the evaluation environment and configure:
+
+The direct Azure rc.12 diagnostic used an isolated environment with Agno 2.9.0,
+the OpenAI SDK, and `sqlalchemy[asyncio]` for SQLite session support. These are
+evaluation dependencies, not runtime package dependencies. Its
+[results](../docs/azure-gpt56-sol-rc12.md) are distinct from Cursor-hosted runs.
 
 ```sh
 export AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
