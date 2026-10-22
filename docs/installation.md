@@ -2,15 +2,13 @@
 
 ## Current v0.5 release
 
-The working tree targets unpublished stable package `0.5.1`, protocol `0.5`.
-The [rc.21 full round](release-candidate-rc21.md) cleared the tested Azure
-behavioral gate. The candidate is uncommitted and unpublished; no exact-commit
-CI or release artifact verification is established. Prior bundles are historical
-and must not be installed or published as the current candidate. For the
-published `0.5.0` skill, use the pinned repository marketplaces below or the
-versioned release downloads. Copying the skill or installing Python from this
-working tree uses the candidate, not the approved release. Candidate builds
-produce separate `0.5.1` host ZIPs; do not upload them as `0.5.0` or rc.9.
+Published package `0.5.1`, protocol `0.5`, is tag `v0.5.1` at
+`3e6eb8f1b85e33c4c7386d55584f2666ade9836c`. The
+[rc.21 full round](release-candidate-rc21.md) cleared the tested Azure
+behavioral gate. Repository marketplaces below pin that release. Official
+OpenAI and Anthropic directory listings remain separate submissions and may
+still show an older approved package. Versioned GitHub downloads are the
+immutable `0.5.1` artifacts.
 
 For an opt-in manual candidate copy, copy the complete
 `skills/progressive-clarity/` directory to a supported host's project skill folder:

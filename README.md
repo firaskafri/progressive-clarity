@@ -102,15 +102,16 @@ validation is not behavioral certification. Read the
 
 [rc.9 evidence](docs/release-candidate-rc9.md) and the
 [instruction-delivery comparison](docs/instruction-delivery-comparison.md)
-retain the failures. The candidate is not vendor-approved; repository marketplace
-pins and approved public release downloads still resolve to unchanged 0.5.0.
+retain the failures. Repository marketplace pins and the GitHub release
+resolve to published `0.5.1`. Official directory listings remain separate
+submissions.
 
-**Protocol v0.5; published package 0.5.0.** This revision introduces
+**Protocol v0.5; published package 0.5.1.** This revision introduces
 usefulness-based presentation, a shorter skill, expanded development cases, and
 a matched comparison/reader-study workflow.
 
 - Versioned downloads are available in the
-  [GitHub release](https://github.com/firaskafri/progressive-clarity/releases/tag/v0.5.0).
+  [GitHub release](https://github.com/firaskafri/progressive-clarity/releases/tag/v0.5.1).
 - OpenAI package 0.5.0 is published in the
   [Plugins Directory](https://chatgpt.com/plugins/plugins_6a82efdddbb48191b2785354515e1be2).
 - Direct Claude Code and Codex installs from the repository marketplaces are

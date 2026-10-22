@@ -20,6 +20,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "https://github.com/firaskafri/progressive-clarity"
 APPROVED_CLAUDE_REVISION = "f34fbf03ba644f7b86d6c9413504878d4f76762b"
+PUBLISHED_RELEASE_REF = "v0.5.1"
+PUBLISHED_RELEASE_REVISION = "3e6eb8f1b85e33c4c7386d55584f2666ade9836c"
 
 
 def load_json(relative_path: str) -> dict[str, object]:
@@ -67,8 +69,8 @@ class PublicationMetadataTests(unittest.TestCase):
             {
                 "source": "url",
                 "url": f"{REPOSITORY}.git",
-                "ref": "v0.5.0",
-                "sha": APPROVED_CLAUDE_REVISION,
+                "ref": PUBLISHED_RELEASE_REF,
+                "sha": PUBLISHED_RELEASE_REVISION,
             },
         )
         self.assertEqual(
@@ -101,8 +103,8 @@ class PublicationMetadataTests(unittest.TestCase):
             {
                 "source": "github",
                 "repo": "firaskafri/progressive-clarity",
-                "ref": "v0.5.0",
-                "sha": APPROVED_CLAUDE_REVISION,
+                "ref": PUBLISHED_RELEASE_REF,
+                "sha": PUBLISHED_RELEASE_REVISION,
             },
         )
 

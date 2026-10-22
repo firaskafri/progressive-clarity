@@ -11,8 +11,8 @@
       "source": {
         "source": "github",
         "repo": "firaskafri/progressive-clarity",
-        "ref": "v0.5.0",
-        "sha": "f34fbf03ba644f7b86d6c9413504878d4f76762b"
+        "ref": "v0.5.1",
+        "sha": "3e6eb8f1b85e33c4c7386d55584f2666ade9836c"
       },
       "description": "Prompt-only guidance for direct, qualified answers and useful depth.",
       "category": "productivity"
