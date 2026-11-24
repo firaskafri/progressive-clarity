@@ -30,38 +30,43 @@ supported platforms. The public community catalog does not yet contain the
 plugin, so catalog synchronization and installability remain unverified. Review
 approval does not establish host activation or rendered behavior.
 
-## Directory validation remediation for the 0.5.1 source
+## Isolated directory source
 
-The portal report for `3e6eb8f` passed structural validation but retained warnings
-and policy holds. These source changes prepare a new review; they do not change
-the published `v0.5.1` tag, its release assets, or repository marketplace pins.
+The first developer-portal submission followed the repository root at commit
+`c3a7b59`. On 2026-10-22, the automated directory policy check refused that
+version. The prompt-only plugin did not use credentials or run local code, but
+the root-folder scan also read maintainer-only evaluation tests, packaging
+tools, documentation, and CI. Those unrelated files triggered credential,
+download-and-run, and referenced-binary findings.
 
-- **Listing icon:** `.claude-plugin/icon.png` is a 1024 × 1024 PNG derived from
-  the existing project logo. The Claude packager includes it and checks its PNG
-  header, square 512–2048 pixel dimensions, and size below 2 MB. SVG remains in
-  the OpenAI package only. Per the portal warning, the listing icon is selected
-  only on the first save or submission; adding it now may not replace an icon
-  for an already-saved listing.
-- **Credential access:** the prompt-only plugin has no authentication, MCP
-  server, runtime, or `user_config` requirement. The optional maintainer Azure
-  evaluation harness is excluded from the ZIP and no longer auto-loads
-  `evals/azure.local.json`; a maintainer must explicitly select a file using
-  `--config` or supply environment values. Do not add an unused secret setting
-  to this plugin. If a future plugin capability actually requires a secret,
-  collect it through a supported `user_config` option with `sensitive: true`,
-  rather than discovering credentials on the user's machine.
-- **CI download-and-run warning:** CI and release workflows install pinned
-  Ruff and Claude Code dependencies in a separate step, then execute installed
-  local binaries. They no longer use `npx` or `uvx` to download and execute a
-  validator in one command. Package installation still downloads third-party
-  software and Claude Code runs its installer; this is CI-only activity, not an
-  install hook. This change is not proof that the portal scanner will clear its
-  warning, and the remaining CI dependency trust should be disclosed to reviewers.
+Anthropic's current submission documentation supports a plugin in a repository
+subfolder and states that the directory scans that selected plugin folder. The
+new source is therefore:
 
-Rerun portal validation against a new public source revision and retain any
-remaining hold text, including the exact file/line for credential access. Local
-tests and official CLI structural validation do not clear directory policy holds
-or imply vendor approval.
+```text
+claude-directory/progressive-clarity/
+```
+
+It contains only the manifest, 1024 × 1024 listing icon, prose README, canonical
+Skill, and canonical license. It has no scripts, hooks, MCP servers, CI
+configuration, package manager files, or network integration. The directory
+manifest uses version `0.5.2`; its prompt content is byte-identical to the
+published `0.5.1` skill. `tools.validate_claude_directory` checks the exact
+inventory, manifest relationship, README length, regular-file boundary, and
+canonical byte identity.
+
+The repository-root plugin and marketplace remain pinned to published
+`v0.5.1`, so this remediation does not change:
+
+```sh
+claude plugin marketplace add firaskafri/progressive-clarity
+claude plugin install progressive-clarity@firas-kafri-plugins
+```
+
+Because a submitted repository/folder pair cannot be changed, the refused
+root-folder submission must be withdrawn and a new submission created with
+plugin path `claude-directory/progressive-clarity`. Portal validation and the
+post-submission scan remain authoritative.
 
 ## Historical v0.4 distribution record
 

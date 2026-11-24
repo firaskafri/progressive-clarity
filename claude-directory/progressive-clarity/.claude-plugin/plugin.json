@@ -1,0 +1,18 @@
+{
+  "name": "progressive-clarity",
+  "version": "0.5.2",
+  "description": "Prompt-only topic-oriented guidance for direct, qualified answers, natural follow-ups, compact decisions, and distinct depth when useful.",
+  "author": {
+    "name": "Firas Kafri",
+    "url": "https://github.com/firaskafri"
+  },
+  "homepage": "https://firaskafri.com/progressive-clarity/",
+  "repository": "https://github.com/firaskafri/progressive-clarity",
+  "license": "Apache-2.0",
+  "keywords": [
+    "response-formatting",
+    "progressive-disclosure",
+    "writing"
+  ],
+  "skills": "./skills/progressive-clarity/"
+}

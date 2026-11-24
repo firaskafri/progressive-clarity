@@ -27,6 +27,7 @@ from tools.package_common import (
     parse_json_object,
 )
 from tools.package_openai_plugin import load_manifest, source_entries
+from tools.validate_claude_directory import validate_directory_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -284,6 +285,11 @@ def validate_distributions(errors: list[str]) -> None:
         generate_packaged_skill(canonical.body)
     except (OSError, ValueError) as exc:
         errors.append(f"Claude.ai Skill: {exc}")
+
+    try:
+        validate_directory_source(ROOT)
+    except (OSError, UnicodeError, ValueError) as exc:
+        errors.append(f"Claude directory source: {exc}")
 
     for label, version in versions.items():
         if version != EXPECTED_PACKAGE_VERSION:

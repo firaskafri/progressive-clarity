@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import struct
 import tempfile
 import unittest
@@ -43,6 +44,14 @@ from tools.package_openai_plugin import (
     source_entries,
     validate_svg_asset,
 )
+from tools.validate_claude_directory import (
+    DIRECTORY_ROOT,
+    DIRECTORY_VERSION,
+    EXPECTED_FILES,
+    validate_directory_source,
+)
+
+
 def _openai_entries() -> dict[str, bytes]:
     """Load the validated OpenAI manifest bytes and source inventory."""
     manifest, manifest_bytes = load_manifest()
@@ -301,6 +310,73 @@ class ClaudePackagingTests(unittest.TestCase):
         manifest["description"] += " changed"
         with self.assertRaisesRegex(ValueError, "validated bytes do not match"):
             package_claude_plugin.source_entries(manifest, manifest_bytes)
+
+
+class ClaudeDirectorySourceTests(unittest.TestCase):
+    """Name: Scanner-isolated Claude directory source.
+
+    Description: Checks the exact folder Anthropic reads for public listing.
+    Assumptions: Repository marketplace distribution remains at the root.
+    Expectations: Only prompt content and listing files enter directory scans.
+    """
+
+    def test_directory_source_is_minimal_and_copy_verified(self) -> None:
+        """Name: Exact scanner input.
+
+        Description: Validates inventory, metadata, README, and canonical bytes.
+        Assumptions: Anthropic scans only the submitted plugin folder.
+        Expectations: The directory source has no tooling, CI, or credential code.
+        """
+        validate_directory_source()
+        actual = {
+            path.relative_to(DIRECTORY_ROOT).as_posix()
+            for path in DIRECTORY_ROOT.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(actual, EXPECTED_FILES)
+        manifest = json.loads(
+            (DIRECTORY_ROOT / ".claude-plugin" / "plugin.json").read_text()
+        )
+        self.assertEqual(manifest["version"], DIRECTORY_VERSION)
+        self.assertFalse(
+            any(
+                Path(path).suffix in {".py", ".sh", ".yml", ".yaml"}
+                for path in actual
+            )
+        )
+
+    def test_directory_source_rejects_canonical_drift(self) -> None:
+        """Name: Duplicated source drift rejection.
+
+        Description: Copies the validation inputs and changes the directory skill.
+        Assumptions: The submitted folder is a tracked distribution copy.
+        Expectations: Any divergence from canonical skill bytes fails closed.
+        """
+        relative_paths = (
+            Path(".claude-plugin/plugin.json"),
+            Path(".claude-plugin/icon.png"),
+            Path("skills/progressive-clarity/LICENSE"),
+            Path("skills/progressive-clarity/SKILL.md"),
+            Path("claude-directory/progressive-clarity"),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for relative in relative_paths:
+                source = package_claude_plugin.ROOT / relative
+                target = root / relative
+                if source.is_dir():
+                    shutil.copytree(source, target)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source, target)
+            skill = (
+                root
+                / "claude-directory/progressive-clarity"
+                / "skills/progressive-clarity/SKILL.md"
+            )
+            skill.write_bytes(skill.read_bytes() + b"\n")
+            with self.assertRaisesRegex(ValueError, "differs"):
+                validate_directory_source(root)
 
 
 class OpenAiPackagingTests(unittest.TestCase):

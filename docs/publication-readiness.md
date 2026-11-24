@@ -155,44 +155,41 @@ The authenticated Claude Console state above was checked on 2026-09-17. Do not
 store Console account identifiers, credentials, or private contact information
 in this repository.
 
-## Remaining blockers
+## Current Anthropic directory status
 
-- [ ] Confirm Progressive Clarity appears in Anthropic's public
-  `claude-plugins-community` catalog and record the catalog-pinned revision.
-  Review has passed, but the public mirror has not synchronized yet.
+- [x] The earlier Console review record is retained as historical evidence.
+- [x] The developer-portal root-folder submission was checked at commit
+  `c3a7b59`.
+- [x] The root-folder version was automatically refused on 2026-10-22 because
+  repository-wide maintainer tests, CI, documentation, and packaging tools
+  triggered directory-policy findings.
+- [x] A scanner-isolated source is tracked at
+  `claude-directory/progressive-clarity` as packaging-only version `0.5.2`.
+- [ ] Submit that folder through the developer portal and record its validation,
+  scan, review, and publication outcome.
+- [ ] Confirm Progressive Clarity appears in Anthropic's public directory and
+  record the live source revision.
 
 Professional name and trademark clearance for “Progressive Clarity” remains a
 documented legal-risk decision. It is not represented as completed by package
 validation or vendor review.
 
-## Anthropic catalog synchronization
+## Anthropic directory resubmission
 
-The Claude Console submission is complete; do not resubmit it merely because
-the public directory is delayed. Progress is tracked in
-[issue #1](https://github.com/firaskafri/progressive-clarity/issues/1).
-Verify both public discovery surfaces:
+The refused root-folder submission cannot be edited to use another folder.
+Withdraw it, create a new plugin-bundle submission for the same repository, and
+set the plugin path to:
 
-```sh
-gh api repos/anthropics/claude-plugins-community/contents/.claude-plugin/marketplace.json \
-  --jq .content \
-  | base64 --decode \
-  | jq '.plugins[] | select(
-      .name == "progressive-clarity"
-      or (.source.repo? == "firaskafri/progressive-clarity")
-    )'
+```text
+claude-directory/progressive-clarity
 ```
 
-Also check <https://claude.com/plugins/progressive-clarity>. Once either source
-lists the plugin, record its public URL and pinned source revision here, then
-verify installation from the official marketplace.
-
-If the entry remains absent for seven days after the latest `passed_review`
-update, contact Anthropic support with the plugin name, public repository,
-review date, and submission identifier. Keep the submission identifier and
-account details private rather than posting them in a public issue.
+Follow the default branch so each pushed commit can be scanned. Validate before
+continuing, preserve the exact findings, and do not claim publication until the
+new version is visibly live and installable.
 
 The self-hosted marketplace remains an available distribution path during the
-sync delay:
+directory review:
 
 ```sh
 claude plugin marketplace add firaskafri/progressive-clarity
